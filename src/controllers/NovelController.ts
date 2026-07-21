@@ -479,24 +479,47 @@ export const NovelController = {
     const { id } = req.params;
     const user = res.locals.user;
     try {
-      const author = AuthorModel.findById(id);
+      let author = AuthorModel.findById(id);
+      let isUserCreator = false;
+
       if (author) {
         (author as any).photo = getLocalAuthorPhoto(author);
         (author as any).externalLink = getWikipediaLink(author);
+      } else {
+        const targetUser = UserModel.findById(id);
+        if (targetUser) {
+          isUserCreator = true;
+          author = {
+            _id: targetUser._id,
+            name: targetUser.username,
+            photo: targetUser.avatar || '/uploads/default-avatar.png',
+            bio: targetUser.bio || 'Poet & Storyteller on Readers.africa',
+            nationality: targetUser.country || 'Kenyan',
+            literaryAchievements: 'Published author & contributor.',
+            famousNovels: 'Original Works & Verses',
+            approvalStatus: 'approved',
+            followers: targetUser.followers || [],
+            createdAt: targetUser.createdAt
+          } as any;
+        }
       }
 
-      if (!author || (author.approvalStatus !== 'approved' && !UserModel.isAdmin(user))) {
-        return res.status(404).render('error', { statusCode: 404, message: 'Author not found.' });
+      if (!author) {
+        return res.status(404).render('error', { statusCode: 404, message: 'Creator profile not found.' });
       }
 
-      // Books collection written by this author
-      const rawNovels = NovelModel.findPublic({ authorId: id }).sort({ readerCount: -1 }).exec();
+      // Books collection written by this author/user
+      const rawNovels = NovelModel.findPublic().exec().filter((n: any) =>
+        String(n.authorId) === String(id) ||
+        String(n.submittedBy) === String(id) ||
+        n.authorName?.toLowerCase() === author.name.toLowerCase()
+      );
       const novels = rawNovels.map((n: any) => ({
         ...n,
         coverImage: getLocalNovelCover(n)
       }));
 
-      // Poems collection written/submitted by this author
+      // Poems collection written/submitted by this author/user
       const rawPoems = PoemModel.findPublic().exec().filter((p: any) =>
         String(p.authorId) === String(id) ||
         String(p.submittedBy) === String(id) ||
@@ -520,7 +543,7 @@ export const NovelController = {
       });
     } catch (error) {
       console.error('Author profile error:', error);
-      res.status(500).render('error', { statusCode: 500, message: 'Could not load author profile.' });
+      res.status(500).render('error', { statusCode: 500, message: 'Could not load creator profile.' });
     }
   },
 
