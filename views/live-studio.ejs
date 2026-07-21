@@ -2,45 +2,93 @@
 <%- include('partials/navbar') %>
 <%- include('partials/flash') %>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow">
   
-  <div class="mb-8 text-center sm:text-left">
-    <a href="/live" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline flex items-center gap-1 mb-2">&larr; Back to Live Rooms</a>
-    <h1 class="font-serif text-3xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2">
-      <i data-lucide="video" class="w-8 h-8 text-red-500"></i>
-      Live Recitation & Reading Studio
-    </h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Set up your camera, pick a poem or book chapter, and broadcast live to your followers in real-time.</p>
+  <!-- Header -->
+  <div class="mb-8 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-brown/10 dark:border-brand-brown/20 pb-6">
+    <div>
+      <a href="/live" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline flex items-center gap-1 mb-2">&larr; Back to Live Stage</a>
+      <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-3">
+        <i data-lucide="video" class="w-8 h-8 text-red-500"></i>
+        Live Studio & Beauty Filter Control
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Set up your webcam, apply flattering real-time face filters, select your poem or book, and broadcast live.</p>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
     
-    <!-- Camera Preview Column -->
-    <div class="lg:col-span-6 space-y-4">
-      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-xl border-2 border-brand-brown/20 flex items-center justify-center">
-        <video id="studioWebcam" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
-        
-        <div id="camPlaceholder" class="text-center p-6 space-y-3">
-          <i data-lucide="camera-off" class="w-12 h-12 text-gray-500 mx-auto"></i>
-          <p class="text-xs text-gray-400">Click Enable Camera to preview your video feed before broadcasting</p>
-          <button type="button" onclick="enableCamera()" class="px-4 py-2 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow transition-colors">
-            Enable Camera & Microphone
+    <!-- LEFT: Camera Preview & Filter Toolbar (Col span 6) -->
+    <div class="lg:col-span-6 space-y-5">
+      
+      <!-- Video Container with Live Filters -->
+      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border-2 border-brand-brown/20 flex items-center justify-center group">
+        <video id="studioWebcam" autoplay playsinline muted class="w-full h-full object-cover hidden transition-all duration-300"></video>
+        <canvas id="studioAudioWave" class="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10 hidden"></canvas>
+
+        <div id="camPlaceholder" class="text-center p-8 space-y-4">
+          <div class="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto animate-pulse">
+            <i data-lucide="camera" class="w-8 h-8"></i>
+          </div>
+          <div>
+            <h3 class="font-serif text-lg font-bold text-white">Webcam & Mic Offline</h3>
+            <p class="text-xs text-gray-400 mt-1">Grant camera access to preview your live feed with face filters.</p>
+          </div>
+          <button type="button" onclick="enableCamera()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-lg transition-colors inline-flex items-center gap-2">
+            <i data-lucide="video" class="w-4 h-4"></i> Enable Camera & Microphone
           </button>
         </div>
 
-        <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+        <span class="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
           STUDIO PREVIEW
         </span>
+
+        <!-- Active Filter Badge Overlay -->
+        <span id="activeFilterLabel" class="absolute top-4 right-4 bg-black/60 backdrop-blur text-brand-pink text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 uppercase tracking-wider">
+          Filter: Natural
+        </span>
       </div>
+
+      <!-- Real-Time Beauty Face Filter Toolbar -->
+      <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+            Real-Time Face Beauty Filters
+          </span>
+          <span class="text-[10px] text-gray-400">Tap filter to test live</span>
+        </div>
+
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <button type="button" onclick="applyFilter('none', 'Natural')" class="filter-btn py-2 px-3 rounded-xl border border-brand-brown/20 bg-brand-cream/30 text-xs font-semibold text-gray-800 dark:text-white hover:bg-brand-brown hover:text-white transition-colors active">
+            ✨ Natural
+          </button>
+          <button type="button" onclick="applyFilter('glam', 'Glam Glow')" class="filter-btn py-2 px-3 rounded-xl border border-brand-brown/20 bg-brand-cream/30 text-xs font-semibold text-gray-800 dark:text-white hover:bg-brand-brown hover:text-white transition-colors">
+            🌟 Glam Glow
+          </button>
+          <button type="button" onclick="applyFilter('golden', 'Golden Hour')" class="filter-btn py-2 px-3 rounded-xl border border-brand-brown/20 bg-brand-cream/30 text-xs font-semibold text-gray-800 dark:text-white hover:bg-brand-brown hover:text-white transition-colors">
+            🌅 Golden
+          </button>
+          <button type="button" onclick="applyFilter('vibrant', 'Vibrant HD')" class="filter-btn py-2 px-3 rounded-xl border border-brand-brown/20 bg-brand-cream/30 text-xs font-semibold text-gray-800 dark:text-white hover:bg-brand-brown hover:text-white transition-colors">
+            🎨 Vibrant
+          </button>
+          <button type="button" onclick="applyFilter('noir', 'Poetic Noir')" class="filter-btn py-2 px-3 rounded-xl border border-brand-brown/20 bg-brand-cream/30 text-xs font-semibold text-gray-800 dark:text-white hover:bg-brand-brown hover:text-white transition-colors">
+            🎬 Noir B&W
+          </button>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Form Column -->
+    <!-- RIGHT: Live Broadcast Setup Form (Col span 6) -->
     <div class="lg:col-span-6 bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
       <form action="/live/create" method="POST" class="space-y-5">
         
+        <input type="hidden" id="selectedFilterInput" name="filter" value="none">
+
         <div>
           <label for="title" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Broadcasting Title</label>
-          <input type="text" id="title" name="title" required placeholder="e.g. Reciting My Latest Haiku Live" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown">
+          <input type="text" id="title" name="title" required placeholder="e.g. Reciting My Latest Verse Live" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown">
         </div>
 
         <div>
@@ -80,7 +128,37 @@
 
 </div>
 
+<style>
+/* Beauty Face Filter Styles */
+.filter-glam {
+  filter: contrast(1.06) brightness(1.12) saturate(1.18) blur(0.2px) !important;
+}
+.filter-golden {
+  filter: sepia(0.25) contrast(1.1) brightness(1.08) saturate(1.25) hue-rotate(-10deg) !important;
+}
+.filter-vibrant {
+  filter: saturate(1.4) contrast(1.1) brightness(1.05) !important;
+}
+.filter-noir {
+  filter: grayscale(1) contrast(1.25) brightness(1.05) !important;
+}
+</style>
+
 <script>
+let activeFilter = 'none';
+
+function applyFilter(filterName, label) {
+  activeFilter = filterName;
+  const video = document.getElementById('studioWebcam');
+  document.getElementById('selectedFilterInput').value = filterName;
+  document.getElementById('activeFilterLabel').innerText = 'Filter: ' + label;
+
+  video.className = 'w-full h-full object-cover transition-all duration-300';
+  if (filterName !== 'none') {
+    video.classList.add('filter-' + filterName);
+  }
+}
+
 async function enableCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -89,9 +167,45 @@ async function enableCamera() {
     video.srcObject = stream;
     video.classList.remove('hidden');
     placeholder.classList.add('hidden');
+
+    // Init Audio Spectrum Waveform
+    initAudioWave(stream);
   } catch (err) {
-    alert('Camera access error: Please grant camera permissions in your browser to broadcast live.');
+    alert('Camera access error: Please grant camera permissions in your browser to preview and broadcast live.');
   }
+}
+
+function initAudioWave(stream) {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 64;
+
+    const canvas = document.getElementById('studioAudioWave');
+    canvas.classList.remove('hidden');
+    const ctx = canvas.getContext('2d');
+
+    function draw() {
+      requestAnimationFrame(draw);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getTimings ? analyser.getTimings(dataArray) : analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = (canvas.width / bufferLength) * 2;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
+        x += barWidth;
+      }
+    }
+    draw();
+  } catch (e) {}
 }
 </script>
 

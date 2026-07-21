@@ -7,7 +7,7 @@
     "email": "barbrah361@gmail.com",
     "passwordHash": "$2b$10$L85EZcbHdvhSARdLejW0w.LVzEXK.MKX1hEIEWvSC2efsTXi18yBy",
     "role": "reader",
-    "avatar": "/uploads/default-avatar.png",
+    "avatar": "/uploads/avatar-1784639225679-575970180.jpeg",
     "bio": "",
     "favorites": [],
     "bookmarks": [],
@@ -16,7 +16,7 @@
     "emailVerified": true,
     "following": [],
     "followers": [],
-    "updatedAt": "2026-07-21T09:45:39.822Z",
+    "updatedAt": "2026-07-21T13:07:05.878Z",
     "passwordResetToken": "9d456d498be21e8a65cb4d7e3acde7d0594f8ca248d980c8bde29816d1b76e2f",
     "passwordResetExpires": "2026-07-21T10:45:39.822Z"
   },

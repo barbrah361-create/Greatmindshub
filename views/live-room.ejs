@@ -2,46 +2,84 @@
 <%- include('partials/navbar') %>
 <%- include('partials/flash') %>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow">
   
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     
-    <!-- LEFT & CENTER: Live Video Feed & Teleprompter (Col span 8) -->
+    <!-- LEFT & CENTER: Live Video Stream & Teleprompter (Col span 8) -->
     <div class="lg:col-span-8 space-y-6">
       
-      <!-- Video Container -->
+      <!-- Video Container with Live Filters & Overlay -->
       <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border border-brand-brown/20 flex items-center justify-center group">
-        <video id="liveVideoFeed" class="w-full h-full object-cover" autoplay playsinline muted></video>
-        
-        <!-- Live Badge Overlay -->
-        <div class="absolute top-4 left-4 flex items-center gap-3 z-10">
+        <video id="liveVideoFeed" class="w-full h-full object-cover transition-all duration-300" autoplay playsinline muted></video>
+        <canvas id="liveAudioWave" class="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10 hidden"></canvas>
+
+        <!-- Live Badge & Viewer Counter Overlay -->
+        <div class="absolute top-4 left-4 flex flex-wrap items-center gap-2 z-20">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-md uppercase tracking-wider animate-pulse">
             <span class="w-2 h-2 rounded-full bg-white"></span> LIVE
           </span>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur text-white">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur text-white border border-white/10">
             <i data-lucide="users" class="w-3.5 h-3.5 text-red-400"></i>
             <span id="roomViewerCount"><%= session.viewersCount %></span> Watching
           </span>
         </div>
 
-        <!-- Host Name Tag -->
-        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white z-10">
+        <!-- Filter Selector Overlay (For Creator & Viewers) -->
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs text-white">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+          <select id="liveFilterSelect" onchange="applyLiveFilter(this.value)" class="bg-transparent text-white font-bold text-xs outline-none cursor-pointer">
+            <option value="none" class="bg-gray-900 text-white">✨ Natural</option>
+            <option value="glam" class="bg-gray-900 text-white">🌟 Glam Glow</option>
+            <option value="golden" class="bg-gray-900 text-white">🌅 Golden Hour</option>
+            <option value="vibrant" class="bg-gray-900 text-white">🎨 Vibrant</option>
+            <option value="noir" class="bg-gray-900 text-white">🎬 Poetic Noir</option>
+          </select>
+        </div>
+
+        <!-- Host Name Tag & Floating Heart Trigger -->
+        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white z-20">
           <div class="flex items-center gap-3 bg-black/60 backdrop-blur px-4 py-2 rounded-2xl border border-white/10">
             <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-10 h-10 rounded-full object-cover ring-2 ring-red-500">
             <div>
-              <h3 class="font-bold text-sm"><%= session.hostName %></h3>
+              <h3 class="font-bold text-sm leading-snug"><%= session.hostName %></h3>
               <p class="text-[11px] text-gray-300">Reciting: <%= session.workTitle %></p>
             </div>
           </div>
 
-          <!-- TikTok Style Live Heart Trigger -->
-          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg transition-transform active:scale-125">
+          <!-- TikTok Style Heart Button -->
+          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl transition-transform active:scale-125">
             <i data-lucide="heart" class="w-6 h-6 fill-white"></i>
           </button>
         </div>
 
         <!-- Floating hearts animation overlay container -->
-        <div id="heartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+        <div id="heartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
+        <!-- Gift Notification Banner Overlay -->
+        <div id="giftNotificationBanner" class="absolute top-16 left-4 z-30 pointer-events-none space-y-2"></div>
+      </div>
+
+      <!-- Live Gift & Appreciation Bar -->
+      <div class="bg-white dark:bg-[#1E150F] p-4 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-white">
+          <i data-lucide="gift" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          Send Audience Appreciation Gift:
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="sendGift('🌹 Rose')" class="px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+            🌹 Rose
+          </button>
+          <button onclick="sendGift('📚 Golden Book')" class="px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+            📚 Book
+          </button>
+          <button onclick="sendGift('💎 Diamond')" class="px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+            💎 Diamond
+          </button>
+          <button onclick="sendGift('👑 Crown')" class="px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+            👑 Crown
+          </button>
+        </div>
       </div>
 
       <!-- Live Read-Along Teleprompter Card -->
@@ -73,8 +111,8 @@
 
     </div>
 
-    <!-- RIGHT COLUMN: Real-Time Live Chat (Col span 4) -->
-    <div class="lg:col-span-4 bg-white dark:bg-[#1E150F] rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col h-[600px] overflow-hidden">
+    <!-- RIGHT COLUMN: Real-Time Live Chat & Audience Feed (Col span 4) -->
+    <div class="lg:col-span-4 bg-white dark:bg-[#1E150F] rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col h-[650px] overflow-hidden">
       
       <!-- Chat Header -->
       <div class="p-4 border-b border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/20 dark:bg-brand-brown/10 flex items-center justify-between">
@@ -111,18 +149,63 @@
 
 </div>
 
+<style>
+/* Beauty Face Filter Styles */
+.filter-glam {
+  filter: contrast(1.06) brightness(1.12) saturate(1.18) blur(0.2px) !important;
+}
+.filter-golden {
+  filter: sepia(0.25) contrast(1.1) brightness(1.08) saturate(1.25) hue-rotate(-10deg) !important;
+}
+.filter-vibrant {
+  filter: saturate(1.4) contrast(1.1) brightness(1.05) !important;
+}
+.filter-noir {
+  filter: grayscale(1) contrast(1.25) brightness(1.05) !important;
+}
+</style>
+
 <script>
-// Local video feed simulated stream
+// Apply live face filter to stream feed
+function applyLiveFilter(filterName) {
+  const video = document.getElementById('liveVideoFeed');
+  video.className = 'w-full h-full object-cover transition-all duration-300';
+  if (filterName !== 'none') {
+    video.classList.add('filter-' + filterName);
+  }
+}
+
+// Local video feed simulated stream & audio spectrum
 async function initLiveVideo() {
   try {
     const video = document.getElementById('liveVideoFeed');
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     video.srcObject = stream;
   } catch (e) {
-    console.log('Webcam feed fallback: Camera preview active');
+    console.log('Webcam feed fallback: Active live stream view');
   }
 }
 initLiveVideo();
+
+// Send Audience Gift
+function sendGift(giftName) {
+  const user = "<%= user ? user.username : 'Reader' %>";
+  const banner = document.getElementById('giftNotificationBanner');
+  const toast = document.createElement('div');
+  toast.className = 'bg-black/80 backdrop-blur text-white text-xs font-bold px-4 py-2 rounded-2xl border border-amber-400/40 shadow-xl flex items-center gap-2 animate-bounce';
+  toast.innerHTML = `<span>✨ ${user} sent ${giftName}!</span>`;
+  banner.appendChild(toast);
+
+  // Add to live chat feed
+  const feed = document.getElementById('chatFeed');
+  const msg = document.createElement('div');
+  msg.className = 'p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-center';
+  msg.innerHTML = `🎁 ${user} sent ${giftName} to <%= session.hostName %>!`;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+
+  setTimeout(() => toast.remove(), 3000);
+}
 
 // Live Chat Simulation & Messaging
 function sendChatMessage(e) {
