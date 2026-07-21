@@ -53,9 +53,24 @@
             <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-brand-accent transition-colors">
               <a href="/poems/<%= poem._id %>"><%= poem.title %></a>
             </h2>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
-              By <span class="font-semibold text-brand-brown dark:text-brand-pink"><%= poem.authorName %></span>
-            </p>
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <p class="text-xs text-gray-400 dark:text-gray-500">
+                By 
+                <% if (poem.authorId || poem.submittedBy) { %>
+                  <a href="/authors/<%= poem.authorId || poem.submittedBy %>" class="font-semibold text-brand-brown dark:text-brand-pink hover:underline"><%= poem.authorName %></a>
+                <% } else { %>
+                  <span class="font-semibold text-brand-brown dark:text-brand-pink"><%= poem.authorName %></span>
+                <% } %>
+              </p>
+
+              <% if (poem.authorId || poem.submittedBy) { %>
+                <form action="/authors/<%= poem.authorId || poem.submittedBy %>/follow" method="POST" class="inline">
+                  <button type="submit" class="px-2.5 py-0.5 rounded-full bg-brand-pink/20 hover:bg-brand-pink/40 text-brand-brown dark:text-brand-pink text-[10px] font-bold border border-brand-pink/30 flex items-center gap-1 transition-all">
+                    <i data-lucide="user-plus" class="w-3 h-3"></i> Follow
+                  </button>
+                </form>
+              <% } %>
+            </div>
 
             <div class="text-sm italic text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-serif line-clamp-4 whitespace-pre-line">
               <%= poem.content %>

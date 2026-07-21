@@ -528,60 +528,93 @@ export const NovelController = {
   postFollowAuthor: (req: Request, res: Response) => {
     const { id } = req.params;
     const user = res.locals.user;
+
     if (!user) {
-      if (req.headers.accept?.includes('json')) {
-        return res.status(401).json({ success: false, message: 'Login required.' });
-      }
-      req.flash('error', 'Please log in to follow authors.');
+      req.flash('error', 'Please log in to follow creators.');
       return res.redirect('/auth/login');
     }
 
     try {
       const author = AuthorModel.findById(id);
-      if (!author) {
-        if (req.headers.accept?.includes('json')) {
-          return res.status(404).json({ success: false, message: 'Author not found.' });
-        }
-        req.flash('error', 'Author not found.');
+      const targetUser = UserModel.findById(id);
+
+      if (!author && !targetUser) {
+        req.flash('error', 'Creator profile not found.');
         return res.redirect('/authors');
       }
 
-      const followers = [...(author.followers || [])];
-      const userFollowing = [...(user.following || [])];
+      if (targetUser) {
+        const followers = [...(targetUser.followers || [])];
+        const userFollowing = [...(user.following || [])];
+        const idx = followers.indexOf(user._id);
+        let isFollowing = false;
 
-      const idx = followers.indexOf(user._id);
-      let isFollowing = false;
+        if (idx > -1) {
+          followers.splice(idx, 1);
+          const fIdx = userFollowing.indexOf(id);
+          if (fIdx > -1) userFollowing.splice(fIdx, 1);
+          isFollowing = false;
+          req.flash('success', `Unfollowed ${targetUser.username}`);
+        } else {
+          followers.push(user._id);
+          if (!userFollowing.includes(id)) userFollowing.push(id);
+          isFollowing = true;
+          req.flash('success', `Now following ${targetUser.username}!`);
+          try {
+            NotificationModel.notify(targetUser._id, 'follow', 'New Follower', `${user.username} started following you!`, `/authors/${targetUser._id}`);
+          } catch (err) {}
+        }
 
-      if (idx > -1) {
-        followers.splice(idx, 1);
-        const fIdx = userFollowing.indexOf(id);
-        if (fIdx > -1) userFollowing.splice(fIdx, 1);
-        isFollowing = false;
-        req.flash('success', `Unfollowed ${author.name}`);
-      } else {
-        followers.push(user._id);
-        if (!userFollowing.includes(id)) userFollowing.push(id);
-        isFollowing = true;
-        req.flash('success', `Now following ${author.name}!`);
+        UserModel.findByIdAndUpdate(id, { followers });
+        UserModel.findByIdAndUpdate(user._id, { following: userFollowing });
+
+        if (req.headers.accept?.includes('json')) {
+          return res.json({
+            success: true,
+            isFollowing,
+            followerCount: followers.length,
+            formattedFollowers: formatTikTokMetric(followers.length)
+          });
+        }
+        return res.redirect(req.get('Referer') || `/authors/${id}`);
       }
 
-      AuthorModel.findByIdAndUpdate(id, { followers });
-      UserModel.findByIdAndUpdate(user._id, { following: userFollowing });
+      if (author) {
+        const followers = [...(author.followers || [])];
+        const userFollowing = [...(user.following || [])];
+        const idx = followers.indexOf(user._id);
+        let isFollowing = false;
 
-      if (req.headers.accept?.includes('json')) {
-        return res.json({
-          success: true,
-          isFollowing,
-          followerCount: followers.length,
-          formattedFollowers: formatTikTokMetric(followers.length)
-        });
+        if (idx > -1) {
+          followers.splice(idx, 1);
+          const fIdx = userFollowing.indexOf(id);
+          if (fIdx > -1) userFollowing.splice(fIdx, 1);
+          isFollowing = false;
+          req.flash('success', `Unfollowed ${author.name}`);
+        } else {
+          followers.push(user._id);
+          if (!userFollowing.includes(id)) userFollowing.push(id);
+          isFollowing = true;
+          req.flash('success', `Now following ${author.name}!`);
+        }
+
+        AuthorModel.findByIdAndUpdate(id, { followers });
+        UserModel.findByIdAndUpdate(user._id, { following: userFollowing });
+
+        if (req.headers.accept?.includes('json')) {
+          return res.json({
+            success: true,
+            isFollowing,
+            followerCount: followers.length,
+            formattedFollowers: formatTikTokMetric(followers.length)
+          });
+        }
+        return res.redirect(req.get('Referer') || `/authors/${id}`);
       }
-
-      res.redirect(`/authors/${id}`);
     } catch (error) {
       console.error('Follow author error:', error);
       req.flash('error', 'Could not update follow status.');
-      res.redirect(`/authors/${id}`);
+      res.redirect(req.get('Referer') || `/authors/${id}`);
     }
   },
 

@@ -42,5 +42,28 @@
     "genre": "Free Verse",
     "submittedBy": "440rvi4s86tz0ftpopl83i",
     "updatedAt": "2026-07-21T12:48:29.518Z"
+  },
+  {
+    "_id": "j8ch951td9q33pm46lch4f",
+    "id": "j8ch951td9q33pm46lch4f",
+    "createdAt": "2026-07-21T13:30:19.182Z",
+    "likes": [
+      "83v6pkw84q7s3w0ti0nq1"
+    ],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 2,
+    "approvalStatus": "approved",
+    "tags": [
+      "Nature"
+    ],
+    "title": "MORNING",
+    "content": "When morning comes",
+    "authorId": "83v6pkw84q7s3w0ti0nq1",
+    "authorName": "Barbrah",
+    "genre": "Free Verse",
+    "submittedBy": "83v6pkw84q7s3w0ti0nq1",
+    "updatedAt": "2026-07-21T13:30:24.926Z"
   }
 ]
