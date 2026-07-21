@@ -9,47 +9,72 @@
     <!-- LEFT & CENTER: Live Video Stream & Teleprompter (Col span 8) -->
     <div class="lg:col-span-8 space-y-6">
       
-      <!-- Video Container with Live Filters & Overlay -->
-      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border border-brand-brown/20 flex items-center justify-center group">
-        <video id="liveVideoFeed" class="w-full h-full object-cover transition-all duration-300" autoplay playsinline muted></video>
-        <canvas id="liveAudioWave" class="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10 hidden"></canvas>
+      <!-- Video Container (TikTok Live Vertical/Horizontal Ratio) -->
+      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border-2 border-brand-brown/20 flex items-center justify-center group">
+        <!-- Live Video Element (Mirrored like TikTok Selfie Cam) -->
+        <video id="liveVideoFeed" class="w-full h-full object-cover transition-all duration-300 transform -scale-x-100" autoplay playsinline muted></video>
+
+        <!-- Tap to Start Camera Overlay (If browser permission required) -->
+        <div id="cameraStartOverlay" class="absolute inset-0 bg-black/80 backdrop-blur z-40 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div class="w-20 h-20 rounded-full bg-red-600/20 text-red-500 flex items-center justify-center animate-pulse ring-4 ring-red-500/30">
+            <i data-lucide="video" class="w-10 h-10"></i>
+          </div>
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-white">Join Live Recitation Stage</h3>
+            <p class="text-xs text-gray-300 max-w-sm mt-1">Tap below to enable your camera feed, audio stream, and real-time TikTok beauty filters.</p>
+          </div>
+          <button type="button" onclick="startLiveCamera()" class="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-red-500/30 transition-all text-xs flex items-center gap-2">
+            <i data-lucide="camera" class="w-4 h-4"></i> Enable Camera & Broadcast Live
+          </button>
+        </div>
 
         <!-- Live Badge & Viewer Counter Overlay -->
         <div class="absolute top-4 left-4 flex flex-wrap items-center gap-2 z-20">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-md uppercase tracking-wider animate-pulse">
-            <span class="w-2 h-2 rounded-full bg-white"></span> LIVE
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-lg uppercase tracking-wider animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-white"></span> LIVE STAGE
           </span>
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur text-white border border-white/10">
             <i data-lucide="users" class="w-3.5 h-3.5 text-red-400"></i>
-            <span id="roomViewerCount"><%= session.viewersCount %></span> Watching
+            <span id="roomViewerCount"><%= session.viewersCount || 124 %></span> Watching
           </span>
         </div>
 
-        <!-- Filter Selector Overlay (For Creator & Viewers) -->
-        <div class="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs text-white">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-          <select id="liveFilterSelect" onchange="applyLiveFilter(this.value)" class="bg-transparent text-white font-bold text-xs outline-none cursor-pointer">
-            <option value="none" class="bg-gray-900 text-white">✨ Natural</option>
-            <option value="glam" class="bg-gray-900 text-white">🌟 Glam Glow</option>
-            <option value="golden" class="bg-gray-900 text-white">🌅 Golden Hour</option>
-            <option value="vibrant" class="bg-gray-900 text-white">🎨 Vibrant</option>
-            <option value="noir" class="bg-gray-900 text-white">🎬 Poetic Noir</option>
-          </select>
+        <!-- Filter Selector & Controls Overlay (Top Right) -->
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <!-- Filter Select -->
+          <div class="flex items-center gap-1.5 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs text-white">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+            <select id="liveFilterSelect" onchange="applyLiveFilter(this.value)" class="bg-transparent text-white font-bold text-xs outline-none cursor-pointer">
+              <option value="glam" class="bg-gray-900 text-white" selected>🌟 Glam Glow</option>
+              <option value="none" class="bg-gray-900 text-white">✨ Natural</option>
+              <option value="golden" class="bg-gray-900 text-white">🌅 Golden Hour</option>
+              <option value="vibrant" class="bg-gray-900 text-white">🎨 Vibrant</option>
+              <option value="noir" class="bg-gray-900 text-white">🎬 Poetic Noir</option>
+            </select>
+          </div>
+
+          <!-- Flip Mirror Toggle -->
+          <button type="button" onclick="toggleMirror()" title="Toggle Camera Mirror" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white flex items-center justify-center hover:bg-black transition-colors">
+            <i data-lucide="flip-horizontal" class="w-4 h-4"></i>
+          </button>
         </div>
 
-        <!-- Host Name Tag & Floating Heart Trigger -->
+        <!-- TikTok Live Host Banner & Floating Hearts Trigger -->
         <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white z-20">
-          <div class="flex items-center gap-3 bg-black/60 backdrop-blur px-4 py-2 rounded-2xl border border-white/10">
+          <div class="flex items-center gap-3 bg-black/60 backdrop-blur px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
             <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-10 h-10 rounded-full object-cover ring-2 ring-red-500">
             <div>
-              <h3 class="font-bold text-sm leading-snug"><%= session.hostName %></h3>
+              <h3 class="font-bold text-sm leading-snug flex items-center gap-1.5">
+                <%= session.hostName %>
+                <span class="bg-red-600 text-[9px] px-1.5 py-0.2 rounded font-bold uppercase">HOST</span>
+              </h3>
               <p class="text-[11px] text-gray-300">Reciting: <%= session.workTitle %></p>
             </div>
           </div>
 
-          <!-- TikTok Style Heart Button -->
-          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl transition-transform active:scale-125">
-            <i data-lucide="heart" class="w-6 h-6 fill-white"></i>
+          <!-- TikTok Style Big Floating Heart Button -->
+          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-14 h-14 rounded-full bg-gradient-to-tr from-red-600 to-pink-500 hover:scale-110 text-white flex items-center justify-center shadow-2xl transition-transform active:scale-125 border-2 border-white/20">
+            <i data-lucide="heart" class="w-7 h-7 fill-white"></i>
           </button>
         </div>
 
@@ -59,24 +84,24 @@
         <div id="giftNotificationBanner" class="absolute top-16 left-4 z-30 pointer-events-none space-y-2"></div>
       </div>
 
-      <!-- Live Gift & Appreciation Bar -->
+      <!-- TikTok Live Appreciation Gift Toolbar -->
       <div class="bg-white dark:bg-[#1E150F] p-4 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-white">
-          <i data-lucide="gift" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-          Send Audience Appreciation Gift:
+          <i data-lucide="gift" class="w-4.5 h-4.5 text-red-500"></i>
+          Send Live TikTok Gift:
         </div>
 
-        <div class="flex items-center gap-2">
-          <button onclick="sendGift('🌹 Rose')" class="px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="sendGift('🌹 Rose')" class="px-3.5 py-1.5 rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
             🌹 Rose
           </button>
-          <button onclick="sendGift('📚 Golden Book')" class="px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+          <button onclick="sendGift('📚 Golden Book')" class="px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
             📚 Book
           </button>
-          <button onclick="sendGift('💎 Diamond')" class="px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+          <button onclick="sendGift('💎 Diamond')" class="px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
             💎 Diamond
           </button>
-          <button onclick="sendGift('👑 Crown')" class="px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1">
+          <button onclick="sendGift('👑 Crown')" class="px-3.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
             👑 Crown
           </button>
         </div>
@@ -118,7 +143,7 @@
       <div class="p-4 border-b border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/20 dark:bg-brand-brown/10 flex items-center justify-between">
         <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
           <i data-lucide="message-square" class="w-4 h-4 text-red-500"></i>
-          Live Stream Chat
+          TikTok Live Stream Chat
         </h3>
         <span class="text-[11px] font-bold text-red-500 flex items-center gap-1">
           <i data-lucide="heart" class="w-3.5 h-3.5 fill-red-500"></i>
@@ -166,33 +191,90 @@
 </style>
 
 <script>
+let isMirrored = true;
+
+function toggleMirror() {
+  const video = document.getElementById('liveVideoFeed');
+  isMirrored = !isMirrored;
+  if (isMirrored) {
+    video.classList.add('transform', '-scale-x-100');
+  } else {
+    video.classList.remove('transform', '-scale-x-100');
+  }
+}
+
 // Apply live face filter to stream feed
 function applyLiveFilter(filterName) {
   const video = document.getElementById('liveVideoFeed');
-  video.className = 'w-full h-full object-cover transition-all duration-300';
+  video.className = 'w-full h-full object-cover transition-all duration-300 ' + (isMirrored ? 'transform -scale-x-100' : '');
   if (filterName !== 'none') {
     video.classList.add('filter-' + filterName);
   }
 }
 
-// Local video feed simulated stream & audio spectrum
-async function initLiveVideo() {
+// Start Live Camera Stream
+async function startLiveCamera() {
   try {
     const video = document.getElementById('liveVideoFeed');
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const overlay = document.getElementById('cameraStartOverlay');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+      audio: true
+    });
     video.srcObject = stream;
+    await video.play();
+    overlay.classList.add('hidden');
+    applyLiveFilter('glam');
   } catch (e) {
-    console.log('Webcam feed fallback: Active live stream view');
+    alert('Camera access note: Please allow camera permissions in your browser bar.');
   }
 }
-initLiveVideo();
+
+// Auto attempt start camera on page load
+window.addEventListener('DOMContentLoaded', () => {
+  startLiveCamera();
+});
+
+// TikTok Live Automated Reader Audience Simulation (Hearts & Comments)
+const sampleAudienceComments = [
+  "Love this poem so much! ❤️",
+  "Your voice is so calming 🌹",
+  "Reading along from Nairobi! 📚",
+  "Such powerful prose ✨",
+  "Recite the second stanza again please!",
+  "Giving 5 stars to this live stage 💎",
+  "Brilliant recital! 👑",
+  "So inspiring! 🙌"
+];
+
+setInterval(() => {
+  // Random heart floating
+  if (Math.random() > 0.4) {
+    sendLiveHeart('<%= session._id %>');
+  }
+
+  // Random viewer comment
+  if (Math.random() > 0.6) {
+    const randomUser = "Reader_" + Math.floor(1000 + Math.random() * 9000);
+    const randomComment = sampleAudienceComments[Math.floor(Math.random() * sampleAudienceComments.length)];
+    const feed = document.getElementById('chatFeed');
+    const msg = document.createElement('div');
+    msg.className = 'flex items-start gap-2 p-2.5 rounded-2xl bg-brand-cream/50 dark:bg-brand-brown/15 border border-brand-brown/5';
+    msg.innerHTML = `
+      <span class="font-bold text-brand-brown dark:text-brand-pink shrink-0">${randomUser}:</span>
+      <span class="text-gray-800 dark:text-gray-200 leading-snug">${randomComment}</span>
+    `;
+    feed.appendChild(msg);
+    feed.scrollTop = feed.scrollHeight;
+  }
+}, 4000);
 
 // Send Audience Gift
 function sendGift(giftName) {
   const user = "<%= user ? user.username : 'Reader' %>";
   const banner = document.getElementById('giftNotificationBanner');
   const toast = document.createElement('div');
-  toast.className = 'bg-black/80 backdrop-blur text-white text-xs font-bold px-4 py-2 rounded-2xl border border-amber-400/40 shadow-xl flex items-center gap-2 animate-bounce';
+  toast.className = 'bg-black/90 backdrop-blur text-white text-xs font-bold px-4 py-2 rounded-2xl border border-amber-400/40 shadow-xl flex items-center gap-2 animate-bounce';
   toast.innerHTML = `<span>✨ ${user} sent ${giftName}!</span>`;
   banner.appendChild(toast);
 
