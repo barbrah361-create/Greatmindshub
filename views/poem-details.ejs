@@ -24,13 +24,27 @@
       <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight mb-3">
         <%= poem.title %>
       </h1>
-      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-        Composed by <span class="font-bold text-brand-brown dark:text-brand-pink text-sm"><%= poem.authorName %></span>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-3">
+        <span>Composed by 
+          <% if (poem.authorId) { %>
+            <a href="/authors/<%= poem.authorId %>" class="font-bold text-brand-brown dark:text-brand-pink text-sm hover:underline"><%= poem.authorName %></a>
+          <% } else { %>
+            <span class="font-bold text-brand-brown dark:text-brand-pink text-sm"><%= poem.authorName %></span>
+          <% } %>
+        </span>
+        <% if (poem.authorId) { %>
+          <form action="/authors/<%= poem.authorId %>/follow" method="POST" class="inline">
+            <button type="submit" class="px-3 py-1 rounded-full bg-brand-pink/20 hover:bg-brand-pink/40 text-brand-brown dark:text-brand-pink text-[11px] font-bold border border-brand-pink/30 flex items-center gap-1">
+              <i data-lucide="user-plus" class="w-3 h-3"></i>
+              Follow Author
+            </button>
+          </form>
+        <% } %>
       </p>
       <div class="w-16 h-px bg-brand-brown/20 dark:bg-brand-pink/20 mx-auto mt-6"></div>
     </div>
 
-    <!-- Poem Content: Centered, indented, large font-serif with whitespace retention -->
+    <!-- Poem Content -->
     <div class="font-serif text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-loose italic max-w-lg mx-auto whitespace-pre-line text-center md:text-left md:pl-12 my-12 tracking-wide">
       <%= poem.content %>
     </div>
@@ -69,11 +83,11 @@
     </div>
   </article>
 
-  <!-- Comments / Discussion -->
+  <!-- Comments / Discussion Section -->
   <section class="book-card p-6 sm:p-10 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-sm rounded-2xl">
     <h3 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2.5">
       <i data-lucide="message-square" class="w-5.5 h-5.5 text-brand-brown dark:text-brand-pink"></i>
-      Discussion
+      Discussion & Replies
       <span class="text-xs bg-brand-pink/30 text-brand-brown dark:text-brand-pink px-2.5 py-0.5 rounded-full font-sans font-bold">
         <%= poem.comments ? poem.comments.length : 0 %>
       </span>
@@ -93,8 +107,7 @@
         </div>
       <% } %>
       <div>
-        <label for="comment-textarea" class="sr-only">Your Comment</label>
-        <textarea id="comment-textarea" name="content" rows="3" required placeholder="Write a thoughtful comment on this piece..." class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 p-4 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed"></textarea>
+        <textarea id="comment-textarea" name="content" rows="3" required placeholder="Write a thoughtful critique or response to this poem..." class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 p-4 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed"></textarea>
       </div>
       <div class="flex justify-end">
         <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl text-xs transition-colors shadow-sm">
@@ -103,13 +116,12 @@
       </div>
     </form>
 
-    <!-- Comments List -->
+    <!-- Comments List with Replies -->
     <div class="space-y-6">
       <% if (poem.comments && poem.comments.length > 0) { %>
         <% poem.comments.forEach(function(comment) { %>
-          <div class="border-b border-brand-brown/10 dark:border-brand-brown/15 pb-6 last:border-b-0 last:pb-0">
+          <div class="border-b border-brand-brown/10 dark:border-brand-brown/15 pb-6 last:border-b-0 last:pb-0 space-y-3">
             <div class="flex items-start gap-3">
-              <!-- Avatar -->
               <div class="w-10 h-10 rounded-full bg-brand-cream border border-brand-brown/10 shadow-sm shrink-0 overflow-hidden flex items-center justify-center font-bold text-sm text-brand-brown dark:text-brand-pink">
                 <% if (comment.userAvatar) { %>
                   <img src="<%= comment.userAvatar %>" alt="<%= comment.username %>" class="w-full h-full object-cover">
@@ -118,15 +130,58 @@
                 <% } %>
               </div>
 
-              <!-- Main Comment Meta & Content -->
               <div class="flex-grow">
-                <div class="flex items-center gap-2.5">
-                  <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
-                  <span class="text-[10px] text-gray-400 font-medium"><%= new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
+                    <span class="text-[10px] text-gray-400 font-medium"><%= new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                  </div>
+                  
+                  <button onclick="document.getElementById('replyBox-<%= comment._id %>').classList.toggle('hidden');" class="text-xs text-brand-brown dark:text-brand-pink font-semibold hover:underline flex items-center gap-1">
+                    <i data-lucide="corner-up-left" class="w-3.5 h-3.5"></i> Reply
+                  </button>
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
                   <%= comment.content %>
                 </p>
+
+                <!-- Inline Reply Box -->
+                <div id="replyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5">
+                  <form action="/poems/<%= poem._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-3">
+                    <% if (!user) { %>
+                      <input type="text" name="guestName" placeholder="Your Name" class="w-full px-3 py-1.5 rounded-lg border border-brand-brown/20 bg-brand-cream/20 text-xs text-gray-800 dark:text-white">
+                    <% } %>
+                    <textarea name="content" rows="2" required placeholder="Reply to <%= comment.username %>..." class="w-full p-3 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
+                    <div class="flex justify-end gap-2">
+                      <button type="button" onclick="document.getElementById('replyBox-<%= comment._id %>').classList.add('hidden');" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
+                      <button type="submit" class="px-4 py-1.5 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Submit Reply</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Nested Replies Threads -->
+                <% if (comment.replies && comment.replies.length > 0) { %>
+                  <div class="mt-4 space-y-3 pl-4 border-l-2 border-brand-pink/40 dark:border-brand-brown/20">
+                    <% comment.replies.forEach(function(reply) { %>
+                      <div class="flex items-start gap-2.5 text-xs bg-brand-cream/30 dark:bg-brand-brown/10 p-3 rounded-xl border border-brand-brown/5">
+                        <div class="w-7 h-7 rounded-full bg-brand-cream overflow-hidden shrink-0 flex items-center justify-center font-bold text-[10px] text-brand-brown">
+                          <% if (reply.userAvatar) { %>
+                            <img src="<%= reply.userAvatar %>" alt="" class="w-full h-full object-cover">
+                          <% } else { %>
+                            <%= reply.username.substring(0, 2).toUpperCase() %>
+                          <% } %>
+                        </div>
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-800 dark:text-white"><%= reply.username %></span>
+                            <span class="text-[9px] text-gray-400"><%= new Date(reply.createdAt).toLocaleDateString() %></span>
+                          </div>
+                          <p class="text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
               </div>
             </div>
           </div>

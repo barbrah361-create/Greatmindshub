@@ -1,0 +1,46 @@
+[
+  {
+    "_id": "tukei4bkntwwlot8thmlp",
+    "id": "tukei4bkntwwlot8thmlp",
+    "createdAt": "2026-07-21T09:50:32.670Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 3,
+    "approvalStatus": "approved",
+    "tags": [
+      "Nature"
+    ],
+    "title": "THE RED MOON",
+    "content": "i am the red moon",
+    "authorId": "7e7jf2wzecn0lpfcg9myeo",
+    "authorName": "Steve",
+    "genre": "Haiku / Tanka",
+    "submittedBy": "7e7jf2wzecn0lpfcg9myeo",
+    "updatedAt": "2026-07-21T09:50:59.011Z"
+  },
+  {
+    "_id": "rqu8el6dauk9nzg4v2jet8",
+    "id": "rqu8el6dauk9nzg4v2jet8",
+    "createdAt": "2026-07-21T12:06:51.475Z",
+    "likes": [
+      "440rvi4s86tz0ftpopl83i"
+    ],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 9,
+    "approvalStatus": "approved",
+    "tags": [
+      "LOVE"
+    ],
+    "title": "LOVE",
+    "content": "It hurts to love someone and not to be loved back",
+    "authorId": "440rvi4s86tz0ftpopl83i",
+    "authorName": "Beatrice",
+    "genre": "Free Verse",
+    "submittedBy": "440rvi4s86tz0ftpopl83i",
+    "updatedAt": "2026-07-21T12:48:29.518Z"
+  }
+]

@@ -25,6 +25,7 @@ import authorRoutes from './src/routes/authorRoutes.js';
 import dashboardRoutes from './src/routes/dashboardRoutes.js';
 import articleRoutes from './src/routes/articleRoutes.js';
 import poemRoutes from './src/routes/poemRoutes.js';
+import liveRoutes from './src/routes/liveRoutes.js';
 
 async function bootstrap() {
   const app = express();
@@ -93,6 +94,7 @@ async function bootstrap() {
   app.use('/articles', articleRoutes);
   app.use('/admin', adminRoutes);
   app.use('/authors', authorRoutes);
+  app.use('/live', liveRoutes);
   app.use('/', dashboardRoutes);
 
   app.post('/api/mpesa/callback', PaymentController.mpesaCallback);
@@ -117,8 +119,13 @@ async function bootstrap() {
   });
 
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
-    app.use(vite.middlewares);
+    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
+    app.use((req, res, next) => {
+      if (req.url.startsWith('/@') || req.url.startsWith('/src/') || req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.css')) {
+        return vite.middlewares(req, res, next);
+      }
+      next();
+    });
   }
 
   app.use((req, res) => {

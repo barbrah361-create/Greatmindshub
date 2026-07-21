@@ -3,6 +3,8 @@ import { UserModel } from '../models/User.js';
 import { EmailService } from '../services/emailService.js';
 import { sanitizePlainText } from '../utils/sanitize.js';
 
+import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
+
 export const AuthController = {
   getRegister: (req: Request, res: Response) => {
     if (req.session.userId) return res.redirect('/dashboard');
@@ -250,7 +252,16 @@ export const AuthController = {
   getProfile: (req: Request, res: Response) => {
     const user = res.locals.user;
     if (!user) return res.redirect('/auth/login');
-    res.render('profile', { title: 'My Profile', profileUser: user });
+    const likesInfo = calculateTikTokStyleLikes(user._id, user.username);
+    const followersCount = user.followers ? user.followers.length : 0;
+    const followingCount = user.following ? user.following.length : 0;
+    res.render('profile', {
+      title: 'My Profile',
+      profileUser: user,
+      tiktokLikes: likesInfo.formattedLikes,
+      followersCount: formatTikTokMetric(followersCount),
+      followingCount: formatTikTokMetric(followingCount)
+    });
   },
 
   updateProfile: (req: Request, res: Response) => {

@@ -28,9 +28,19 @@
 
         <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight"><%= novel.title %></h1>
         
-        <p class="text-sm text-gray-400 font-medium">
-          Written by <a href="/authors/<%= novel.authorId %>" class="text-brand-pink hover:underline font-bold text-base block sm:inline mt-1 sm:mt-0"><%= novel.authorName %></a>
-        </p>
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+          <p class="text-sm text-gray-400 font-medium">
+            Written by <a href="/authors/<%= novel.authorId %>" class="text-brand-pink hover:underline font-bold text-base block sm:inline mt-1 sm:mt-0"><%= novel.authorName %></a>
+          </p>
+          <% if (novel.authorId) { %>
+            <form action="/authors/<%= novel.authorId %>/follow" method="POST" class="inline">
+              <button type="submit" class="px-3 py-1 rounded-full bg-brand-pink/20 hover:bg-brand-pink/40 text-brand-pink text-xs font-bold border border-brand-pink/30 flex items-center gap-1 transition-colors">
+                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                Follow Author
+              </button>
+            </form>
+          <% } %>
+        </div>
 
         <div class="flex items-center justify-center md:justify-start gap-6 pt-2 text-sm text-gray-300">
           <div class="flex items-center gap-1.5">
@@ -201,7 +211,11 @@
                       <%= comment.content %>
                     </p>
                     
-                    <div class="mt-3 flex items-center gap-4 text-[10px] border-t border-brand-brown/5 pt-2">
+                    <div class="mt-3 flex items-center justify-between text-[10px] border-t border-brand-brown/5 pt-2">
+                      <button onclick="document.getElementById('novelReplyBox-<%= comment._id %>').classList.toggle('hidden');" class="text-brand-brown dark:text-brand-pink font-bold hover:underline flex items-center gap-1">
+                        <i data-lucide="corner-up-left" class="w-3 h-3"></i> Reply
+                      </button>
+
                       <% if (comment.isReported) { %>
                         <span class="text-red-500 font-semibold flex items-center gap-1">
                           <i data-lucide="shield-alert" class="w-3 h-3"></i> Flagged for Moderation
@@ -214,6 +228,38 @@
                         </form>
                       <% } %>
                     </div>
+
+                    <!-- Inline Reply Form -->
+                    <div id="novelReplyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5">
+                      <form action="/novels/<%= novel._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-2">
+                        <% if (!user) { %>
+                          <input type="text" name="guestName" placeholder="Your Name" class="w-full px-3 py-1.5 rounded-lg border border-brand-brown/20 bg-brand-cream/20 text-xs text-gray-800 dark:text-white">
+                        <% } %>
+                        <textarea name="content" rows="2" required placeholder="Reply to critique..." class="w-full p-2.5 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
+                        <div class="flex justify-end gap-2">
+                          <button type="button" onclick="document.getElementById('novelReplyBox-<%= comment._id %>').classList.add('hidden');" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
+                          <button type="submit" class="px-3.5 py-1 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Post Reply</button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <!-- Nested Replies -->
+                    <% if (comment.replies && comment.replies.length > 0) { %>
+                      <div class="mt-3 space-y-2 pl-3 border-l-2 border-brand-pink/40 dark:border-brand-brown/20">
+                        <% comment.replies.forEach(function(reply) { %>
+                          <div class="flex items-start gap-2 text-xs bg-brand-cream/30 dark:bg-brand-brown/10 p-2.5 rounded-xl border border-brand-brown/5">
+                            <img src="<%= reply.userAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-6 h-6 rounded-full object-cover shrink-0">
+                            <div>
+                              <div class="flex items-center gap-2">
+                                <span class="font-bold text-gray-800 dark:text-white"><%= reply.username %></span>
+                                <span class="text-[9px] text-gray-400"><%= new Date(reply.createdAt).toLocaleDateString() %></span>
+                              </div>
+                              <p class="text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                            </div>
+                          </div>
+                        <% }) %>
+                      </div>
+                    <% } %>
                   </div>
                 </div>
               <% }) %>
@@ -227,6 +273,79 @@
       </div>
 
     </div>
+
+    <!-- 3. Books Collection by this Author -->
+    <% if (authorNovels && authorNovels.length > 0) { %>
+      <div class="mt-16 pt-12 border-t border-brand-brown/10 dark:border-brand-brown/20 space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-wider">Author Stacks</span>
+            <h2 class="font-serif text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">More Books Collection by <%= novel.authorName %></h2>
+          </div>
+          <% if (novel.authorId) { %>
+            <a href="/authors/<%= novel.authorId %>" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline flex items-center gap-1">
+              View Author Profile &rarr;
+            </a>
+          <% } %>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <% authorNovels.forEach(function(item) { %>
+            <div class="group bg-white dark:bg-[#1E150F] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border border-brand-brown/5 dark:border-brand-brown/15 flex flex-col h-full">
+              <div class="relative h-56 overflow-hidden bg-brand-cream/50">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= item.coverImage %>" alt="<%= item.title %>" loading="lazy">
+                <span class="absolute bottom-3 left-3 bg-brand-brown text-brand-cream text-[9px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                  <%= item.genre %>
+                </span>
+              </div>
+              <div class="p-4 flex flex-col flex-grow">
+                <h3 class="font-serif text-sm font-bold text-gray-800 dark:text-white group-hover:text-brand-brown dark:group-hover:text-brand-pink transition-colors truncate">
+                  <%= item.title %>
+                </h3>
+                <div class="flex items-center justify-between border-t border-brand-brown/10 pt-3 mt-auto">
+                  <span class="text-[10px] text-gray-400 font-medium">Rating: <%= item.rating %> ★</span>
+                  <a href="/novels/<%= item._id %>" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline">Read Details &rarr;</a>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- 4. Related Genre Masterpieces Shelf -->
+    <% if (relatedNovels && relatedNovels.length > 0) { %>
+      <div class="mt-12 pt-10 border-t border-brand-brown/10 dark:border-brand-brown/20 space-y-6">
+        <div>
+          <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-wider">Discover Similar Works</span>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">Related Masterpieces in <%= novel.genre %></h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <% relatedNovels.forEach(function(item) { %>
+            <div class="group bg-white dark:bg-[#1E150F] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border border-brand-brown/5 dark:border-brand-brown/15 flex flex-col h-full">
+              <div class="relative h-56 overflow-hidden bg-brand-cream/50">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= item.coverImage %>" alt="<%= item.title %>" loading="lazy">
+                <span class="absolute bottom-3 left-3 bg-brand-brown text-brand-cream text-[9px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                  <%= item.genre %>
+                </span>
+              </div>
+              <div class="p-4 flex flex-col flex-grow">
+                <h3 class="font-serif text-sm font-bold text-gray-800 dark:text-white group-hover:text-brand-brown dark:group-hover:text-brand-pink transition-colors truncate">
+                  <%= item.title %>
+                </h3>
+                <p class="text-xs text-gray-400 mt-0.5">By <%= item.authorName %></p>
+                <div class="flex items-center justify-between border-t border-brand-brown/10 pt-3 mt-auto">
+                  <span class="text-[10px] text-gray-400 font-medium"><%= item.readerCount %> Readers</span>
+                  <a href="/novels/<%= item._id %>" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline">Read Details &rarr;</a>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
   </div>
 
 </div>

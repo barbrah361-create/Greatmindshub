@@ -9,7 +9,9 @@ import { sanitizeText } from '../utils/sanitize.js';
 import { featuredArticles } from '../config/articles.js';
 import { getLocalAuthorPhoto, getWikipediaLink } from '../utils/authorPhoto.js';
 import { getLocalNovelCover, getCategoryCover } from '../utils/novelPhoto.js';
-
+import { CATEGORY_DETAILS } from '../config/categoryDetails.js';
+import { PoemModel } from '../models/Poem.js';
+import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
 
 export const NovelController = {
   // 1. Landing Page
@@ -346,8 +348,51 @@ export const NovelController = {
       req.flash('success', 'Review submitted successfully.');
       res.redirect(`/novels/${id}`);
     } catch (error) {
-      console.error('Comment submit error:', error);
-      req.flash('error', 'Could not post comment.');
+      console.error('Comment error:', error);
+      req.flash('error', 'Could not submit critique.');
+      res.redirect(`/novels/${id}`);
+    }
+  },
+
+  postCommentReply: (req: Request, res: Response) => {
+    const { id, commentId } = req.params;
+    const { content, guestName } = req.body;
+    const user = res.locals.user;
+
+    if (!content) {
+      req.flash('error', 'Reply content cannot be empty.');
+      return res.redirect(`/novels/${id}`);
+    }
+
+    try {
+      const parentComment = CommentModel.findById(commentId);
+      if (!parentComment) {
+        req.flash('error', 'Original comment not found.');
+        return res.redirect(`/novels/${id}`);
+      }
+
+      const userId = user ? user._id : 'guest';
+      const username = user ? user.username : sanitizeText(guestName || 'Anonymous Guest', 50);
+      const userAvatar = user ? (user.avatar || '/uploads/default-avatar.png') : '/uploads/default-avatar.png';
+
+      const reply = {
+        _id: Math.random().toString(36).substring(2, 15),
+        userId,
+        username,
+        userAvatar,
+        content: sanitizeText(content, 2000),
+        replies: [],
+        createdAt: new Date().toISOString()
+      };
+
+      const replies = [...(parentComment.replies || []), reply];
+      CommentModel.findByIdAndUpdate(commentId, { replies });
+
+      req.flash('success', 'Reply posted.');
+      res.redirect(`/novels/${id}`);
+    } catch (error) {
+      console.error('Comment reply error:', error);
+      req.flash('error', 'Could not post reply.');
       res.redirect(`/novels/${id}`);
     }
   },
@@ -407,11 +452,21 @@ export const NovelController = {
   // 10. Authors List
   getAuthors: (req: Request, res: Response) => {
     try {
-      const authors = AuthorModel.findPublic().exec().map((a: any) => ({
-        ...a,
-        photo: getLocalAuthorPhoto(a),
-        externalLink: getWikipediaLink(a)
-      }));
+      const user = res.locals.user;
+      const authors = AuthorModel.findPublic().exec().map((a: any) => {
+        const likesInfo = calculateTikTokStyleLikes(a._id, a.name);
+        const followers = a.followers || [];
+        const isFollowing = user ? followers.includes(user._id) : false;
+        return {
+          ...a,
+          photo: getLocalAuthorPhoto(a),
+          externalLink: getWikipediaLink(a),
+          tiktokLikes: likesInfo.formattedLikes,
+          followerCount: followers.length,
+          formattedFollowers: formatTikTokMetric(followers.length),
+          isFollowing
+        };
+      });
       res.render('authors', { title: 'Meet Our Authors', authors });
     } catch (error) {
       console.error('Load authors error:', error);
@@ -419,10 +474,10 @@ export const NovelController = {
     }
   },
 
-
   // 11. Author Profile Page
   getAuthorProfile: (req: Request, res: Response) => {
     const { id } = req.params;
+    const user = res.locals.user;
     try {
       const author = AuthorModel.findById(id);
       if (author) {
@@ -430,24 +485,103 @@ export const NovelController = {
         (author as any).externalLink = getWikipediaLink(author);
       }
 
-      if (!author || (author.approvalStatus !== 'approved' && !UserModel.isAdmin(res.locals.user))) {
+      if (!author || (author.approvalStatus !== 'approved' && !UserModel.isAdmin(user))) {
         return res.status(404).render('error', { statusCode: 404, message: 'Author not found.' });
       }
 
+      // Books collection written by this author
       const rawNovels = NovelModel.findPublic({ authorId: id }).sort({ readerCount: -1 }).exec();
       const novels = rawNovels.map((n: any) => ({
         ...n,
         coverImage: getLocalNovelCover(n)
       }));
 
+      // Poems collection written/submitted by this author
+      const rawPoems = PoemModel.findPublic().exec().filter((p: any) =>
+        String(p.authorId) === String(id) ||
+        String(p.submittedBy) === String(id) ||
+        p.authorName?.toLowerCase() === author.name.toLowerCase()
+      );
+
+      // TikTok-style metrics
+      const likesInfo = calculateTikTokStyleLikes(id, author.name);
+      const followers = author.followers || [];
+      const isFollowing = user ? followers.includes(user._id) : false;
+
       res.render('author-profile', {
         title: author.name,
         author,
-        novels
+        novels,
+        poems: rawPoems,
+        tiktokLikes: likesInfo.formattedLikes,
+        followerCount: followers.length,
+        formattedFollowers: formatTikTokMetric(followers.length),
+        isFollowing
       });
     } catch (error) {
       console.error('Author profile error:', error);
       res.status(500).render('error', { statusCode: 500, message: 'Could not load author profile.' });
+    }
+  },
+
+  // 11b. Toggle Follow Author
+  postFollowAuthor: (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = res.locals.user;
+    if (!user) {
+      if (req.headers.accept?.includes('json')) {
+        return res.status(401).json({ success: false, message: 'Login required.' });
+      }
+      req.flash('error', 'Please log in to follow authors.');
+      return res.redirect('/auth/login');
+    }
+
+    try {
+      const author = AuthorModel.findById(id);
+      if (!author) {
+        if (req.headers.accept?.includes('json')) {
+          return res.status(404).json({ success: false, message: 'Author not found.' });
+        }
+        req.flash('error', 'Author not found.');
+        return res.redirect('/authors');
+      }
+
+      const followers = [...(author.followers || [])];
+      const userFollowing = [...(user.following || [])];
+
+      const idx = followers.indexOf(user._id);
+      let isFollowing = false;
+
+      if (idx > -1) {
+        followers.splice(idx, 1);
+        const fIdx = userFollowing.indexOf(id);
+        if (fIdx > -1) userFollowing.splice(fIdx, 1);
+        isFollowing = false;
+        req.flash('success', `Unfollowed ${author.name}`);
+      } else {
+        followers.push(user._id);
+        if (!userFollowing.includes(id)) userFollowing.push(id);
+        isFollowing = true;
+        req.flash('success', `Now following ${author.name}!`);
+      }
+
+      AuthorModel.findByIdAndUpdate(id, { followers });
+      UserModel.findByIdAndUpdate(user._id, { following: userFollowing });
+
+      if (req.headers.accept?.includes('json')) {
+        return res.json({
+          success: true,
+          isFollowing,
+          followerCount: followers.length,
+          formattedFollowers: formatTikTokMetric(followers.length)
+        });
+      }
+
+      res.redirect(`/authors/${id}`);
+    } catch (error) {
+      console.error('Follow author error:', error);
+      req.flash('error', 'Could not update follow status.');
+      res.redirect(`/authors/${id}`);
     }
   },
 
@@ -473,7 +607,13 @@ export const NovelController = {
       }).slice(0, 24);
     }
 
-    res.render('categories', { title: category || 'Explore Genres', categories, category, categoryNovels });
+    res.render('categories', { 
+      title: category || 'Explore Genres', 
+      categories, 
+      category, 
+      categoryNovels,
+      categoryDetailsMap: CATEGORY_DETAILS
+    });
   },
 
   // 13. GET Public Submit Novel Form

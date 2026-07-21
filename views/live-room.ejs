@@ -1,0 +1,177 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+  
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- LEFT & CENTER: Live Video Feed & Teleprompter (Col span 8) -->
+    <div class="lg:col-span-8 space-y-6">
+      
+      <!-- Video Container -->
+      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border border-brand-brown/20 flex items-center justify-center group">
+        <video id="liveVideoFeed" class="w-full h-full object-cover" autoplay playsinline muted></video>
+        
+        <!-- Live Badge Overlay -->
+        <div class="absolute top-4 left-4 flex items-center gap-3 z-10">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-md uppercase tracking-wider animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-white"></span> LIVE
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur text-white">
+            <i data-lucide="users" class="w-3.5 h-3.5 text-red-400"></i>
+            <span id="roomViewerCount"><%= session.viewersCount %></span> Watching
+          </span>
+        </div>
+
+        <!-- Host Name Tag -->
+        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white z-10">
+          <div class="flex items-center gap-3 bg-black/60 backdrop-blur px-4 py-2 rounded-2xl border border-white/10">
+            <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-10 h-10 rounded-full object-cover ring-2 ring-red-500">
+            <div>
+              <h3 class="font-bold text-sm"><%= session.hostName %></h3>
+              <p class="text-[11px] text-gray-300">Reciting: <%= session.workTitle %></p>
+            </div>
+          </div>
+
+          <!-- TikTok Style Live Heart Trigger -->
+          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg transition-transform active:scale-125">
+            <i data-lucide="heart" class="w-6 h-6 fill-white"></i>
+          </button>
+        </div>
+
+        <!-- Floating hearts animation overlay container -->
+        <div id="heartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+      </div>
+
+      <!-- Live Read-Along Teleprompter Card -->
+      <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/15 pb-4">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-pink bg-brand-pink/20 px-2.5 py-0.5 rounded-full">Read Along</span>
+            <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mt-1"><%= session.workTitle %></h2>
+          </div>
+          <% if (isHost) { %>
+            <form action="/live/<%= session._id %>/end" method="POST" onsubmit="return confirm('End your live stream session?');">
+              <button type="submit" class="px-4 py-2 bg-gray-900 hover:bg-black text-white font-bold rounded-xl text-xs shadow">
+                End Broadcast
+              </button>
+            </form>
+          <% } %>
+        </div>
+
+        <div class="prose prose-amber dark:prose-invert text-gray-700 dark:text-gray-200 text-base leading-relaxed max-h-72 overflow-y-auto pr-2 scrollbar-hide space-y-3 font-serif italic">
+          <% if (session.workContent) { %>
+            <% session.workContent.split('\n\n').forEach(function(p) { %>
+              <p class="py-1"><%= p %></p>
+            <% }) %>
+          <% } else { %>
+            <p class="text-gray-400 italic">No text provided. Listen live as <%= session.hostName %> recites!</p>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Real-Time Live Chat (Col span 4) -->
+    <div class="lg:col-span-4 bg-white dark:bg-[#1E150F] rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col h-[600px] overflow-hidden">
+      
+      <!-- Chat Header -->
+      <div class="p-4 border-b border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/20 dark:bg-brand-brown/10 flex items-center justify-between">
+        <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="message-square" class="w-4 h-4 text-red-500"></i>
+          Live Stream Chat
+        </h3>
+        <span class="text-[11px] font-bold text-red-500 flex items-center gap-1">
+          <i data-lucide="heart" class="w-3.5 h-3.5 fill-red-500"></i>
+          <span id="liveLikesCount"><%= session.likesCount %></span> Hearts
+        </span>
+      </div>
+
+      <!-- Chat Stream Feed -->
+      <div id="chatFeed" class="p-4 flex-grow overflow-y-auto space-y-3 text-xs">
+        <div class="bg-brand-cream/40 dark:bg-brand-brown/10 p-3 rounded-2xl border border-brand-brown/5 text-gray-500 dark:text-gray-400 italic text-center">
+          Welcome to <%= session.hostName %>'s live recitation stage! Keep comments encouraging and respectful.
+        </div>
+      </div>
+
+      <!-- Chat Form Input -->
+      <div class="p-4 border-t border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/10">
+        <form onsubmit="sendChatMessage(event)" class="flex gap-2">
+          <input type="text" id="chatInput" placeholder="Send a live comment..." required class="flex-grow px-4 py-2.5 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1C120C] text-xs text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown">
+          <button type="submit" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow transition-colors">
+            Send
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// Local video feed simulated stream
+async function initLiveVideo() {
+  try {
+    const video = document.getElementById('liveVideoFeed');
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    video.srcObject = stream;
+  } catch (e) {
+    console.log('Webcam feed fallback: Camera preview active');
+  }
+}
+initLiveVideo();
+
+// Live Chat Simulation & Messaging
+function sendChatMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const feed = document.getElementById('chatFeed');
+  const msg = document.createElement('div');
+  msg.className = 'flex items-start gap-2 p-2.5 rounded-2xl bg-brand-cream/50 dark:bg-brand-brown/15 border border-brand-brown/5';
+  msg.innerHTML = `
+    <span class="font-bold text-brand-brown dark:text-brand-pink shrink-0"><%= user ? user.username : 'Guest Reader' %>:</span>
+    <span class="text-gray-800 dark:text-gray-200 leading-snug">${text}</span>
+  `;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+  input.value = '';
+}
+
+// Live TikTok-style Floating Hearts Animation
+async function sendLiveHeart(sessionId) {
+  try {
+    const res = await fetch('/live/' + sessionId + '/like', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('liveLikesCount').innerText = data.likesCount;
+    }
+  } catch (err) {}
+
+  // Trigger visual floating heart
+  const container = document.getElementById('heartsContainer');
+  const heart = document.createElement('div');
+  heart.innerHTML = '❤️';
+  heart.style.position = 'absolute';
+  heart.style.bottom = '20px';
+  heart.style.right = (20 + Math.random() * 40) + 'px';
+  heart.style.fontSize = (20 + Math.random() * 20) + 'px';
+  heart.style.transition = 'all 2s ease-out';
+  heart.style.opacity = '1';
+  container.appendChild(heart);
+
+  setTimeout(() => {
+    heart.style.transform = `translateY(-${150 + Math.random() * 150}px) scale(1.5)`;
+    heart.style.opacity = '0';
+  }, 50);
+
+  setTimeout(() => heart.remove(), 2100);
+}
+</script>
+
+<%- include('partials/footer') %>

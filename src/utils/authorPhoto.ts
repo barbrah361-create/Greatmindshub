@@ -40,6 +40,9 @@ const AUTHOR_PHOTO_MAP: Record<string, string> = {
   auth_obama: 'Barack Obama.png',
   'Barack Obama': 'Barack Obama.png',
 
+  auth_soyinka: 'Wole Soyinka.jpg',
+  'Wole Soyinka': 'Wole Soyinka.jpg',
+
   auth_king: 'Stephen King.jpg',
   'Stephen King': 'Stephen King.jpg',
 

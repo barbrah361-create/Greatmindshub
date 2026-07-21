@@ -12,50 +12,16 @@
     </p>
   </div>
 
-  <% const categoryImages = {
-    'African Literature': '/uploads/African fictions.jpg',
-    'Romance': '/uploads/romance novel.jpeg',
-    'Fantasy': '/uploads/fantesy novel.png',
-    'Adventure': '/uploads/adventure novel.webp',
-    'Thriller': '/uploads/thriller.webp',
-    'Mystery': '/uploads/mystery.jpg',
-    'Horror': '/uploads/horror novel.webp',
-    'Comedy': '/uploads/Drama novel.webp',
-    'Crime': '/uploads/mystery.jpg',
-    'Action': '/uploads/adventure novel.webp',
-    'Science Fiction': '/uploads/science fiction.jpg',
-    'Biography': '/uploads/historical fiction.webp',
-    'Autobiography': '/uploads/historical fiction.webp',
-    'Poetry': '/uploads/poetry.webp',
-    'History': '/uploads/historical fiction.webp',
-    'Politics': '/uploads/historical fiction.webp',
-    'Religion': '/uploads/classics novels.jpg',
-    'Business': '/uploads/historical fiction.webp',
-    'Technology': '/uploads/science fiction.jpg',
-    'Programming': '/uploads/science fiction.jpg',
-    'Education': '/uploads/classics novels.jpg',
-    'Children Books': '/uploads/fantesy novel.png',
-    'Young Adult': '/uploads/romance novel.jpeg',
-    'Classic Literature': '/uploads/classics novels.jpg',
-    'Penguin Classics': '/uploads/classics novels.jpg',
-    'Short Stories': '/uploads/poetry.webp',
-    'Health': '/uploads/historical fiction.webp',
-    'Psychology': '/uploads/historical fiction.webp',
-    'Philosophy': '/uploads/classics novels.jpg',
-    'Self Help': '/uploads/poetry.webp',
-    'Comics': '/uploads/fantesy novel.png',
-    'Graphic Novels': '/uploads/adventure novel.webp',
-    'Historical Fiction': '/uploads/historical fiction.webp',
-    'Memoir': '/uploads/historical fiction.webp',
-    'Political Fiction': '/uploads/historical fiction.webp',
-    'Drama': '/uploads/Drama novel.webp'
-  } %>
-
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-    <% categories.forEach(function(category) { %>
+    <% categories.forEach(function(category) { 
+         const detail = (typeof categoryDetailsMap !== 'undefined' && categoryDetailsMap[category]) ? categoryDetailsMap[category] : {
+           image: '/uploads/cat-' + category.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jpg',
+           description: 'Dedicated literary shelf featuring collections and timeless works in ' + category + '.'
+         };
+    %>
       <div class="group overflow-hidden rounded-3xl border border-brand-brown/10 bg-brand-cream shadow-sm hover:shadow-md transition-all duration-300">
         <div class="relative h-52 overflow-hidden">
-          <img src="<%= categoryImages[category] || '/uploads/OIP.webp' %>" alt="<%= category %>" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <img src="<%= detail.image %>" alt="<%= category %>" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
           <div class="absolute left-4 bottom-4 right-4">
             <span class="inline-flex items-center gap-2 rounded-full bg-brand-cream/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-brand-brown shadow-sm">
@@ -65,20 +31,8 @@
         </div>
 
         <div class="p-6">
-          <p class="text-sm text-brand-brown/80 leading-relaxed mb-6">
-            <% if (category === 'Romance') { %> Swept by intense emotions, lifelong pledges, and warm chronicles.
-            <% } else if (category === 'Mystery') { %> Shadows of doubt, master detectives, and hidden crime structures.
-            <% } else if (category === 'Fantasy') { %> Kingdoms of magic lore, sorcery relics, and ancient quests.
-            <% } else if (category === 'Historical Fiction') { %> Retold epochs, legendary figures, and real events framed by classical prose.
-            <% } else if (category === 'African Literature') { %> Oral histories, cultural values, and award-winning contemporary accounts.
-            <% } else if (category === 'Science Fiction') { %> Futuristic empires, deep space, and innovative technologies.
-            <% } else if (category === 'Horror') { %> Spooky encounters, dark environments, and ancient curses.
-            <% } else if (category === 'Thriller') { %> Suspenseful cliffhangers, ticking timers, and high-stakes conspiracies.
-            <% } else if (category === 'Adventure') { %> Voyages through untamed wilderness, mountains, and hidden treasures.
-            <% } else if (category === 'Classics') { %> Ageless masterpieces written across centuries of literary excellence.
-            <% } else if (category === 'Poetry') { %> Structured stanzas, rhythmic expressions of the soul, and lyric collections.
-            <% } else { %> Theatrical plays, tragedies, comedies, and dramatic dialogues.
-            <% } %>
+          <p class="text-sm text-brand-brown/80 leading-relaxed mb-6 min-h-[48px]">
+            <%= detail.description %>
           </p>
 
           <a href="/novels?genre=<%= encodeURIComponent(category) %>" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-brown text-brand-cream rounded-full text-xs font-semibold hover:bg-brand-accent transition-colors">

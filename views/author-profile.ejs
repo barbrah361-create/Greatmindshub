@@ -13,13 +13,44 @@
 
       <!-- Text details -->
       <div class="flex-grow text-center md:text-left space-y-4">
-        <div>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink">
-            <i data-lucide="feather" class="w-3.5 h-3.5"></i>
-            Archived Biography
-          </span>
-          <h1 class="font-serif text-3xl sm:text-4xl font-bold mt-2 text-gray-800 dark:text-white"><%= author.name %></h1>
-          <p class="text-sm text-gray-400 mt-1">Origin: <span class="font-bold text-gray-650 dark:text-gray-300"><%= author.nationality %></span></p>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink">
+              <i data-lucide="feather" class="w-3.5 h-3.5"></i>
+              Archived Biography
+            </span>
+            <h1 class="font-serif text-3xl sm:text-4xl font-bold mt-2 text-gray-800 dark:text-white"><%= author.name %></h1>
+            <p class="text-sm text-gray-400 mt-1">Origin: <span class="font-bold text-gray-650 dark:text-gray-300"><%= author.nationality %></span></p>
+          </div>
+
+          <!-- TikTok Style Follow Button -->
+          <div class="flex items-center gap-3">
+            <button id="followBtn" onclick="toggleFollowAuthor('<%= author._id %>')" class="px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-sm flex items-center gap-2 <%= isFollowing ? 'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300' : 'bg-brand-brown hover:bg-brand-accent text-white' %>">
+              <i data-lucide="<%= isFollowing ? 'user-check' : 'user-plus' %>" class="w-4 h-4"></i>
+              <span id="followBtnText"><%= isFollowing ? 'Following' : 'Follow Author' %></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TikTok Style Metrics Bar -->
+        <div class="flex items-center justify-center md:justify-start gap-6 py-3 border-y border-brand-brown/10 dark:border-brand-brown/15 text-sm">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+            <span class="font-bold text-gray-900 dark:text-white"><%= tiktokLikes %></span>
+            <span class="text-xs text-gray-400 uppercase tracking-wider">Likes</span>
+          </div>
+          <div class="w-px h-4 bg-brand-brown/15"></div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="users" class="w-4.5 h-4.5 text-brand-brown dark:text-brand-pink"></i>
+            <span id="followerCountDisplay" class="font-bold text-gray-900 dark:text-white"><%= formattedFollowers %></span>
+            <span class="text-xs text-gray-400 uppercase tracking-wider">Followers</span>
+          </div>
+          <div class="w-px h-4 bg-brand-brown/15"></div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="book-open" class="w-4.5 h-4.5 text-amber-500"></i>
+            <span class="font-bold text-gray-900 dark:text-white"><%= novels.length %></span>
+            <span class="text-xs text-gray-400 uppercase tracking-wider">Books</span>
+          </div>
         </div>
 
         <div class="p-4 rounded-xl bg-brand-cream/30 dark:bg-brand-brown/10 border border-brand-brown/5 text-xs text-left max-w-2xl space-y-1.5">
@@ -50,8 +81,14 @@
   </div>
 
   <!-- 2. Novels linked to this author catalog -->
-  <div class="space-y-6">
-    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-gray-800 dark:text-brand-pink">Published Books in Our Stacks</h2>
+  <div class="space-y-6 mb-16">
+    <div class="flex items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/15 pb-4">
+      <h2 class="font-serif text-2xl sm:text-3xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2.5">
+        <i data-lucide="library" class="w-7 h-7 text-brand-brown dark:text-brand-pink"></i>
+        Books Collection
+      </h2>
+      <span class="text-xs font-semibold text-gray-400"><%= novels.length %> Published Masterpieces</span>
+    </div>
     
     <% if (novels.length > 0) { %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -99,6 +136,84 @@
     <% } %>
   </div>
 
+  <!-- 3. Poems collection by this author -->
+  <% if (poems && poems.length > 0) { %>
+    <div class="space-y-6">
+      <div class="flex items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/15 pb-4">
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2.5">
+          <i data-lucide="feather" class="w-7 h-7 text-brand-brown dark:text-brand-pink"></i>
+          Poetry Collections
+        </h2>
+        <span class="text-xs font-semibold text-gray-400"><%= poems.length %> Verses Published</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% poems.forEach(function(poem) { %>
+          <div class="bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col justify-between space-y-4">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-pink bg-brand-pink/20 px-2.5 py-0.5 rounded-full"><%= poem.genre || 'Poetry' %></span>
+              <h3 class="font-serif text-xl font-bold text-gray-800 dark:text-white mt-2 mb-2"><%= poem.title %></h3>
+              <p class="text-xs text-gray-500 dark:text-gray-300 line-clamp-4 italic leading-relaxed">
+                "<%= poem.content %>"
+              </p>
+            </div>
+            <div class="flex items-center justify-between border-t border-brand-brown/10 dark:border-brand-brown/15 pt-3.5 text-xs text-gray-400">
+              <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1">
+                  <i data-lucide="heart" class="w-3.5 h-3.5 text-red-500 fill-red-500"></i>
+                  <%= poem.likes ? poem.likes.length : 0 %>
+                </span>
+                <span class="flex items-center gap-1">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-brown dark:text-brand-pink"></i>
+                  <%= poem.viewCount || 0 %>
+                </span>
+              </div>
+              <a href="/poems/<%= poem._id %>" class="text-brand-brown dark:text-brand-pink font-semibold hover:underline flex items-center gap-1">
+                Read Verse &rarr;
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
 </div>
 
+<script>
+async function toggleFollowAuthor(authorId) {
+  try {
+    const res = await fetch('/authors/' + authorId + '/follow', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.status === 401) {
+      window.location.href = '/auth/login';
+      return;
+    }
+    const data = await res.json();
+    if (data.success) {
+      const btn = document.getElementById('followBtn');
+      const text = document.getElementById('followBtnText');
+      const count = document.getElementById('followerCountDisplay');
+
+      if (data.isFollowing) {
+        btn.className = 'px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-sm flex items-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300';
+        text.innerText = 'Following';
+      } else {
+        btn.className = 'px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-sm flex items-center gap-2 bg-brand-brown hover:bg-brand-accent text-white';
+        text.innerText = 'Follow Author';
+      }
+
+      if (count && data.formattedFollowers) {
+        count.innerText = data.formattedFollowers;
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+</script>
+
 <%- include('partials/footer') %>
+

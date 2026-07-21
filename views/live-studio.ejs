@@ -1,0 +1,98 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <div class="mb-8 text-center sm:text-left">
+    <a href="/live" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline flex items-center gap-1 mb-2">&larr; Back to Live Rooms</a>
+    <h1 class="font-serif text-3xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2">
+      <i data-lucide="video" class="w-8 h-8 text-red-500"></i>
+      Live Recitation & Reading Studio
+    </h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Set up your camera, pick a poem or book chapter, and broadcast live to your followers in real-time.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Camera Preview Column -->
+    <div class="lg:col-span-6 space-y-4">
+      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-xl border-2 border-brand-brown/20 flex items-center justify-center">
+        <video id="studioWebcam" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+        
+        <div id="camPlaceholder" class="text-center p-6 space-y-3">
+          <i data-lucide="camera-off" class="w-12 h-12 text-gray-500 mx-auto"></i>
+          <p class="text-xs text-gray-400">Click Enable Camera to preview your video feed before broadcasting</p>
+          <button type="button" onclick="enableCamera()" class="px-4 py-2 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow transition-colors">
+            Enable Camera & Microphone
+          </button>
+        </div>
+
+        <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          STUDIO PREVIEW
+        </span>
+      </div>
+    </div>
+
+    <!-- Form Column -->
+    <div class="lg:col-span-6 bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+      <form action="/live/create" method="POST" class="space-y-5">
+        
+        <div>
+          <label for="title" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Broadcasting Title</label>
+          <input type="text" id="title" name="title" required placeholder="e.g. Reciting My Latest Haiku Live" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown">
+        </div>
+
+        <div>
+          <label for="type" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Recitation Category</label>
+          <select id="type" name="type" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown">
+            <option value="poem">Poetry Recitation</option>
+            <option value="novel">Book Reading Session</option>
+          </select>
+        </div>
+
+        <% if (userPoems && userPoems.length > 0) { %>
+          <div>
+            <label for="selectedWorkId" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Select Your Published Poem to Read</label>
+            <select id="selectedWorkId" name="selectedWorkId" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown">
+              <option value="">-- Custom Text or Live Freestyle --</option>
+              <% userPoems.forEach(function(p) { %>
+                <option value="<%= p._id %>"><%= p.title %></option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+
+        <div>
+          <label for="customText" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Live Teleprompter / Verse Text</label>
+          <textarea id="customText" name="customText" rows="4" placeholder="Paste the verse or prose text here so followers can read along live with you..." class="block w-full p-4 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-brand-brown"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-red-500/25 text-sm transition-all flex items-center justify-center gap-2">
+          <i data-lucide="video" class="w-5 h-5"></i>
+          Start Live Recitation Broadcast
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+async function enableCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const video = document.getElementById('studioWebcam');
+    const placeholder = document.getElementById('camPlaceholder');
+    video.srcObject = stream;
+    video.classList.remove('hidden');
+    placeholder.classList.add('hidden');
+  } catch (err) {
+    alert('Camera access error: Please grant camera permissions in your browser to broadcast live.');
+  }
+}
+</script>
+
+<%- include('partials/footer') %>

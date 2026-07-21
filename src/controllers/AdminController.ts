@@ -6,6 +6,8 @@ import { CommentModel } from '../models/Comment.js';
 import { PoemModel } from '../models/Poem.js';
 import { PaymentModel } from '../models/Payment.js';
 import { EmailService } from '../services/emailService.js';
+import { getLocalAuthorPhoto } from '../utils/authorPhoto.js';
+import { getLocalNovelCover } from '../utils/novelPhoto.js';
 
 export const AdminController = {
   // 1. Admin Index / Dashboard with Analytics
@@ -22,8 +24,14 @@ export const AdminController = {
 
       // Reported Comments
       const reportedComments = CommentModel.find({ isReported: true }).exec();
-      const pendingNovels = NovelModel.find({ approvalStatus: 'pending' }).exec();
-      const pendingAuthors = AuthorModel.find({ approvalStatus: 'pending' }).exec();
+      const pendingNovels = NovelModel.find({ approvalStatus: 'pending' }).exec().map(n => ({
+        ...n,
+        coverImage: getLocalNovelCover(n)
+      }));
+      const pendingAuthors = AuthorModel.find({ approvalStatus: 'pending' }).exec().map(a => ({
+        ...a,
+        photo: getLocalAuthorPhoto(a)
+      }));
       const pendingPoems = PoemModel.find({ approvalStatus: 'pending' }).exec();
       const payments = PaymentModel.find({ status: 'completed' }).exec();
       const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -99,7 +107,10 @@ export const AdminController = {
   // 2. Manage Novels
   getManageNovels: (req: Request, res: Response) => {
     try {
-      const novels = NovelModel.find().exec();
+      const novels = NovelModel.find().exec().map(n => ({
+        ...n,
+        coverImage: getLocalNovelCover(n)
+      }));
       res.render('manage-novels', { title: 'Manage Novels', novels });
     } catch (error) {
       console.error('Manage novels error:', error);
@@ -290,7 +301,10 @@ export const AdminController = {
   // 3. Manage Authors
   getManageAuthors: (req: Request, res: Response) => {
     try {
-      const authors = AuthorModel.find().exec();
+      const authors = AuthorModel.find().exec().map(a => ({
+        ...a,
+        photo: getLocalAuthorPhoto(a)
+      }));
       res.render('manage-authors', { title: 'Manage Authors', authors });
     } catch (error) {
       console.error('Manage authors error:', error);

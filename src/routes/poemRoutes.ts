@@ -11,5 +11,6 @@ router.post('/submit', requireAuth, requireVerified, submissionLimiter, PoemCont
 router.get('/:id', PoemController.getPoemDetails);
 router.post('/:id/like', requireAuth, requireVerified, PoemController.postLike);
 router.post('/:id/comment', PoemController.postComment);
+router.post('/:id/comment/:commentId/reply', PoemController.postCommentReply);
 
 export default router;

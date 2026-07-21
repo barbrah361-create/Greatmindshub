@@ -136,5 +136,53 @@ export const PoemController = {
 
     req.flash('success', 'Comment added.');
     res.redirect(`/poems/${poem._id}`);
+  },
+
+  postCommentReply: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { content, guestName } = req.body;
+    const { id, commentId } = req.params;
+    const poem = PoemModel.findById(id);
+    if (!poem) return res.redirect('/poems');
+
+    const sanitizedContent = sanitizeText(content || '', 2000);
+    if (!sanitizedContent) {
+      req.flash('error', 'Reply cannot be empty.');
+      return res.redirect(`/poems/${poem._id}`);
+    }
+
+    const userId = user ? user._id : 'guest';
+    const username = user ? user.username : sanitizeText(guestName || 'Anonymous Guest', 50);
+    const userAvatar = user ? user.avatar : undefined;
+
+    const reply = {
+      _id: Math.random().toString(36).substring(2, 15),
+      userId,
+      username,
+      userAvatar,
+      content: sanitizedContent,
+      replies: [],
+      createdAt: new Date().toISOString()
+    };
+
+    const comments = [...(poem.comments || [])];
+    const targetComment = comments.find(c => c._id === commentId);
+    if (targetComment) {
+      targetComment.replies = targetComment.replies || [];
+      targetComment.replies.push(reply);
+      PoemModel.findByIdAndUpdate(poem._id, { comments });
+
+      if (targetComment.userId && targetComment.userId !== userId && targetComment.userId !== 'guest') {
+        try {
+          NotificationModel.notify(targetComment.userId, 'comment', 'Reply to your comment', `${username} replied to your comment on "${poem.title}"`, `/poems/${poem._id}`);
+        } catch (err) {}
+      }
+
+      req.flash('success', 'Reply submitted.');
+    } else {
+      req.flash('error', 'Original comment not found.');
+    }
+
+    res.redirect(`/poems/${poem._id}`);
   }
 };

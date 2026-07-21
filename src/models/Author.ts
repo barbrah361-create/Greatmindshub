@@ -15,6 +15,8 @@ export interface Author {
   literaryAchievements: string;
   famousNovels: string;
   novelCount: number;
+  followers?: string[];
+  totalLikes?: number;
   externalLink?: string;
   website?: string;
   twitter?: string;
@@ -40,6 +42,8 @@ export const AuthorModel = {
     verified: false,
     genres: [],
     awards: [],
+    followers: [],
+    totalLikes: 0,
     ...data
   }),
   findByIdAndUpdate: (id: string, update: Partial<Author>) => AuthorDB.findByIdAndUpdate(id, update),
