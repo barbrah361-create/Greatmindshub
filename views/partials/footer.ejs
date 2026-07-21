@@ -1,0 +1,100 @@
+<footer class="mt-auto bg-[#1C120C] text-amber-50/80 border-t border-brand-brown/30 pt-16 pb-8 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+      
+      <!-- Column 1: Brand & Bio -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-brand-brown flex items-center justify-center text-brand-cream shadow-md">
+            <i data-lucide="book-open" class="w-5 h-5 text-brand-pink"></i>
+          </div>
+          <span class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-brand-pink">
+            Elegance<span class="font-sans font-light text-gray-400">Library</span>
+          </span>
+        </div>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Step into a luxurious sanctuary of world-class digital literature. Read, bookmark, and discover pristine stories crafted across epochs.
+        </p>
+        <div class="flex items-center space-x-3 pt-2">
+          <a href="#" class="p-2 rounded-full bg-brand-brown/20 hover:bg-brand-pink/20 hover:text-brand-pink text-gray-400 transition-all duration-200">
+            <i data-lucide="facebook" class="w-4 h-4"></i>
+          </a>
+          <a href="#" class="p-2 rounded-full bg-brand-brown/20 hover:bg-brand-pink/20 hover:text-brand-pink text-gray-400 transition-all duration-200">
+            <i data-lucide="twitter" class="w-4 h-4"></i>
+          </a>
+          <a href="#" class="p-2 rounded-full bg-brand-brown/20 hover:bg-brand-pink/20 hover:text-brand-pink text-gray-400 transition-all duration-200">
+            <i data-lucide="instagram" class="w-4 h-4"></i>
+          </a>
+          <a href="#" class="p-2 rounded-full bg-brand-brown/20 hover:bg-brand-pink/20 hover:text-brand-pink text-gray-400 transition-all duration-200">
+            <i data-lucide="globe" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Column 2: Navigation Links -->
+      <div>
+        <h3 class="font-serif text-lg font-bold text-white mb-6 tracking-wide">Quick Navigation</h3>
+        <ul class="space-y-3.5 text-sm">
+          <li><a href="/" class="hover:text-brand-pink hover:underline transition-all duration-150">Home Gates</a></li>
+          <li><a href="/novels" class="hover:text-brand-pink hover:underline transition-all duration-150">Novel Directory</a></li>
+          <li><a href="/authors" class="hover:text-brand-pink hover:underline transition-all duration-150">Meet Our Authors</a></li>
+          <li><a href="/novels/categories" class="hover:text-brand-pink hover:underline transition-all duration-150">Explore Categories</a></li>
+          <li><a href="/about" class="hover:text-brand-pink hover:underline transition-all duration-150">About The Archival</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Contact details -->
+      <div>
+        <h3 class="font-serif text-lg font-bold text-white mb-6 tracking-wide">Contact Us</h3>
+        <ul class="space-y-4 text-sm text-gray-300">
+          <li class="flex gap-3">
+            <i data-lucide="map-pin" class="w-5 h-5 text-brand-pink flex-shrink-0"></i>
+            <span>Eldoret, Kenya</span>
+          </li>
+          <li class="flex gap-3">
+            <i data-lucide="mail" class="w-5 h-5 text-brand-pink flex-shrink-0"></i>
+            <a href="mailto:curator@elegancelibrary.com" class="hover:text-brand-pink hover:underline">curator@elegancelibrary.com</a>
+          </li>
+          <li class="flex gap-3">
+            <i data-lucide="phone" class="w-5 h-5 text-brand-pink flex-shrink-0"></i>
+            <span>0726625144</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Column 4: Newsletter Subscription -->
+      <div>
+        <h3 class="font-serif text-lg font-bold text-white mb-6 tracking-wide">Weekly Letter</h3>
+        <p class="text-sm text-gray-400 mb-4 leading-relaxed">
+          Receive curated summaries of newly acquired masterpieces and historical biographies.
+        </p>
+        <form class="space-y-2.5" action="/newsletter-subscribe" method="POST" onsubmit="event.preventDefault(); alert('Thank you for subscribing to Elegance Library Weekly Letter!'); this.reset();">
+          <input type="email" placeholder="Your literary email..." required class="w-full px-4 py-2.5 rounded-lg bg-brand-brown/10 border border-brand-brown/40 text-white placeholder-gray-500 focus:outline-none focus:border-brand-pink transition-all text-sm">
+          <button type="submit" class="w-full px-4 py-2.5 bg-brand-pink hover:bg-white text-brand-dark font-semibold rounded-lg shadow-md transition-all duration-250 text-sm">
+            Subscribe
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Sub-footer -->
+    <div class="border-t border-brand-brown/20 pt-8 mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <p>&copy; 2026 Elegance Library Management System. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-brand-pink">Privacy Scroll</a>
+        <a href="#" class="hover:text-brand-pink">Terms of Gathering</a>
+        <a href="#" class="hover:text-brand-pink">Archival Codes</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Initialize all Lucide Icons on load
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+</script>
+</body>
+</html>

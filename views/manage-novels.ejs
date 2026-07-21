@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-brand-brown/10 dark:border-brand-brown/25 pb-6">
+    <div>
+      <a href="/admin" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline flex items-center gap-1 mb-2">&larr; Back to Admin Center</a>
+      <h1 class="font-serif text-3xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2">
+        <i data-lucide="book-open" class="w-7 h-7 text-brand-brown dark:text-brand-pink"></i>
+        Manage Books Directory
+      </h1>
+    </div>
+    
+    <a href="/admin/novels/add" class="px-5 py-3 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow-md transition-all duration-200 text-sm flex items-center gap-2">
+      <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+      Add New Novel
+    </a>
+  </div>
+
+  <!-- Catalog Table -->
+  <div class="bg-white dark:bg-[#1E150F] rounded-2xl shadow-sm border border-brand-brown/10 dark:border-brand-brown/20 overflow-hidden">
+    <% if (novels.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/10 text-xs text-gray-400 font-bold uppercase">
+              <th class="py-3.5 px-6">Book Cover & Title</th>
+              <th class="py-3.5 px-6">Author Name</th>
+              <th class="py-3.5 px-6">Genre</th>
+              <th class="py-3.5 px-6">Rating</th>
+              <th class="py-3.5 px-6">Reader Count</th>
+              <th class="py-3.5 px-6 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-brand-brown/5 text-sm text-gray-700 dark:text-gray-300">
+            <% novels.forEach(function(novel) { %>
+              <tr class="hover:bg-brand-cream/5 dark:hover:bg-brand-brown/5 transition-colors">
+                <td class="py-4 px-6 flex items-center gap-4">
+                  <img src="<%= novel.coverImage %>" alt="" class="w-10 h-14 object-cover rounded-md shadow-sm">
+                  <div>
+                    <span class="font-bold text-gray-800 dark:text-white leading-snug"><%= novel.title %></span>
+                    <span class="block text-xs text-gray-400 mt-0.5">Published Year: <%= novel.publicationYear %></span>
+                  </div>
+                </td>
+                <td class="py-4 px-6"><%= novel.authorName %></td>
+                <td class="py-4 px-6">
+                  <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink border border-brand-pink/10"><%= novel.genre %></span>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-500">
+                    <i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i>
+                    <%= novel.rating %>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-gray-400 font-mono"><%= novel.readerCount %></td>
+                <td class="py-4 px-6 text-right">
+                  <div class="flex items-center justify-end gap-2.5">
+                    <a href="/admin/novels/edit/<%= novel._id %>" class="p-2 bg-brand-cream hover:bg-brand-pink/20 text-brand-brown dark:text-brand-pink rounded-lg transition-colors" title="Edit Novel">
+                      <i data-lucide="edit" class="w-4 h-4"></i>
+                    </a>
+                    <form action="/admin/novels/delete/<%= novel._id %>" method="POST" class="inline" onsubmit="return confirm('Delete this book permanently from the catalog? This is irreversible.');">
+                      <button type="submit" class="p-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors" title="Delete Novel">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="text-center py-20 text-gray-400">
+        <i data-lucide="book-x" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+        <p class="text-lg">No books found in the database.</p>
+        <a href="/admin/novels/add" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-brand-brown text-white font-semibold rounded-lg text-sm">Add First Novel &rarr;</a>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>

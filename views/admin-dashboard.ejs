@@ -1,0 +1,296 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<!-- ChartJS CDN for Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <!-- 1. Header and Quick Portals -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-brand-brown/10 dark:border-brand-brown/25 pb-6">
+    <div>
+      <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-brand-pink flex items-center gap-2.5">
+        <i data-lucide="shield-check" class="w-8 h-8 text-brand-brown dark:text-brand-pink"></i>
+        Admin Control Center
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor library throughput, compile metrics, and manage catalog structures.</p>
+    </div>
+    
+    <!-- Navigation Portals inside Admin -->
+    <div class="flex flex-wrap gap-3">
+      <a href="/admin/novels" class="px-4 py-2.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition-colors flex items-center gap-1.5">
+        <i data-lucide="book-open" class="w-4 h-4"></i>
+        Manage Novels
+      </a>
+      <a href="/admin/authors" class="px-4 py-2.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition-colors flex items-center gap-1.5">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        Manage Authors
+      </a>
+      <a href="/admin/users" class="px-4 py-2.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition-colors flex items-center gap-1.5">
+        <i data-lucide="user-cog" class="w-4 h-4"></i>
+        Manage Users
+      </a>
+    </div>
+  </div>
+
+  <!-- 2. Statistics Summaries Widget -->
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+    <!-- Novels Counter -->
+    <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center">
+        <i data-lucide="book" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase">Books</p>
+        <p class="text-2xl font-serif font-bold text-gray-800 dark:text-white mt-0.5"><%= stats.novelsCount %></p>
+      </div>
+    </div>
+    <!-- Authors Counter -->
+    <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center">
+        <i data-lucide="feather" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase">Authors</p>
+        <p class="text-2xl font-serif font-bold text-gray-800 dark:text-white mt-0.5"><%= stats.authorsCount %></p>
+      </div>
+    </div>
+    <!-- Registered Users Counter -->
+    <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center">
+        <i data-lucide="users-2" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase">Members</p>
+        <p class="text-2xl font-serif font-bold text-gray-800 dark:text-white mt-0.5"><%= stats.usersCount %></p>
+      </div>
+    </div>
+    <!-- Active Readers Counter -->
+    <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center">
+        <i data-lucide="glasses" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase">Active</p>
+        <p class="text-2xl font-serif font-bold text-gray-800 dark:text-white mt-0.5"><%= stats.activeReadersCount %></p>
+      </div>
+    </div>
+    <!-- Flagged Reviews Count -->
+    <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 col-span-2 lg:col-span-1 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-400 flex items-center justify-center">
+        <i data-lucide="message-square-warning" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase">Flagged</p>
+        <p class="text-2xl font-serif font-bold text-gray-800 dark:text-white mt-0.5"><%= stats.reportedCommentsCount %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Charts/Analytics Panel -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+    <!-- Chart A: Most Read Novels (Bar chart) -->
+    <div class="bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+      <h3 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-4 flex items-center gap-2">
+        <i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+        Most Read Masterpieces
+      </h3>
+      <div class="relative h-64">
+        <canvas id="mostReadChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart B: Most Popular Authors (Bar chart) -->
+    <div class="bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+      <h3 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-4 flex items-center gap-2">
+        <i data-lucide="pie-chart" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+        Author Popularity (Total Readers)
+      </h3>
+      <div class="relative h-64">
+        <canvas id="authorPopularityChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart C: User Registrations (Line chart) -->
+    <div class="bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+      <h3 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-4 flex items-center gap-2">
+        <i data-lucide="trending-up" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+        User Registrations Profile
+      </h3>
+      <div class="relative h-64">
+        <canvas id="userRegsChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart D: Active Readers Profile (Line chart) -->
+    <div class="bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+      <h3 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-4 flex items-center gap-2">
+        <i data-lucide="activity" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+        Monthly Active Readers
+      </h3>
+      <div class="relative h-64">
+        <canvas id="activeReadersChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Flagged Comments / Inappropriate Reviews Section -->
+  <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm">
+    <h3 class="font-serif text-xl font-bold text-gray-800 dark:text-brand-pink mb-6 pb-4 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2">
+      <i data-lucide="message-square-warning" class="w-5 h-5 text-red-500"></i>
+      Reported Comments Queue
+    </h3>
+
+    <% if (reportedComments.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-brand-brown/10 dark:border-brand-brown/15 text-xs text-gray-400 font-semibold uppercase">
+              <th class="py-3 px-4">Reader</th>
+              <th class="py-3 px-4">Comment Content</th>
+              <th class="py-3 px-4">Reported At</th>
+              <th class="py-3 px-4 text-right">Moderation Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-brand-brown/5 text-sm text-gray-700 dark:text-gray-300">
+            <% reportedComments.forEach(function(comment) { %>
+              <tr>
+                <td class="py-4 px-4 flex items-center gap-3">
+                  <img src="<%= comment.userAvatar %>" alt="" class="w-8 h-8 rounded-full object-cover">
+                  <span class="font-bold"><%= comment.username %></span>
+                </td>
+                <td class="py-4 px-4 max-w-md">
+                  <p class="italic leading-relaxed">"<%= comment.content %>"</p>
+                </td>
+                <td class="py-4 px-4 text-xs text-gray-400">
+                  <%= new Date(comment.createdAt).toLocaleDateString() %>
+                </td>
+                <td class="py-4 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2.5">
+                    <!-- Dismiss Form -->
+                    <form action="/admin/comments/dismiss/<%= comment._id %>" method="POST" class="inline">
+                      <button type="submit" class="px-3 py-1.5 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-xs font-semibold flex items-center gap-1">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Dismiss
+                      </button>
+                    </form>
+                    <!-- Delete Form -->
+                    <form action="/admin/comments/delete/<%= comment._id %>" method="POST" class="inline" onsubmit="return confirm('Delete this comment permanently?');">
+                      <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-xs font-semibold flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="text-center py-10 text-gray-400">
+        <i data-lucide="smile" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+        <p class="text-sm">Queue is clean! No reviews or comments are flagged.</p>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- Render charts scripts -->
+<script>
+  // Setup Chart JS options
+  const defaultChartConfig = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: {
+        grid: { color: 'rgba(111, 78, 55, 0.1)' },
+        ticks: { color: '#888' }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: '#888' }
+      }
+    }
+  };
+
+  // Decode Dataset payloads passed from Server
+  const mostReadPayload = <%- JSON.stringify(chartData.mostReadNovels) %>;
+  const authorPopularityPayload = <%- JSON.stringify(chartData.authorPopularity) %>;
+  const userRegsPayload = <%- JSON.stringify(chartData.userRegistrations) %>;
+  const activeReadersPayload = <%- JSON.stringify(chartData.activeReadersMonthly) %>;
+
+  // 1. Most Read Novels
+  new Chart(document.getElementById('mostReadChart'), {
+    type: 'bar',
+    data: {
+      labels: mostReadPayload.map(n => n.title),
+      datasets: [{
+        data: mostReadPayload.map(n => n.readers),
+        backgroundColor: '#6F4E37', // Brown
+        borderRadius: 8
+      }]
+    },
+    options: defaultChartConfig
+  });
+
+  // 2. Author Popularity
+  new Chart(document.getElementById('authorPopularityChart'), {
+    type: 'bar',
+    data: {
+      labels: authorPopularityPayload.map(a => a.name),
+      datasets: [{
+        data: authorPopularityPayload.map(a => a.readers),
+        backgroundColor: '#F7D6E0', // Soft pink
+        borderColor: '#6F4E37',
+        borderWidth: 1.5,
+        borderRadius: 8
+      }]
+    },
+    options: defaultChartConfig
+  });
+
+  // 3. User Registrations Line Chart
+  new Chart(document.getElementById('userRegsChart'), {
+    type: 'line',
+    data: {
+      labels: userRegsPayload.map(r => r.month),
+      datasets: [{
+        data: userRegsPayload.map(r => r.count),
+        borderColor: '#6F4E37',
+        backgroundColor: 'rgba(111, 78, 55, 0.1)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 3,
+        pointBackgroundColor: '#FFF8E7',
+        pointBorderWidth: 2
+      }]
+    },
+    options: defaultChartConfig
+  });
+
+  // 4. Active Readers Line Chart
+  new Chart(document.getElementById('activeReadersChart'), {
+    type: 'line',
+    data: {
+      labels: activeReadersPayload.map(a => a.month),
+      datasets: [{
+        data: activeReadersPayload.map(a => a.count),
+        borderColor: '#8B5A2B',
+        backgroundColor: 'rgba(247, 214, 224, 0.2)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 3,
+        pointBackgroundColor: '#FFF8E7',
+        pointBorderWidth: 2
+      }]
+    },
+    options: defaultChartConfig
+  });
+</script>
+
+<%- include('partials/footer') %>

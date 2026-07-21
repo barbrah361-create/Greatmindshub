@@ -1,0 +1,14 @@
+{
+  "name": "Readers - Africa's Digital Library",
+  "short_name": "Readers",
+  "description": "Africa's largest online reading, writing and publishing community",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8E7",
+  "theme_color": "#6F4E37",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,200 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow">
+  <div class="rounded-[32px] border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#18110C] shadow-[0_20px_80px_rgba(0,0,0,0.08)] overflow-hidden">
+    <div class="bg-[radial-gradient(circle_at_top_left,_rgba(247,214,224,0.16),_transparent_35%),linear-gradient(180deg,_rgba(247,214,224,0.12),_transparent_70%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(247,214,224,0.08),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.04),_transparent_70%)] p-8 sm:p-10">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.32em] text-brand-brown/70 dark:text-brand-pink/70 mb-3">Personal Archive</p>
+          <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-900 dark:text-brand-pink">Welcome to your profile</h1>
+          <p class="mt-3 max-w-2xl text-sm sm:text-base text-gray-500 dark:text-gray-300">Keep your account polished with a new avatar, bio, and secure credentials. Your reader persona is the first impression in our library.</p>
+        </div>
+        <div class="grid grid-cols-3 gap-3 text-center sm:w-full lg:w-auto">
+          <div class="rounded-3xl bg-brand-cream/80 dark:bg-white/5 border border-brand-brown/10 dark:border-brand-pink/20 p-4">
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white"><%= profileUser.favorites?.length || 0 %></p>
+            <p class="text-xs uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mt-1">Favorites</p>
+          </div>
+          <div class="rounded-3xl bg-brand-cream/80 dark:bg-white/5 border border-brand-brown/10 dark:border-brand-pink/20 p-4">
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white"><%= profileUser.bookmarks?.length || 0 %></p>
+            <p class="text-xs uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mt-1">Bookmarks</p>
+          </div>
+          <div class="rounded-3xl bg-brand-cream/80 dark:bg-white/5 border border-brand-brown/10 dark:border-brand-pink/20 p-4">
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white"><%= profileUser.readingHistory?.length || 0 %></p>
+            <p class="text-xs uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mt-1">Reads</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 pb-10 pt-8 sm:px-6 lg:px-8">
+      <aside class="lg:col-span-4 bg-white dark:bg-[#1E150F] border border-brand-brown/10 dark:border-brand-brown/20 rounded-3xl p-6 shadow-sm">
+        <div class="relative inline-flex mx-auto">
+          <img src="<%= profileUser.avatar || '/uploads/default-avatar.png' %>" alt="<%= profileUser.username %>" class="w-36 h-36 rounded-full object-cover ring-4 ring-brand-pink shadow-lg">
+          <form action="/auth/profile/avatar" method="POST" enctype="multipart/form-data" class="absolute bottom-1 right-1">
+            <label for="avatar-input" class="w-11 h-11 rounded-full bg-brand-brown hover:bg-brand-accent text-white flex items-center justify-center cursor-pointer shadow-md transition-colors" aria-label="Upload new profile photo">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+            </label>
+            <input type="file" id="avatar-input" name="avatar" class="hidden" accept="image/*" onchange="document.getElementById('avatar-submit-btn').click();">
+            <button type="submit" id="avatar-submit-btn" class="hidden"></button>
+          </form>
+        </div>
+
+        <div class="mt-7 text-center">
+          <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white"><%= profileUser.username %></h2>
+          <span class="inline-flex items-center justify-center mt-3 px-4 py-2 rounded-full bg-brand-pink/20 text-brand-brown dark:text-brand-pink text-xs font-semibold uppercase tracking-[0.24em] border border-brand-pink/30"> <%= profileUser.role %> Member </span>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Member since <span class="font-semibold text-gray-800 dark:text-white"><%= new Date(profileUser.createdAt).toLocaleDateString() %></span></p>
+        </div>
+
+        <div class="mt-8 space-y-4">
+          <div class="rounded-3xl bg-brand-cream/90 dark:bg-white/5 border border-brand-brown/10 dark:border-brand-pink/20 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-[0.24em] mb-3">About your profile</h3>
+            <% if (profileUser.bio) { %>
+              <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed"><%= profileUser.bio %></p>
+            <% } else { %>
+              <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed italic">No public bio yet. Add something memorable about your reading journey.</p>
+            <% } %>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3">
+            <% if (profileUser.location) { %>
+              <div class="rounded-3xl bg-white dark:bg-[#24180F] border border-brand-brown/10 dark:border-brand-brown/20 p-4">
+                <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-[0.24em] mb-2">Location</p>
+                <p class="text-base font-semibold text-gray-900 dark:text-white"><%= profileUser.location %></p>
+              </div>
+            <% } %>
+            <% if (profileUser.website) { %>
+              <div class="rounded-3xl bg-white dark:bg-[#24180F] border border-brand-brown/10 dark:border-brand-brown/20 p-4">
+                <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-[0.24em] mb-2">Website</p>
+                <a href="<%= profileUser.website %>" target="_blank" rel="noopener noreferrer" class="text-brand-brown dark:text-brand-pink font-semibold hover:underline break-words"><%= profileUser.website %></a>
+              </div>
+            <% } %>
+            <% if (profileUser.twitter || profileUser.instagram || profileUser.linkedin) { %>
+              <div class="rounded-3xl bg-white dark:bg-[#24180F] border border-brand-brown/10 dark:border-brand-brown/20 p-4">
+                <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-[0.24em] mb-3">Social links</p>
+                <div class="space-y-2 text-sm">
+                  <% if (profileUser.twitter) { %>
+                    <a href="<%= profileUser.twitter %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="twitter" class="w-4 h-4"></i><span>Twitter</span></a>
+                  <% } %>
+                  <% if (profileUser.instagram) { %>
+                    <a href="<%= profileUser.instagram %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="instagram" class="w-4 h-4"></i><span>Instagram</span></a>
+                  <% } %>
+                  <% if (profileUser.linkedin) { %>
+                    <a href="<%= profileUser.linkedin %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="linkedin" class="w-4 h-4"></i><span>LinkedIn</span></a>
+                  <% } %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </aside>
+
+      <main class="lg:col-span-8 space-y-6">
+        <section class="bg-white dark:bg-[#1E150F] border border-brand-brown/10 dark:border-brand-brown/20 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="font-serif text-xl font-bold text-gray-900 dark:text-brand-pink">Edit Your Profile</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Update your public name, biography, and reading style.</p>
+            </div>
+            <div class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.28em] text-brand-brown/70 dark:text-brand-pink/70 font-semibold">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              Always kept current
+            </div>
+          </div>
+
+          <form action="/auth/profile/update" method="POST" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
+                <input type="text" id="username" name="username" value="<%= profileUser.username %>" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-400 dark:text-gray-500 mb-1.5">Registered Email</label>
+                <input type="email" value="<%= profileUser.email %>" readonly class="block w-full px-4 py-3 border border-brand-brown/10 dark:border-brand-brown/15 rounded-2xl bg-gray-50 dark:bg-[#24180F] text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="location" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Location</label>
+                <input type="text" id="location" name="location" value="<%= profileUser.location %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Lagos, Nigeria" />
+              </div>
+              <div>
+                <label for="website" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
+                <input type="url" id="website" name="website" value="<%= profileUser.website %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="twitter" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Twitter</label>
+                <input type="url" id="twitter" name="twitter" value="<%= profileUser.twitter %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://twitter.com/yourhandle" />
+              </div>
+              <div>
+                <label for="instagram" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Instagram</label>
+                <input type="url" id="instagram" name="instagram" value="<%= profileUser.instagram %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://instagram.com/yourhandle" />
+              </div>
+            </div>
+
+            <div>
+              <label for="linkedin" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">LinkedIn</label>
+              <input type="url" id="linkedin" name="linkedin" value="<%= profileUser.linkedin %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://linkedin.com/in/yourname" />
+            </div>
+
+            <div>
+              <label for="bio" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Biography / Literary Taste</label>
+              <textarea id="bio" name="bio" rows="5" class="block w-full px-4 py-4 border border-brand-brown/20 dark:border-brand-brown/30 rounded-3xl bg-brand-cream/10 dark:bg-[#24180F] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Share the genres and authors that shape your reading life..."><%= profileUser.bio %></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Your profile is visible to the library community when you post comments and ratings.</p>
+              <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                Save Profile
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="bg-white dark:bg-[#1E150F] border border-brand-brown/10 dark:border-brand-brown/20 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="font-serif text-xl font-bold text-gray-900 dark:text-brand-pink">Security & access</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Protect your account with a strong password and keep your reading vault secure.</p>
+            </div>
+            <span class="inline-flex items-center gap-2 rounded-full border border-brand-brown/10 dark:border-brand-pink/20 bg-brand-cream/90 dark:bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown dark:text-brand-pink">Password change</span>
+          </div>
+
+          <form action="/auth/profile/password" method="POST" class="space-y-5">
+            <div>
+              <label for="currentPassword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Current Password</label>
+              <input type="password" id="currentPassword" name="currentPassword" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#24180F] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="••••••••" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="newPassword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">New Password</label>
+                <input type="password" id="newPassword" name="newPassword" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#24180F] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="••••••••" />
+              </div>
+              <div>
+                <label for="confirmNewPassword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#24180F] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <p class="text-xs text-gray-500 dark:text-gray-400">A strong password keeps your reading collection and account safe.</p>
+              <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold">
+                <i data-lucide="key-round" class="w-4 h-4"></i>
+                Change Password
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

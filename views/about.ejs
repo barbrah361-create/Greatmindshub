@@ -1,0 +1,76 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="flex-grow">
+  
+  <!-- Hero banner -->
+  <section class="relative py-24 sm:py-32 bg-cover bg-center text-center text-white" style="background-image: url('https://images.unsplash.com/photo-1513001900722-370f803f498d?w=1600&auto=format&fit=crop&q=80');">
+    <div class="absolute inset-0 bg-[#251811]/85 backdrop-blur-[2px]"></div>
+    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-pink/20 text-brand-pink uppercase tracking-wider mb-4">
+        Our Chronicles
+      </span>
+      <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4">About Elegance Library</h1>
+      <p class="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+        Preserving the world's most luxurious prose and historical landmarks through immersive, server-side digital archives.
+      </p>
+    </div>
+  </section>
+
+  <!-- Content Section -->
+  <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <div class="lg:col-span-6 space-y-6">
+        <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-wider">The Sacred Covenant</span>
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-snug">
+          Where Classical Literature Meets Elegant Modernity
+        </h2>
+        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+          Founded on June 29th, 2026 by Barbrah Angelique, a young Poet and an Author From Kenya, as a private collection of classical folios and African oral traditions, the Elegance Library has evolved into a global digital sanctuary. We curate rare masterpieces, biographies of historical icons, and pristine translations.
+        </p>
+        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+          Our core architecture honors the traditional book structure while leveraging progressive full-stack technology. Readers can flip through high-definition digitized pages, preserve notes, review themes, and share insights securely with a like-minded guild.
+        </p>
+
+        <!-- Bullet Highlights -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-sm text-gray-700 dark:text-gray-300">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center flex-shrink-0">
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </div>
+            <span class="font-semibold">Interactive Book Reader</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center flex-shrink-0">
+              <i data-lucide="bookmark" class="w-4 h-4"></i>
+            </div>
+            <span class="font-semibold">Progress Sync & Bookmarks</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center flex-shrink-0">
+              <i data-lucide="award" class="w-4 h-4"></i>
+            </div>
+            <span class="font-semibold">Curated Masterpieces</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center flex-shrink-0">
+              <i data-lucide="users-2" class="w-4 h-4"></i>
+            </div>
+            <span class="font-semibold">Famous Author Registers</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-6 relative">
+        <div class="absolute -top-4 -left-4 w-full h-full border-2 border-brand-brown rounded-2xl pointer-events-none"></div>
+        <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&auto=format&fit=crop&q=80" alt="Beautiful Library Shelves" class="w-full h-[450px] object-cover rounded-2xl shadow-xl relative z-10 hover:scale-[1.02] transition-transform duration-500">
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<%- include('partials/footer') %>

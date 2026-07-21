@@ -1,0 +1,143 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-grow">
+  
+  <!-- Back Button -->
+  <div class="mb-8">
+    <a href="/poems" class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink transition-colors font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+      Back to Poem Collective
+    </a>
+  </div>
+
+  <!-- Poem Presentation Card -->
+  <article class="book-card p-8 sm:p-16 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-md relative overflow-hidden mb-12">
+    <!-- Style accents like a luxury printed page -->
+    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-brown via-brand-pink to-brand-accent"></div>
+    
+    <div class="text-center mb-10">
+      <span class="text-[10px] uppercase tracking-[0.25em] bg-brand-pink/20 text-brand-brown dark:text-brand-pink font-bold px-3 py-1 rounded-full border border-brand-pink/30 inline-block mb-4">
+        <%= poem.genre || 'Poetry' %>
+      </span>
+      <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight mb-3">
+        <%= poem.title %>
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        Composed by <span class="font-bold text-brand-brown dark:text-brand-pink text-sm"><%= poem.authorName %></span>
+      </p>
+      <div class="w-16 h-px bg-brand-brown/20 dark:bg-brand-pink/20 mx-auto mt-6"></div>
+    </div>
+
+    <!-- Poem Content: Centered, indented, large font-serif with whitespace retention -->
+    <div class="font-serif text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-loose italic max-w-lg mx-auto whitespace-pre-line text-center md:text-left md:pl-12 my-12 tracking-wide">
+      <%= poem.content %>
+    </div>
+
+    <div class="w-full h-px bg-brand-brown/10 dark:bg-brand-pink/10 my-8"></div>
+
+    <!-- Stats & Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-5 text-xs text-gray-500 dark:text-gray-400">
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          <strong><%= poem.viewCount || 0 %></strong> Views
+        </span>
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="calendar" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          Published <%= new Date(poem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) %>
+        </span>
+      </div>
+
+      <div class="flex gap-2">
+        <!-- Like Action Form -->
+        <form action="/poems/<%= poem._id %>/like" method="POST" class="inline">
+          <% const hasLiked = user && poem.likes && poem.likes.includes(user._id); %>
+          <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm border transition-all duration-200 <%= hasLiked ? 'bg-red-500 border-red-500 text-white hover:bg-red-600' : 'bg-brand-cream dark:bg-brand-brown/10 hover:bg-brand-pink/30 text-gray-700 dark:text-gray-200 border-brand-brown/15' %>">
+            <i data-lucide="heart" class="w-4 h-4 <%= hasLiked ? 'fill-white' : 'text-red-500 fill-red-500/10' %>"></i>
+            <%= hasLiked ? 'Liked' : 'Like Poem' %>
+            <span class="font-bold pl-1 border-l border-current/25"><%= poem.likes ? poem.likes.length : 0 %></span>
+          </button>
+        </form>
+
+        <button onclick="navigator.clipboard.writeText(window.location.href); alert('Poem link copied to clipboard!');" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30">
+          <i data-lucide="share-2" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          Share
+        </button>
+      </div>
+    </div>
+  </article>
+
+  <!-- Comments / Discussion -->
+  <section class="book-card p-6 sm:p-10 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-sm rounded-2xl">
+    <h3 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2.5">
+      <i data-lucide="message-square" class="w-5.5 h-5.5 text-brand-brown dark:text-brand-pink"></i>
+      Discussion
+      <span class="text-xs bg-brand-pink/30 text-brand-brown dark:text-brand-pink px-2.5 py-0.5 rounded-full font-sans font-bold">
+        <%= poem.comments ? poem.comments.length : 0 %>
+      </span>
+    </h3>
+
+    <!-- Write a Comment Form -->
+    <form action="/poems/<%= poem._id %>/comment" method="POST" class="space-y-4 mb-8">
+      <% if (!user) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="guestName" class="block text-xs uppercase tracking-wider font-bold text-gray-550 dark:text-gray-350 mb-1.5">Your Name (Optional)</label>
+            <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed">
+          </div>
+          <div class="flex items-end pb-1.5">
+            <span class="text-xs text-gray-400">You are posting as a guest. Or <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Log in</a> to use your account.</span>
+          </div>
+        </div>
+      <% } %>
+      <div>
+        <label for="comment-textarea" class="sr-only">Your Comment</label>
+        <textarea id="comment-textarea" name="content" rows="3" required placeholder="Write a thoughtful comment on this piece..." class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 p-4 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed"></textarea>
+      </div>
+      <div class="flex justify-end">
+        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl text-xs transition-colors shadow-sm">
+          Post Comment
+        </button>
+      </div>
+    </form>
+
+    <!-- Comments List -->
+    <div class="space-y-6">
+      <% if (poem.comments && poem.comments.length > 0) { %>
+        <% poem.comments.forEach(function(comment) { %>
+          <div class="border-b border-brand-brown/10 dark:border-brand-brown/15 pb-6 last:border-b-0 last:pb-0">
+            <div class="flex items-start gap-3">
+              <!-- Avatar -->
+              <div class="w-10 h-10 rounded-full bg-brand-cream border border-brand-brown/10 shadow-sm shrink-0 overflow-hidden flex items-center justify-center font-bold text-sm text-brand-brown dark:text-brand-pink">
+                <% if (comment.userAvatar) { %>
+                  <img src="<%= comment.userAvatar %>" alt="<%= comment.username %>" class="w-full h-full object-cover">
+                <% } else { %>
+                  <%= comment.username.substring(0, 2).toUpperCase() %>
+                <% } %>
+              </div>
+
+              <!-- Main Comment Meta & Content -->
+              <div class="flex-grow">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
+                  <span class="text-[10px] text-gray-400 font-medium"><%= new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                  <%= comment.content %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="text-center py-8 text-gray-400 text-xs">
+          <p>No comments on this poem yet. Be the first to start the conversation!</p>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</div>
+
+<%- include('partials/footer') %>

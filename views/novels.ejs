@@ -1,0 +1,182 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <!-- Page Header -->
+  <div class="mb-10 text-center sm:text-left">
+    <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-brand-pink">Discover Masterpieces</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Browse our hand-curated catalog, filter by ancient or modern genres, and pick your next read.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- 1. LEFT SIDEBAR: Advanced Filter controls (Col span 1) -->
+    <div class="lg:col-span-1 bg-white dark:bg-[#1E150F] p-6 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm h-fit space-y-6">
+      
+      <!-- Filter Form -->
+      <form action="/novels" method="GET" class="space-y-6">
+        <!-- Preserve page if changing filter, but reset to 1 is usually safer. Let's just pass filters -->
+        
+        <!-- Search Keyword -->
+        <div>
+          <label for="search" class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Search Text</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </span>
+            <input id="search" name="search" type="text" value="<%= filters.search || '' %>" class="block w-full pl-9 pr-3 py-2 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white text-xs placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink" placeholder="Search title or author...">
+          </div>
+        </div>
+
+        <!-- Genres Shelf Filter -->
+        <div>
+          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5">Shelves / Genres</label>
+          <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <% categories.forEach(function(category) { %>
+              <label class="flex items-center gap-2.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-brand-brown dark:hover:text-brand-pink">
+                <input type="radio" name="genre" value="<%= category %>" <%= filters.genre === category ? 'checked' : '' %> class="rounded-full border-gray-350 text-brand-brown focus:ring-brand-brown dark:focus:ring-brand-pink">
+                <span><%= category %></span>
+              </label>
+            <% }) %>
+            <label class="flex items-center gap-2.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-brand-brown dark:hover:text-brand-pink">
+              <input type="radio" name="genre" value="" <%= !filters.genre ? 'checked' : '' %> class="rounded-full border-gray-350 text-brand-brown focus:ring-brand-brown dark:focus:ring-brand-pink">
+              <span class="font-semibold italic">Show All Genres</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Sort Select -->
+        <div>
+          <label for="sort" class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Sort Order</label>
+          <select id="sort" name="sort" class="block w-full px-3 py-2 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white text-xs focus:outline-none focus:border-brand-brown">
+            <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Most Readers</option>
+            <option value="rating" <%= filters.sort === 'rating' ? 'selected' : '' %>>Highest Rated</option>
+            <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Release Year (Newest)</option>
+            <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Release Year (Oldest)</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="pt-2 flex flex-col gap-2">
+          <button type="submit" class="w-full py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow-sm text-xs transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="filter" class="w-4 h-4"></i>
+            Apply Query
+          </button>
+          <a href="/novels" class="w-full py-2.5 border border-brand-brown/20 hover:bg-brand-cream/10 text-gray-700 dark:text-gray-300 font-semibold text-center rounded-xl text-xs transition-colors block">
+            Clear Filters
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- 2. RIGHT GRID: Catalog Novels (Col span 3) -->
+    <div class="lg:col-span-3 space-y-10">
+      
+      <% if (novels.length > 0) { %>
+        <!-- Novels Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          <% novels.forEach(function(novel) { %>
+            <div class="group book-card overflow-hidden hover:-translate-y-1 flex flex-col h-full">
+              <!-- Cover image -->
+              <div class="relative h-64 overflow-hidden bg-brand-cream/50">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= novel.coverImage %>" alt="<%= novel.title %>" loading="lazy">
+                <div class="absolute top-3 right-3 bg-white/90 dark:bg-brand-dark/95 backdrop-blur px-2 py-1 rounded-lg border border-brand-brown/15 flex items-center gap-1 text-[11px] font-bold text-gray-800 dark:text-brand-pink">
+                  <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>
+                  <%= novel.rating %>
+                </div>
+                <span class="absolute bottom-3 left-3 bg-brand-brown text-brand-cream text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                  <%= novel.genre %>
+                </span>
+              </div>
+
+              <!-- Details -->
+              <div class="p-5 flex flex-col flex-grow">
+                <span class="text-[11px] font-medium text-gray-400">By <%= novel.authorName %></span>
+                <h3 class="font-serif text-lg font-bold mt-1 mb-2 text-gray-800 dark:text-white group-hover:text-brand-brown dark:group-hover:text-brand-pink transition-colors truncate">
+                  <%= novel.title %>
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-300 line-clamp-2 leading-relaxed mb-4 flex-grow">
+                  <%= novel.description %>
+                </p>
+
+                <div class="flex items-center justify-between border-t border-brand-brown/10 dark:border-brand-brown/15 pt-3.5 mt-auto">
+                  <span class="text-[10px] font-medium text-gray-400 flex items-center gap-1">
+                    <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-brown dark:text-brand-pink"></i>
+                    <%= novel.readerCount %> reads
+                  </span>
+                  <a href="/novels/<%= novel._id %>" class="px-3.5 py-1.5 bg-brand-cream hover:bg-brand-pink/30 text-brand-brown dark:text-brand-pink font-semibold rounded-lg text-xs transition-colors flex items-center gap-1">
+                    Details
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <!-- 3. Server-Side Pagination Controls -->
+        <% if (totalPages > 1) { %>
+          <nav class="flex items-center justify-center gap-1.5 pt-6 border-t border-brand-brown/10 dark:border-brand-brown/20" aria-label="Catalog Navigation">
+            
+            <!-- Previous Button -->
+            <% if (currentPage > 1) { %>
+              <a href="/novels?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(filters.search || '') %>&genre=<%= encodeURIComponent(filters.genre || '') %>&sort=<%= encodeURIComponent(filters.sort || '') %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors" aria-label="Previous Page">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </a>
+            <% } else { %>
+              <span class="p-2 border border-brand-brown/10 text-gray-300 dark:text-gray-600 rounded-lg cursor-not-allowed">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </span>
+            <% } %>
+
+            <!-- Page indicators -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <% if (i === currentPage) { %>
+                <span class="px-3.5 py-1.5 bg-brand-brown text-white font-bold rounded-lg text-xs" aria-current="page">
+                  <%= i %>
+                </span>
+              <% } else { %>
+                <a href="/novels?page=<%= i %>&search=<%= encodeURIComponent(filters.search || '') %>&genre=<%= encodeURIComponent(filters.genre || '') %>&sort=<%= encodeURIComponent(filters.sort || '') %>" class="px-3.5 py-1.5 border border-brand-brown/20 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 text-xs transition-colors">
+                  <%= i %>
+                </a>
+              <% } %>
+            <% } %>
+
+            <!-- Next Button -->
+            <% if (currentPage < totalPages) { %>
+              <a href="/novels?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(filters.search || '') %>&genre=<%= encodeURIComponent(filters.genre || '') %>&sort=<%= encodeURIComponent(filters.sort || '') %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors" aria-label="Next Page">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </a>
+            <% } else { %>
+              <span class="p-2 border border-brand-brown/10 text-gray-300 dark:text-gray-600 rounded-lg cursor-not-allowed">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </span>
+            <% } %>
+
+          </nav>
+        <% } %>
+
+      <% } else { %>
+        <!-- No Results -->
+        <div class="bg-white dark:bg-[#1E150F] p-16 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm text-center text-gray-450 space-y-4">
+          <div class="w-16 h-16 rounded-full bg-brand-cream dark:bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center mx-auto shadow-sm">
+            <i data-lucide="info" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-serif text-xl font-bold text-gray-800 dark:text-white">No Masterpieces Found</h3>
+          <p class="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
+            We couldn't find any books matching your exact search text or filters. Try choosing a different shelf or clearing filters.
+          </p>
+          <a href="/novels" class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-brown text-white font-semibold rounded-lg text-xs shadow-md">
+            Reset All Filters
+          </a>
+        </div>
+      <% } %>
+
+    </div>
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>

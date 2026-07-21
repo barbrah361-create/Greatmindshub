@@ -1,0 +1,224 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="flex-grow flex flex-col min-h-[calc(100vh-140px)] transition-colors duration-300" id="reading-canvas">
+  
+  <!-- 1. Reading Controls Panel -->
+  <div class="bg-white/80 dark:bg-[#1E150F]/80 backdrop-blur border-b border-brand-brown/10 dark:border-brand-brown/20 sticky top-16 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Back button & Info -->
+      <div class="flex items-center gap-3">
+        <a href="/novels/<%= novel._id %>" class="p-2 rounded-xl hover:bg-brand-cream/10 text-gray-500 dark:text-gray-400" title="Exit Reader">
+          <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <div class="min-w-0">
+          <h1 class="font-serif text-sm sm:text-base font-bold text-gray-800 dark:text-white truncate"><%= novel.title %></h1>
+          <p class="text-[10px] text-gray-400">By <%= novel.authorName %> &bull; Page <%= pageIndex + 1 %> of <%= novel.contentPages.length %></p>
+        </div>
+      </div>
+
+      <!-- Live customization settings toggles -->
+      <div class="flex items-center gap-3 sm:gap-5 flex-wrap">
+        
+        <!-- Font family select -->
+        <div class="flex items-center gap-1.5 bg-brand-cream/40 dark:bg-brand-brown/15 px-2.5 py-1.5 rounded-xl border border-brand-brown/10 text-xs">
+          <i data-lucide="type" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          <select id="fontFamilySelector" onchange="changeFontFamily(this.value)" class="bg-transparent text-gray-800 dark:text-white focus:outline-none cursor-pointer">
+            <option value="font-serif">Classic Serif</option>
+            <option value="font-sans">Modern Sans</option>
+            <option value="font-mono">Chancery Mono</option>
+          </select>
+        </div>
+
+        <!-- Font Size select -->
+        <div class="flex items-center gap-1.5 bg-brand-cream/40 dark:bg-brand-brown/15 px-2.5 py-1.5 rounded-xl border border-brand-brown/10 text-xs">
+          <i data-lucide="case-sensitive" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
+          <button onclick="changeFontSize(-1)" class="p-1 text-gray-500 hover:text-brand-brown" title="Smaller Font">&minus;</button>
+          <span id="fontSizeDisplay" class="font-bold text-gray-800 dark:text-white">18px</span>
+          <button onclick="changeFontSize(1)" class="p-1 text-gray-500 hover:text-brand-brown" title="Larger Font">&plus;</button>
+        </div>
+
+        <!-- Palette Theme toggler -->
+        <div class="flex items-center gap-1.5 bg-brand-cream/40 dark:bg-brand-brown/15 px-2 py-1 rounded-xl border border-brand-brown/10">
+          <button onclick="setThemePalette('warm')" class="w-5 h-5 rounded-full bg-[#FFF8E7] border border-amber-200" title="Warm Cream"></button>
+          <button onclick="setThemePalette('light')" class="w-5 h-5 rounded-full bg-[#FFFFFF] border border-gray-250" title="Pristine White"></button>
+          <button onclick="setThemePalette('dark')" class="w-5 h-5 rounded-full bg-[#1F1712] border border-brand-brown" title="Cozy Cocoa"></button>
+        </div>
+
+        <!-- Bookmark Form Toggle -->
+        <% if (user) { %>
+          <form action="/novels/<%= novel._id %>/bookmark?page=<%= pageIndex %>" method="POST">
+            <button type="submit" class="p-2.5 rounded-xl border border-brand-brown/20 text-gray-700 dark:text-gray-300 hover:bg-brand-cream/10 text-xs font-bold transition-all flex items-center gap-1.5 <%= isBookmarked ? 'bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-brand-pink border-amber-300 dark:border-brand-pink' : '' %>" title="<%= isBookmarked ? 'Unbookmark this page' : 'Bookmark this page' %>">
+              <% if (isBookmarked) { %>
+                <i data-lucide="bookmark" class="w-4.5 h-4.5 text-amber-600 fill-amber-500 dark:text-brand-pink dark:fill-brand-pink"></i>
+                <span class="hidden sm:inline">Bookmarked</span>
+              <% } else { %>
+                <i data-lucide="bookmark" class="w-4.5 h-4.5"></i>
+                <span class="hidden sm:inline">Bookmark Page</span>
+              <% } %>
+            </button>
+          </form>
+        <% } else { %>
+          <a href="/auth/login" class="p-2.5 rounded-xl border border-brand-brown/20 text-gray-500 hover:text-brand-brown dark:text-gray-400 dark:hover:text-brand-pink hover:bg-brand-cream/10 text-xs font-bold transition-all flex items-center gap-1.5" title="Login to Bookmark">
+            <i data-lucide="bookmark" class="w-4.5 h-4.5"></i>
+            <span class="hidden sm:inline">Sign in to Bookmark</span>
+          </a>
+        <% } %>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. Reading Text Canvas Area -->
+  <div class="flex-grow py-12 px-4 sm:px-6 flex justify-center bg-transparent transition-colors duration-200" id="reading-board-wrapper">
+    <article class="max-w-3xl w-full mx-auto space-y-8 bg-white dark:bg-[#1C120C] p-8 sm:p-14 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-md transition-all duration-300" id="reading-paper">
+      
+      <!-- Chapter header indicator -->
+      <div class="border-b border-brand-brown/10 dark:border-brand-brown/15 pb-4 text-center">
+        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-widest font-mono">Archive Record</span>
+        <h2 class="font-serif text-lg sm:text-xl font-bold mt-1 text-brand-brown dark:text-brand-pink"><%= novel.title %></h2>
+        <p class="text-xs text-gray-500">Page <%= pageIndex + 1 %> of <%= novel.contentPages.length %></p>
+      </div>
+
+      <!-- Real Reading Content with configurable properties -->
+      <div class="font-serif text-lg text-gray-800 dark:text-gray-200 leading-relaxed space-y-6 break-words" id="novel-content-pane">
+        <% novel.contentPages[pageIndex].split('\n\n').forEach(function(para) { %>
+          <p><%= para %></p>
+        <% }) %>
+      </div>
+
+    </article>
+  </div>
+
+  <!-- 3. Reading Foot Navigator / Pagination bar -->
+  <div class="bg-white/95 dark:bg-[#1E150F]/95 backdrop-blur border-t border-brand-brown/10 dark:border-brand-brown/20 py-4 mt-auto">
+    <div class="max-w-5xl mx-auto px-4 flex items-center justify-between gap-4">
+      
+      <!-- Previous button -->
+      <% if (pageIndex > 0) { %>
+        <a href="/novels/<%= novel._id %>/read?page=<%= pageIndex - 1 %>" class="px-4.5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          Previous Page
+        </a>
+      <% } else { %>
+        <span class="px-4.5 py-2.5 bg-gray-100 dark:bg-brand-brown/5 text-gray-300 dark:text-gray-650 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1.5">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          Previous Page
+        </span>
+      <% } %>
+
+      <!-- Quick page dropdown selector -->
+      <div class="flex items-center gap-2">
+        <label for="pageDropdown" class="hidden sm:inline text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">Jump to:</label>
+        <select id="pageDropdown" onchange="window.location.href='/novels/<%= novel._id %>/read?page=' + this.value" class="px-3 py-2 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white text-xs font-bold focus:outline-none">
+          <% for(let i = 0; i < novel.contentPages.length; i++) { %>
+            <option value="<%= i %>" <%= i === pageIndex ? 'selected' : '' %>>Page <%= i + 1 %> of <%= novel.contentPages.length %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Next button -->
+      <% if (pageIndex < novel.contentPages.length - 1) { %>
+        <a href="/novels/<%= novel._id %>/read?page=<%= pageIndex + 1 %>" class="px-4.5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors">
+          Next Page
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </a>
+      <% } else { %>
+        <!-- Last Page: Celebrate completion! -->
+        <a href="/novels/<%= novel._id %>" onclick="alert('Congratulations! You have read to the final chapter of this masterpiece. Your profile stats have been finalized.');" class="px-4.5 py-2.5 bg-brand-pink hover:bg-white text-brand-dark text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-all">
+          Finish Reading
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </a>
+      <% } %>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Reading Screen Customizer Script -->
+<script>
+  let currentFontSize = 18; // Default font-size in pixels
+
+  // Load customizer presets from localStorage
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedFont = localStorage.getItem('elegance_reader_font') || 'font-serif';
+    const savedSize = localStorage.getItem('elegance_reader_size') || '18';
+    const savedPalette = localStorage.getItem('elegance_reader_palette') || 'warm';
+
+    // Apply font family
+    const fontSelector = document.getElementById('fontFamilySelector');
+    if (fontSelector) {
+      fontSelector.value = savedFont;
+      changeFontFamily(savedFont);
+    }
+
+    // Apply font size
+    currentFontSize = parseInt(savedSize, 10);
+    applyFontSize();
+
+    // Apply palette
+    setThemePalette(savedPalette);
+  });
+
+  // Change font family class
+  function changeFontFamily(fontClass) {
+    const pane = document.getElementById('novel-content-pane');
+    if (pane) {
+      pane.className = fontClass + ' text-gray-850 dark:text-gray-200 leading-relaxed space-y-6 break-words';
+      // Adjust class list
+      localStorage.setItem('elegance_reader_font', fontClass);
+    }
+  }
+
+  // Change font size
+  function changeFontSize(delta) {
+    currentFontSize = Math.max(12, Math.min(32, currentFontSize + delta));
+    applyFontSize();
+    localStorage.setItem('elegance_reader_size', currentFontSize);
+  }
+
+  function applyFontSize() {
+    const pane = document.getElementById('novel-content-pane');
+    const display = document.getElementById('fontSizeDisplay');
+    if (pane) {
+      pane.style.fontSize = currentFontSize + 'px';
+    }
+    if (display) {
+      display.innerText = currentFontSize + 'px';
+    }
+  }
+
+  // Set Theme Palette (Warm, Light, Cozy Dark)
+  function setThemePalette(paletteName) {
+    const board = document.getElementById('reading-board-wrapper');
+    const paper = document.getElementById('reading-paper');
+    
+    if (!board || !paper) return;
+
+    // Reset themes first
+    board.className = "flex-grow py-12 px-4 sm:px-6 flex justify-center transition-colors duration-200 ";
+    paper.className = "max-w-3xl w-full mx-auto space-y-8 p-8 sm:p-14 rounded-3xl border shadow-md transition-all duration-300 ";
+
+    if (paletteName === 'warm') {
+      // Warm Cream
+      board.classList.add('bg-[#FCF5E3]');
+      paper.classList.add('bg-[#FFFBF2]', 'border-amber-250', 'text-[#3E2713]');
+    } else if (paletteName === 'light') {
+      // Pristine White
+      board.classList.add('bg-[#F3F4F6]');
+      paper.classList.add('bg-white', 'border-gray-200', 'text-gray-900');
+    } else if (paletteName === 'dark') {
+      // Cozy Dark Cocoa
+      board.classList.add('bg-[#140D09]');
+      paper.classList.add('bg-[#1E150F]', 'border-brand-brown/30', 'text-amber-50/90');
+    }
+
+    localStorage.setItem('elegance_reader_palette', paletteName);
+  }
+</script>
+
+<%- include('partials/footer') %>

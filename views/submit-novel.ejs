@@ -1,0 +1,157 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <div class="mb-8 border-b border-brand-brown/10 dark:border-brand-brown/25 pb-6">
+    <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest">Publish Your Book</span>
+    <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mt-2">Submit a New Novel</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Share your stories, fantasy lore, or historical biographies with the community.</p>
+  </div>
+
+  <form action="/novels/submit" method="POST" enctype="multipart/form-data" class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl shadow-sm border border-brand-brown/10 dark:border-brand-brown/20 space-y-6">
+    
+    <!-- Title -->
+    <div>
+      <label for="title" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Novel Title</label>
+      <input type="text" id="title" name="title" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Whispers of the Savannah">
+    </div>
+
+    <!-- Author Profile selection or input -->
+    <div class="p-5 sm:p-6 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 space-y-4">
+      <h3 class="font-serif font-bold text-gray-800 dark:text-white text-base">Author Association</h3>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Associate this book with an existing author profile or create a new public author identity.</p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center py-2">
+        <label class="inline-flex items-center">
+          <input type="radio" name="authorType" value="existing" checked class="text-brand-brown focus:ring-brand-brown h-4 w-4 border-gray-300">
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Use Existing Author</span>
+        </label>
+        <label class="inline-flex items-center">
+          <input type="radio" name="authorType" value="new" class="text-brand-brown focus:ring-brand-brown h-4 w-4 border-gray-300">
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Create New Author Profile</span>
+        </label>
+      </div>
+
+      <!-- Existing Author drop-down -->
+      <div id="existing-author-container">
+        <label for="authorId" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Select Author</label>
+        <select id="authorId" name="authorId" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all">
+          <option value="" disabled selected>-- Choose from registered authors --</option>
+          <% authors.forEach(function(author) { %>
+            <option value="<%= author._id %>"><%= author.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- New Author Details (hidden by default) -->
+      <div id="new-author-container" class="hidden space-y-4 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="newAuthorName" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Author Name</label>
+            <input type="text" id="newAuthorName" name="newAuthorName" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Kofi Mensah">
+          </div>
+          <div>
+            <label for="newAuthorNationality" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Nationality</label>
+            <input type="text" id="newAuthorNationality" name="newAuthorNationality" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Kenyan, Nigerian">
+          </div>
+        </div>
+        <div>
+          <label for="newAuthorBio" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Author Mini Bio</label>
+          <textarea id="newAuthorBio" name="newAuthorBio" rows="3" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Tell readers a bit about the author..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Genre & Year -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div>
+        <label for="genre" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Genre / Category</label>
+        <select id="genre" name="genre" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all">
+          <option value="" disabled selected>-- Choose Category --</option>
+          <% categories.forEach(function(category) { %>
+            <option value="<%= category %>"><%= category %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label for="publicationYear" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Publication Year</label>
+        <input type="number" id="publicationYear" name="publicationYear" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. 2026">
+      </div>
+    </div>
+
+    <!-- Cover Image & Short Description -->
+    <div class="grid grid-cols-1 gap-6">
+      <div>
+        <label for="coverImage" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Book Cover Image</label>
+        <input type="file" id="coverImage" name="coverImage" accept="image/*" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-brown file:text-white hover:file:bg-brand-accent">
+        <p class="text-[10px] text-gray-400 mt-1.5">Supported: png, jpg, jpeg, webp. Limit 5MB. If unprovided, a default cover will be generated.</p>
+      </div>
+      <div>
+        <label for="description" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Short Description</label>
+        <input type="text" id="description" name="description" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="A brief hook (1-2 sentences) shown on catalog cards.">
+      </div>
+    </div>
+
+    <!-- Synopsis -->
+    <div>
+      <label for="synopsis" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Synopsis / Plot Summary</label>
+      <textarea id="synopsis" name="synopsis" rows="4" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Describe the story, the stakes, and major themes..."></textarea>
+    </div>
+
+    <!-- Novel Contents Text Area with paging instructions -->
+    <div>
+      <label for="contentText" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Book Reading Content</label>
+      <div class="p-3 bg-brand-cream/40 dark:bg-brand-brown/5 text-brand-brown dark:text-gray-400 text-xs rounded-xl border border-brand-brown/10 mb-2 leading-relaxed">
+        <p class="font-bold mb-1">📖 Page Separation Guide:</p>
+        Use <span class="font-mono text-gray-800 dark:text-white bg-white dark:bg-black px-1.5 py-0.5 rounded border border-brand-brown/10">---PAGE---</span> on its own line to split chapters or pages. For example:
+        <pre class="font-mono mt-1 text-[10px] bg-white dark:bg-black p-2 rounded text-gray-500 overflow-x-auto">This is the text of Page/Chapter 1.
+
+---PAGE---
+
+This is the text of Page/Chapter 2.</pre>
+      </div>
+      <textarea id="contentText" name="contentText" rows="12" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white font-serif placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Write or paste your book content pages separated by ---PAGE--- here..."></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-brand-brown/10 dark:border-brand-brown/25">
+      <a href="/novels" class="px-5 py-3 rounded-xl border border-brand-brown/20 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-brand-cream/10">Cancel</a>
+      <button type="submit" class="px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm flex items-center gap-2">
+        <i data-lucide="send" class="w-4 h-4"></i>
+        Publish Novel
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  // Toggle between existing and new author inputs
+  const authorTypeRadios = document.querySelectorAll('input[name="authorType"]');
+  const existingAuthorContainer = document.getElementById('existing-author-container');
+  const newAuthorContainer = document.getElementById('new-author-container');
+  const authorSelect = document.getElementById('authorId');
+  const newAuthorNameInput = document.getElementById('newAuthorName');
+
+  authorTypeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (e.target.value === 'existing') {
+        existingAuthorContainer.classList.remove('hidden');
+        newAuthorContainer.classList.add('hidden');
+        authorSelect.setAttribute('required', 'required');
+        newAuthorNameInput.removeAttribute('required');
+      } else {
+        existingAuthorContainer.classList.add('hidden');
+        newAuthorContainer.classList.remove('hidden');
+        authorSelect.removeAttribute('required');
+        newAuthorNameInput.setAttribute('required', 'required');
+      }
+    });
+  });
+
+  // Init validation state
+  authorSelect.setAttribute('required', 'required');
+</script>
+
+<%- include('partials/footer') %>

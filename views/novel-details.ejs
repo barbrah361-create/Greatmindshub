@@ -1,0 +1,234 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="flex-grow">
+  
+  <!-- 1. Blur Overlay Top Hero Banner -->
+  <div class="relative bg-brand-dark overflow-hidden py-16 sm:py-24 border-b border-brand-brown/10">
+    <div class="absolute inset-0 opacity-20 bg-cover bg-center filter blur-lg scale-110" style="background-image: url('<%= novel.coverImage %>');"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-[#1C120C] via-[#1C120C]/90 to-[#2A1D15]/80"></div>
+    
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+      <!-- Cover art -->
+      <div class="w-48 h-72 sm:w-56 sm:h-80 bg-brand-cream rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 flex-shrink-0 group relative">
+        <img src="<%= novel.coverImage %>" alt="<%= novel.title %>" class="w-full h-full object-cover">
+      </div>
+
+      <!-- Textual descriptors -->
+      <div class="text-center md:text-left text-white space-y-4 max-w-2xl">
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-pink/25 text-brand-pink border border-brand-pink/10 uppercase tracking-widest">
+            <%= novel.genre %>
+          </span>
+          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white/10 text-gray-300 border border-white/5 uppercase">
+            Published: <%= novel.publicationYear %>
+          </span>
+        </div>
+
+        <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight"><%= novel.title %></h1>
+        
+        <p class="text-sm text-gray-400 font-medium">
+          Written by <a href="/authors/<%= novel.authorId %>" class="text-brand-pink hover:underline font-bold text-base block sm:inline mt-1 sm:mt-0"><%= novel.authorName %></a>
+        </p>
+
+        <div class="flex items-center justify-center md:justify-start gap-6 pt-2 text-sm text-gray-300">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500"></i>
+            <span class="font-bold text-white text-base"><%= novel.rating %></span>
+            <span class="text-gray-400">/ 5.0</span>
+          </div>
+          <div class="w-px h-4 bg-white/10"></div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="glasses" class="w-5 h-5 text-brand-pink"></i>
+            <span class="font-bold text-white"><%= novel.readerCount %></span> readers reading
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Main details Body Columns -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      
+      <!-- LEFT COLUMN: Interactive Actions & QR Code Sharing (Col span 4) -->
+      <div class="lg:col-span-4 space-y-8">
+        
+        <!-- Action Dashboard Card -->
+        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-5">
+          <h2 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-2">Reading Desk</h2>
+          
+          <!-- Start/Continue Reading -->
+          <% if (historyItem) { %>
+            <a href="/novels/<%= novel._id %>/read?page=<%= historyItem.pageIndex %>" class="w-full py-4 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm flex items-center justify-center gap-2.5">
+              <i data-lucide="play" class="w-4.5 h-4.5 fill-white"></i>
+              Resume Reading (Page <%= historyItem.pageIndex + 1 %>)
+            </a>
+          <% } else { %>
+            <a href="/novels/<%= novel._id %>/read?page=0" class="w-full py-4 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm flex items-center justify-center gap-2.5">
+              <i data-lucide="book-open" class="w-4.5 h-4.5"></i>
+              Start Reading Online
+            </a>
+          <% } %>
+
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <!-- Favorite Form Action -->
+            <form action="/novels/<%= novel._id %>/favorite" method="POST">
+              <button type="submit" class="w-full py-2.5 rounded-xl border border-brand-brown/20 text-gray-700 dark:text-gray-300 hover:bg-brand-cream/10 text-xs font-bold transition-all flex items-center justify-center gap-1.5 <%= isFavorite ? 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30' : '' %>">
+                <% if (isFavorite) { %>
+                  <i data-lucide="heart" class="w-4 h-4 text-red-500 fill-red-500"></i>
+                  Favorited!
+                <% } else { %>
+                  <i data-lucide="heart" class="w-4 h-4"></i>
+                  Favorite Book
+                <% } %>
+              </button>
+            </form>
+
+            <!-- Bookmarked status visual indicator -->
+            <% if (bookmarkItem) { %>
+              <a href="/novels/<%= novel._id %>/read?page=<%= bookmarkItem.pageIndex %>" class="py-2.5 rounded-xl border border-brand-pink text-brand-brown dark:text-brand-pink bg-brand-pink/25 text-xs font-bold transition-all flex items-center justify-center gap-1.5" title="Jump to Bookmark">
+                <i data-lucide="bookmark" class="w-4 h-4 fill-brand-brown dark:fill-brand-pink"></i>
+                Page <%= bookmarkItem.pageIndex + 1 %> Save
+              </a>
+            <% } else { %>
+              <button onclick="alert('Open the digital reader by clicking Start Reading to pin bookmarks instantly!');" class="py-2.5 rounded-xl border border-brand-brown/10 text-gray-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="bookmark" class="w-4 h-4"></i>
+                Unbookmarked
+              </button>
+            <% } %>
+          </div>
+
+          <!-- Quick statistics context -->
+          <div class="border-t border-brand-brown/10 dark:border-brand-brown/15 pt-4 text-xs text-gray-500 dark:text-gray-400 space-y-2">
+            <% if (historyItem) { %>
+              <p class="flex justify-between">
+                <span>Reading Status:</span>
+                <span class="font-bold text-gray-800 dark:text-white">Active (<%= historyItem.progressPercent %>% read)</span>
+              </p>
+            <% } else { %>
+              <p class="flex justify-between">
+                <span>Reading Status:</span>
+                <span class="text-gray-400 italic">Unread</span>
+              </p>
+            <% } %>
+            <p class="flex justify-between">
+              <span>Shelved In:</span>
+              <span class="font-bold text-gray-800 dark:text-white"><%= novel.genre %> Shelf</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- QR Code Card for this book -->
+        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col items-center text-center">
+          <h2 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-3">Share This Masterpiece</h2>
+          <p class="text-xs text-gray-400 max-w-xs mb-4">Scan this generated QR code on mobile devices to share this novel's details with other bibliophiles.</p>
+          <div class="p-3 bg-brand-cream rounded-xl border border-brand-pink/10 shadow-inner flex flex-col items-center justify-center w-52">
+            <img src="<%= detailQRCode %>" alt="Book sharing QR Code" class="w-full aspect-square object-contain rounded">
+            <span class="text-[9px] font-bold text-brand-brown uppercase tracking-wider mt-2">Mobile Gate</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Synopsis & Guild Comments (Col span 8) -->
+      <div class="lg:col-span-8 space-y-12">
+        
+        <!-- Synopsis Section -->
+        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-6">
+          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-brand-pink pb-3 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2">
+            <i data-lucide="quote" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+            Synopsis & Historical Context
+          </h2>
+          
+          <div class="prose prose-amber dark:prose-invert text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed space-y-4">
+            <p class="font-bold text-gray-800 dark:text-white italic bg-brand-cream/30 dark:bg-brand-brown/10 p-4 rounded-xl border-l-4 border-brand-brown">
+              "<%= novel.description %>"
+            </p>
+            
+            <!-- Replace newlines with Paragraphs for neat layout -->
+            <% novel.synopsis.split('\n\n').forEach(function(para) { %>
+              <p><%= para %></p>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- Guild reviews / Comments Section -->
+        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-8">
+          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-brand-pink pb-3 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2.5">
+            <i data-lucide="message-square" class="w-6 h-6 text-brand-brown dark:text-brand-pink"></i>
+            The Literary Guild's Reviews
+          </h2>
+
+          <!-- Add Comment Form -->
+          <form action="/novels/<%= novel._id %>/comments" method="POST" class="space-y-4">
+            <% if (!user) { %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="guestName" class="block text-xs uppercase tracking-wider font-bold text-gray-550 dark:text-gray-350 mb-1.5">Your Name (Optional)</label>
+                  <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="block w-full px-4 py-2.5 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all">
+                </div>
+                <div class="flex items-end pb-1.5">
+                  <span class="text-xs text-gray-450">You are reviewing as a guest. Or <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Log in</a> to post.</span>
+                </div>
+              </div>
+            <% } %>
+            <div>
+              <label for="content" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Pen your critique / insights</label>
+              <textarea id="content" name="content" rows="3.5" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Share your literary critique, theme analysis, or historic thoughts..."></textarea>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="px-5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow text-xs flex items-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Submit Critique
+              </button>
+            </div>
+          </form>
+
+          <!-- Comments List Feed -->
+          <div class="space-y-6 pt-4">
+            <% if (comments.length > 0) { %>
+              <% comments.forEach(function(comment) { %>
+                <div class="flex items-start gap-4 p-4 rounded-xl border border-brand-brown/5 dark:border-brand-brown/10 hover:bg-brand-cream/5 dark:hover:bg-brand-brown/5 transition-colors">
+                  <img src="<%= comment.userAvatar %>" alt="" class="w-10 h-10 rounded-full object-cover border border-brand-pink/30 flex-shrink-0">
+                  <div class="flex-grow min-w-0">
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
+                      <span class="text-[10px] text-gray-450 font-mono"><%= new Date(comment.createdAt).toLocaleDateString() %></span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-gray-650 dark:text-gray-350 mt-1 leading-relaxed">
+                      <%= comment.content %>
+                    </p>
+                    
+                    <div class="mt-3 flex items-center gap-4 text-[10px] border-t border-brand-brown/5 pt-2">
+                      <% if (comment.isReported) { %>
+                        <span class="text-red-500 font-semibold flex items-center gap-1">
+                          <i data-lucide="shield-alert" class="w-3 h-3"></i> Flagged for Moderation
+                        </span>
+                      <% } else { %>
+                        <form action="/novels/<%= novel._id %>/comments/report/<%= comment._id %>" method="POST" class="inline">
+                          <button type="submit" class="text-gray-400 hover:text-red-500 flex items-center gap-1">
+                            <i data-lucide="flag" class="w-3.5 h-3.5"></i> Report Content
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="text-xs text-gray-400 italic text-center py-6">No critiques have been submitted yet. Be the first to express your thoughts!</p>
+            <% } %>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>

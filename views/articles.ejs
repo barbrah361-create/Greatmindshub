@@ -1,0 +1,75 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-grow">
+  <div class="text-center mb-14">
+    <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest">Editorial Collection</span>
+    <h1 class="font-serif text-4xl sm:text-5xl font-bold mt-3 text-gray-800 dark:text-white">Insights, Profiles, and Storytelling Guides</h1>
+    <p class="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mt-4 text-sm sm:text-base leading-relaxed">
+      Read our latest library articles, discover author spotlights, and learn the craft behind the most memorable narratives.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-10">
+    <div class="space-y-8">
+      <% articles.forEach(function(article) { %>
+        <article class="group book-card overflow-hidden border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm hover:shadow-lg transition-shadow duration-300">
+          <div class="relative h-72 overflow-hidden bg-brand-cream/50">
+            <img src="<%= article.image %>" alt="<%= article.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent"></div>
+            <div class="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2">
+              <span class="text-[10px] uppercase tracking-[0.25em] bg-brand-pink/90 text-brand-dark font-semibold px-2.5 py-1 rounded-full"> <%= article.category %> </span>
+              <span class="text-[10px] text-gray-100 bg-black/30 px-2.5 py-1 rounded-full"><%= article.readTime %></span>
+            </div>
+          </div>
+
+          <div class="p-6">
+            <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white mb-3"><%= article.title %></h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed"><%= article.excerpt %></p>
+
+            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-5">
+              <span><strong>By</strong> <%= article.author %></span>
+              <span>&bull;</span>
+              <span><%= article.date %></span>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-6">
+              <% article.tags.forEach(function(tag) { %>
+                <span class="px-3 py-1 rounded-full text-[11px] bg-brand-cream text-brand-brown dark:bg-[#2A1E17] dark:text-brand-pink border border-brand-brown/10"><%= tag %></span>
+              <% }) %>
+            </div>
+
+            <a href="/articles/<%= article.id %>" class="inline-flex items-center gap-2 px-4 py-3 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl transition-all duration-200">
+              Read Article
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+
+    <aside class="space-y-8">
+      <div class="book-card p-6 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-sm">
+        <h3 class="font-serif text-xl font-bold text-gray-800 dark:text-white mb-3">Featured Insights</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Browse the editor’s picks for articles that help you understand classic authors, writing craft, and literary history.</p>
+        <div class="space-y-4">
+          <% featuredArticles.forEach(function(article) { %>
+            <a href="/articles/<%= article.id %>" class="block p-3 rounded-3xl bg-brand-cream/80 dark:bg-[#2A1E17] hover:bg-brand-cream dark:hover:bg-[#3A2A21] transition-colors">
+              <h4 class="font-semibold text-gray-800 dark:text-white"><%= article.title %></h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"><%= article.category %> • <%= article.readTime %></p>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="book-card p-6 border border-brand-brown/10 dark:border-brand-brown/20 bg-brand-pink/10 dark:bg-[#2A0E12] shadow-sm">
+        <span class="text-xs uppercase tracking-[0.25em] text-brand-pink font-semibold">Pro Tip</span>
+        <h3 class="font-serif text-xl font-bold mt-3 text-brand-dark dark:text-brand-pink">Keep Your Reading Flow</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">Create a curated reading list, bookmark your favorite passages, and come back daily to finish articles or novels with more focus.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

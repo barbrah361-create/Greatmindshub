@@ -1,0 +1,84 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="flex-grow flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200&auto=format&fit=crop&q=80');">
+  <!-- Subtle dark overlay -->
+  <div class="absolute inset-0 bg-brand-cream/80 dark:bg-black/80 backdrop-blur-[4px]"></div>
+
+  <div class="max-w-md w-full relative z-10 space-y-8 bg-white dark:bg-[#1E150F] p-8 sm:p-10 rounded-2xl shadow-xl border border-brand-brown/10 dark:border-brand-brown/20">
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-xl bg-brand-brown text-brand-cream flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="user-plus" class="w-6 h-6 text-brand-pink"></i>
+      </div>
+      <h2 class="font-serif text-3xl font-bold text-gray-800 dark:text-brand-pink">Create Account</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Become a member to read novels and track your reading progress.</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form class="mt-8 space-y-5" action="/auth/register" method="POST">
+      <div class="space-y-4">
+        <div>
+          <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+              <i data-lucide="user" class="w-5 h-5"></i>
+            </span>
+            <input id="username" name="username" type="text" required class="block w-full pl-11 pr-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink focus:ring-1 focus:ring-brand-brown dark:focus:ring-brand-pink text-sm transition-all" placeholder="e.g. read_enthusiast">
+          </div>
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+              <i data-lucide="mail" class="w-5 h-5"></i>
+            </span>
+            <input id="email" name="email" type="email" autocomplete="email" required class="block w-full pl-11 pr-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink focus:ring-1 focus:ring-brand-brown dark:focus:ring-brand-pink text-sm transition-all" placeholder="name@domain.com">
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+              <i data-lucide="lock" class="w-5 h-5"></i>
+            </span>
+            <input id="password" name="password" type="password" required class="block w-full pl-11 pr-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink focus:ring-1 focus:ring-brand-brown dark:focus:ring-brand-pink text-sm transition-all" placeholder="••••••••">
+          </div>
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Confirm Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+              <i data-lucide="check-square" class="w-5 h-5"></i>
+            </span>
+            <input id="confirmPassword" name="confirmPassword" type="password" required class="block w-full pl-11 pr-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink focus:ring-1 focus:ring-brand-brown dark:focus:ring-brand-pink text-sm transition-all" placeholder="••••••••">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-start text-xs text-gray-500 dark:text-gray-400 leading-relaxed gap-2.5 pt-1">
+        <input type="checkbox" required class="rounded border-gray-300 dark:border-gray-600 text-brand-brown focus:ring-brand-brown dark:focus:ring-brand-pink mt-0.5">
+        <span>I agree to the Library Archival Terms and represent that I will respect standard author copyright guidelines.</span>
+      </div>
+
+      <div class="pt-2">
+        <button type="submit" class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-brown hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-brown dark:focus:ring-brand-pink shadow-md hover:shadow-lg transition-all duration-200">
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <i data-lucide="sparkles" class="w-5 h-5 text-brand-pink group-hover:scale-110 transition-transform"></i>
+          </span>
+          Begin Reading Journey
+        </button>
+      </div>
+    </form>
+
+    <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+      Already a member? 
+      <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Sign in here</a>
+    </p>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

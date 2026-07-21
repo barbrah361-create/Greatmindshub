@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" class="<%= darkMode ? 'dark' : '' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Readers - Africa\'s largest online reading, writing and publishing community. Discover novels, poetry, and world-class authors.' %>">
+  <meta name="theme-color" content="#6F4E37">
+  <link rel="canonical" href="<%= typeof canonical !== 'undefined' ? canonical : (appUrl + currentPath) %>">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Readers">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title + ' | Readers' : 'Readers - Digital Library & Writing Community' %>">
+  <meta property="og:description" content="<%= typeof description !== 'undefined' ? description : 'Africa\'s largest online reading, writing and publishing community' %>">
+  <meta property="og:image" content="<%= appUrl %>/icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <title><%= typeof title !== 'undefined' ? title + ' | Readers' : 'Readers - Digital Library & Writing Community' %></title>
+  
+  <!-- Typography & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS v4 via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              brown: '#D14D2A',
+              pink: '#F7F3EE',
+              cream: '#FDFCF8',
+              accent: '#F9A826',
+              dark: '#1E150F'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Dark Mode Setup (Anti-Flicker) -->
+  <script>
+    // Inline script to prevent theme flickering (Elegant Dark)
+    const getTheme = () => {
+      const stored = document.cookie.split('; ').find(row => row.startsWith('darkMode='));
+      if (stored) {
+        return stored.split('=')[1] === 'true' ? 'dark' : 'light';
+      }
+      return 'dark';
+    };
+    if (getTheme() === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+
+  <!-- Page Loader Animation Styling -->
+  <style>
+    /* Premium smooth transitions */
+    * {
+      transition-property: background-color, border-color, text-decoration-color, fill, stroke;
+      transition-duration: 200ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    :root {
+      --brown: #D14D2A;
+      --pink: #F7F3EE;
+      --cream: #FDFCF8;
+      --white: #FFFFFF;
+      --text: #1A1A1A;
+    }
+
+    /* Elegant Theme Utility Classes */
+    .btn-brown {
+      background-color: var(--brown);
+      color: var(--white);
+      transition: all 0.3s ease;
+    }
+    .btn-brown:hover {
+      background-color: #A93315;
+    }
+    .btn-pink {
+      background-color: var(--pink);
+      color: var(--brown);
+      transition: all 0.3s ease;
+    }
+    .btn-pink:hover {
+      background-color: #ffffff;
+      color: var(--brown);
+    }
+    .book-card {
+      background-color: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(120, 53, 15, 0.05);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(120, 53, 15, 0.08);
+    }
+    .dark .book-card {
+      background-color: #161513;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(245, 236, 227, 0.1);
+    }
+    .author-pill {
+      background-color: rgba(245, 236, 227, 0.15);
+      border: 1px solid rgba(245, 236, 227, 0.3);
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+    }
+    .dark .author-pill {
+      background-color: rgba(245, 236, 227, 0.05);
+      border: 1px solid rgba(245, 236, 227, 0.15);
+    }
+    .category-badge {
+      background-color: var(--white);
+      border: 1px solid var(--brown);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--brown);
+    }
+    .dark .category-badge {
+      background-color: #161513;
+      border: 1px solid var(--pink);
+      color: var(--pink);
+    }
+    .hero-overlay {
+      background: linear-gradient(rgba(120, 53, 15, 0.85), rgba(26, 26, 26, 0.95));
+      border-radius: 24px;
+    }
+    
+    /* Scrollbar hide helper */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+ 
+    .library-loader {
+      position: fixed;
+      inset: 0;
+      background-color: #FDFCF8; /* Cream */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .dark .library-loader {
+      background-color: #0F0E0D; /* Dark charcoal */
+    }
+    .glass-card {
+      background: rgba(253, 252, 248, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(209, 77, 42, 0.1);
+      border-radius: 16px;
+    }
+    .dark .glass-card {
+      background: rgba(22, 21, 19, 0.7);
+      border: 1px solid rgba(247, 243, 238, 0.1);
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f7f3ee 25%, #fdfcf8 50%, #f7f3ee 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .library-loader.hidden-loader {
+      opacity: 0;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body class="bg-[#FDFCF8] dark:bg-[#0F0E0D] text-[#1A1A1A] dark:text-[#EAE6DF] font-sans min-h-screen flex flex-col selection:bg-brand-pink/60 selection:text-brand-dark">
+  
+  <!-- Loading Animation -->
+  <div id="app-loader" class="library-loader">
+    <div class="flex flex-col items-center">
+      <div class="w-16 h-16 border-4 border-brand-brown border-t-brand-pink rounded-full animate-spin"></div>
+      <h2 class="text-brand-brown dark:text-brand-pink font-serif text-xl mt-6 tracking-wide animate-pulse">Opening the Library Gates...</h2>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+    
+    function hideLoader() {
+      const loader = document.getElementById('app-loader');
+      if (loader && !loader.classList.contains('hidden-loader')) {
+        loader.classList.add('hidden-loader');
+      }
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      hideLoader();
+    } else {
+      window.addEventListener('DOMContentLoaded', hideLoader);
+      window.addEventListener('load', hideLoader);
+      // Fail-safe fallback to guarantee page opens in 800ms
+      setTimeout(hideLoader, 800);
+    }
+  </script>
