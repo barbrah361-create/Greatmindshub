@@ -255,12 +255,33 @@ export const AuthController = {
     const likesInfo = calculateTikTokStyleLikes(user._id, user.username);
     const followersCount = user.followers ? user.followers.length : 0;
     const followingCount = user.following ? user.following.length : 0;
+
+    // People You May Know (Suggested Users / Creators with accounts)
+    const allUsers = UserModel.find().exec()
+      .filter((u: any) => String(u._id) !== String(user._id));
+    
+    const suggestedUsers = allUsers.map((u: any) => {
+      const uFollowers = u.followers || [];
+      const isFollowing = user.following ? user.following.includes(u._id) : false;
+      const uLikes = calculateTikTokStyleLikes(u._id, u.username);
+      return {
+        _id: u._id,
+        username: u.username,
+        avatar: u.avatar || '/uploads/default-avatar.png',
+        bio: u.bio || 'Verse & Prose Enthusiast',
+        likes: uLikes.formattedLikes,
+        followersCount: formatTikTokMetric(uFollowers.length),
+        isFollowing
+      };
+    }).slice(0, 12);
+
     res.render('profile', {
       title: 'My Profile',
       profileUser: user,
       tiktokLikes: likesInfo.formattedLikes,
       followersCount: formatTikTokMetric(followersCount),
-      followingCount: formatTikTokMetric(followingCount)
+      followingCount: formatTikTokMetric(followingCount),
+      suggestedUsers
     });
   },
 

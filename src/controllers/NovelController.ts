@@ -453,7 +453,7 @@ export const NovelController = {
   getAuthors: (req: Request, res: Response) => {
     try {
       const user = res.locals.user;
-      const authors = AuthorModel.findPublic().exec().map((a: any) => {
+      const catalogAuthors = AuthorModel.findPublic().exec().map((a: any) => {
         const likesInfo = calculateTikTokStyleLikes(a._id, a.name);
         const followers = a.followers || [];
         const isFollowing = user ? followers.includes(user._id) : false;
@@ -467,7 +467,31 @@ export const NovelController = {
           isFollowing
         };
       });
-      res.render('authors', { title: 'Meet Our Authors', authors });
+
+      // Registered user accounts who write poems/novels
+      const registeredUsers = UserModel.find().exec()
+        .filter((u: any) => !user || String(u._id) !== String(user._id))
+        .map((u: any) => {
+          const likesInfo = calculateTikTokStyleLikes(u._id, u.username);
+          const followers = u.followers || [];
+          const isFollowing = user ? followers.includes(u._id) : false;
+          return {
+            _id: u._id,
+            name: u.username,
+            photo: u.avatar || '/uploads/default-avatar.png',
+            nationality: u.country || 'Kenyan',
+            literaryAchievements: 'Community Creator & Reader',
+            famousNovels: u.bio || 'Poems & Stories',
+            tiktokLikes: likesInfo.formattedLikes,
+            followerCount: followers.length,
+            formattedFollowers: formatTikTokMetric(followers.length),
+            isFollowing,
+            isUserAccount: true
+          };
+        });
+
+      const authors = [...catalogAuthors, ...registeredUsers];
+      res.render('authors', { title: 'Meet Our Authors & Creators', authors });
     } catch (error) {
       console.error('Load authors error:', error);
       res.status(500).render('error', { statusCode: 500, message: 'Could not load authors.' });
