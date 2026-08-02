@@ -5,6 +5,9 @@ import { MpesaService } from '../services/mpesaService.js';
 import { EmailService } from '../services/emailService.js';
 import { UserModel } from '../models/User.js';
 
+const ACCESS_FEE_KES = 100;
+const ACCESS_PHONE = '0726625144';
+
 export const PaymentController = {
   mpesaCallback: async (req: Request, res: Response) => {
     const result = MpesaService.parseCallback(req.body);
@@ -30,6 +33,34 @@ export const PaymentController = {
     }
 
     res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  },
+
+  initiateAccessPayment: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const feature = (req.body.feature as 'upload' | 'live' | 'read') || 'read';
+    const result = await MpesaService.initiateStkPush(ACCESS_PHONE, `ACCESS-${feature}-${user._id.slice(0, 6)}`, `Unlock ${feature} access`);
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, message: result.error || 'Payment could not be started.' });
+    }
+
+    const payment = PaymentModel.create({
+      userId: user._id,
+      feature,
+      contentType: 'book',
+      contentTitle: `${feature} access`,
+      amount: ACCESS_FEE_KES,
+      phoneNumber: ACCESS_PHONE,
+      checkoutRequestId: result.checkoutRequestId,
+      merchantRequestId: result.merchantRequestId,
+      invoiceNumber: `INV-${feature.toUpperCase()}-${Date.now()}`
+    });
+
+    return res.json({ success: true, payment, phoneNumber: ACCESS_PHONE, amount: ACCESS_FEE_KES, message: `Please complete the M-Pesa prompt on ${ACCESS_PHONE} to unlock this feature.` });
   },
 
   getPaymentHistory: (req: Request, res: Response) => {

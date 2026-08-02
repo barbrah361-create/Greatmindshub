@@ -80,6 +80,7 @@ async function bootstrap() {
   app.get('/contact', (req, res) => res.render('contact', { title: 'Contact Our Librarians' }));
   app.get('/profile', requireAuth, AuthController.getProfile);
   app.get('/search', SearchController.search);
+  app.get('/ecosystem', (req, res) => res.render('search', { title: 'Reading Ecosystem', query: '', type: 'all', results: { novels: [], authors: [], poems: [] }, recommendationCards: [] }));
   app.get('/sitemap.xml', SeoController.sitemap);
   app.get('/robots.txt', SeoController.robots);
 
@@ -98,6 +99,7 @@ async function bootstrap() {
   app.use('/', dashboardRoutes);
 
   app.post('/api/mpesa/callback', PaymentController.mpesaCallback);
+  app.post('/api/payments/access', requireAuth, PaymentController.initiateAccessPayment);
   app.get('/dashboard/payments', requireAuth, PaymentController.getPaymentHistory);
   app.get('/dashboard/submissions', requireAuth, PaymentController.getSubmissions);
   app.get('/notifications', requireAuth, SocialController.getNotifications);

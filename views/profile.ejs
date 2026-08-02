@@ -32,8 +32,8 @@
             <p class="text-[10px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-400 mt-1">Favorites</p>
           </div>
           <div class="rounded-3xl bg-brand-cream/80 dark:bg-white/5 border border-brand-brown/10 dark:border-brand-pink/20 p-4">
-            <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white"><%= profileUser.readingHistory?.length || 0 %></p>
-            <p class="text-[10px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-400 mt-1">Reads</p>
+            <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white"><%= typeof streak !== 'undefined' ? streak : 0 %></p>
+            <p class="text-[10px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-400 mt-1">Streak</p>
           </div>
         </div>
       </div>

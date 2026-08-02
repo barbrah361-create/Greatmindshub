@@ -5,6 +5,7 @@ export interface Payment {
   _id: string;
   id: string;
   userId: string;
+  feature?: 'upload' | 'live' | 'read';
   contentType: ContentType;
   contentId?: string;
   contentTitle: string;

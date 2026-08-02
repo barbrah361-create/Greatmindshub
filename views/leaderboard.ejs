@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="max-w-6xl mx-auto px-4 py-12">
+  <div class="rounded-3xl border border-brand-brown/10 bg-white dark:bg-[#1E150F] p-8 shadow-sm">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-[0.28em] text-brand-brown/70 dark:text-brand-pink/70">Community</p>
+        <h1 class="font-serif text-3xl font-bold text-gray-900 dark:text-brand-pink">Leaderboards</h1>
+      </div>
+      <span class="rounded-full bg-brand-pink/20 px-4 py-2 text-sm font-semibold text-brand-brown">Weekly Rising Stars</span>
+    </div>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      <% entries.length ? entries.forEach(function(entry) { %>
+        <div class="rounded-2xl border border-brand-brown/10 bg-brand-cream/40 p-4">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white"><%= entry.name %></p>
+          <p class="mt-2 text-sm text-gray-500"><%= entry.score %> points</p>
+        </div>
+      <% }) : ['Amina', 'Kiptoo', 'Njeri'].forEach(function(name){ %>
+        <div class="rounded-2xl border border-brand-brown/10 bg-brand-cream/40 p-4">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white"><%= name %></p>
+          <p class="mt-2 text-sm text-gray-500">Top reader of the week</p>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

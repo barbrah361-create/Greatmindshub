@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Readers Africa",
+    "slug": "readers-africa",
+    "scheme": "readersafrica",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "assetBundlePatterns": ["**/*"],
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000"
+    }
+  }
+}

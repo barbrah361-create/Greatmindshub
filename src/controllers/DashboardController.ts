@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { NovelModel } from '../models/Novel.js';
 import { UserModel } from '../models/User.js';
 import { getLocalNovelCover } from '../utils/novelPhoto.js';
+import { buildRecommendationSet, calculateReadingStreak, summarizeText } from '../utils/ecosystem.js';
 
 export const DashboardController = {
   // User Dashboard
@@ -64,23 +65,35 @@ export const DashboardController = {
         return null;
       }).filter(Boolean);
 
-      // 4. Recommendation Engine (simple logic: novels user hasn't finished/read yet, sorted by rating)
       const allNovels = NovelModel.find().exec();
       const readNovelIds = new Set((user.readingHistory || []).map((h: any) => String(h.novelId)));
-      const recommendedNovels = allNovels
-        .filter((novel: any) => !readNovelIds.has(String(novel._id)))
-        .slice(0, 3)
-        .map((n: any) => ({
-          ...n,
-          coverImage: getLocalNovelCover(n)
-        }));
+      const recommendedNovels = buildRecommendationSet(
+        allNovels
+          .filter((novel: any) => !readNovelIds.has(String(novel._id)))
+          .map((n: any) => ({ title: n.title, genre: n.genre || 'General' }))
+          .slice(0, 8),
+        user.genres || ['African Literature', 'Fantasy', 'Romance']
+      ).map((item: any) => {
+        const novel = allNovels.find((candidate: any) => candidate.title === item.title);
+        return novel ? { ...novel, coverImage: getLocalNovelCover(novel), summary: summarizeText(novel.synopsis || novel.description || '') } : item;
+      });
+
+      const streak = calculateReadingStreak(user.readingHistory || []);
+      const achievements = [
+        streak >= 3 ? 'Consistency Champion' : 'New Reader',
+        (user.bookmarks || []).length > 0 ? 'Bookmark Curator' : 'Explorer',
+        (user.followers || []).length > 0 ? 'Community Voice' : 'Rising Star'
+      ];
 
       res.render('dashboard', {
         title: 'Reader Dashboard',
         historyItems,
         favoriteNovels,
         bookmarkItems,
-        recommendedNovels
+        recommendedNovels,
+        streak,
+        achievements,
+        premiumStatus: user.role === 'admin' ? 'Editorial Access' : 'Member'
       });
     } catch (error) {
       console.error('Dashboard load error:', error);

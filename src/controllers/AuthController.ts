@@ -255,6 +255,7 @@ export const AuthController = {
     const likesInfo = calculateTikTokStyleLikes(user._id, user.username);
     const followersCount = user.followers ? user.followers.length : 0;
     const followingCount = user.following ? user.following.length : 0;
+    const streak = (user.readingHistory || []).length > 0 ? Math.min(7, Math.max(1, Math.round((user.readingHistory || []).length / 2))) : 0;
 
     // People You May Know (Suggested Users / Creators with accounts)
     const allUsers = UserModel.find().exec()

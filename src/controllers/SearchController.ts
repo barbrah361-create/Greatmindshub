@@ -4,6 +4,7 @@ import { AuthorModel } from '../models/Author.js';
 import { PoemModel } from '../models/Poem.js';
 import { getLocalAuthorPhoto, getWikipediaLink } from '../utils/authorPhoto.js';
 import { getLocalNovelCover } from '../utils/novelPhoto.js';
+import { buildRecommendationSet, summarizeText } from '../utils/ecosystem.js';
 
 export const SearchController = {
   search: (req: Request, res: Response) => {
@@ -15,6 +16,7 @@ export const SearchController = {
       authors: [] as any[],
       poems: [] as any[]
     };
+    const recommendedGenres = ['African Literature', 'Fantasy', 'Romance', 'Poetry'];
 
     if (type === 'all' || type === 'novels' || type === 'books') {
       const allNovels = NovelModel.findPublic().sort({ readerCount: -1 }).limit(200).exec();
@@ -54,6 +56,15 @@ export const SearchController = {
       ).slice(0, 20);
     }
 
-    res.render('search', { title: `Search: ${q}`, query: q, type, results });
+    const recommendationCards = buildRecommendationSet(
+      results.novels.length > 0 ? results.novels.map((novel) => ({ title: novel.title, genre: novel.genre })) : [
+        { title: 'Midnight in Nairobi', genre: 'Mystery' },
+        { title: 'Whispers of the Coast', genre: 'Romance' },
+        { title: 'River of Stars', genre: 'Fantasy' }
+      ],
+      recommendedGenres
+    ).map((item) => ({ ...item, summary: summarizeText(`${item.title} brings a vivid new reading experience to the community.`) }));
+
+    res.render('search', { title: `Search: ${q}`, query: q, type, results, recommendationCards });
   }
 };

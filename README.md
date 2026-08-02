@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Readers Africa
 
-# Run and deploy your AI Studio app
+Readers Africa is a production-ready digital reading ecosystem for African literature, poetry, and author discovery. The platform preserves the existing design language while extending the experience with richer authentication, publishing workflows, discovery, social reading features, premium experiences, and deployment-ready configuration.
 
-This contains everything you need to run your app locally.
+## Highlights
+- Reader, author, and admin authentication with role-aware routing
+- Profiles with avatars, bios, reading streaks, and achievement surfaces
+- Publishing workflows for novels, poetry, and short stories
+- Bookmarking, reading history, continue-reading, progress tracking, and recommendations
+- Advanced search, likes, comments, replies, follows, leaderboards, and notifications
+- Premium and M-Pesa-ready payment hooks for subscriptions, publishing fees, and tips
+- PWA support, responsive layouts, accessibility improvements, loading states, and error handling
+- React Native Expo app support using the same backend APIs
 
-View your app in AI Studio: https://ai.studio/apps/a1a80c1f-f1b1-46af-8276-eb3313cc32b3
+## Run locally
+```bash
+npm install
+npm run dev
+```
 
-## Run Locally
+## Build
+```bash
+npm run build
+```
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Deployment notes
+- Set environment variables for session secrets, admin credentials, and M-Pesa credentials
+- Ensure the public upload folder exists for avatars and covers
+- Use a production reverse proxy and HTTPS for secure sessions

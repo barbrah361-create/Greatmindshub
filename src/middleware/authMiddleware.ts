@@ -1,6 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserModel } from '../models/User.js';
+import { PaymentModel } from '../models/Payment.js';
 import type { UserRole } from '../types/common.js';
+
+const ACCESS_FEE_KES = 100;
+const ACCESS_PHONE = '0726625144';
+
+export function hasCompletedAccessPayment(user: any, feature: 'upload' | 'live' | 'read', amount = ACCESS_FEE_KES): boolean {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+
+  const payments = PaymentModel.find({
+    userId: user._id,
+    status: 'completed',
+    amount,
+    feature
+  }).exec();
+
+  return payments.length > 0;
+}
 
 declare module 'express-session' {
   interface SessionData {
@@ -79,6 +97,28 @@ export function requireVerified(req: Request, res: Response, next: NextFunction)
     return res.redirect('/403');
   }
   next();
+}
+
+export function requireAccessPayment(feature: 'upload' | 'live' | 'read') {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session?.userId) {
+      req.flash('error', 'You must be logged in to access this feature.');
+      return res.redirect('/auth/login');
+    }
+
+    const user = UserModel.findById(req.session.userId);
+    if (!user) {
+      req.flash('error', 'Please sign in again.');
+      return res.redirect('/auth/login');
+    }
+
+    if (hasCompletedAccessPayment(user, feature)) {
+      return next();
+    }
+
+    req.flash('error', `Please pay KES 100 to ${ACCESS_PHONE} via M-Pesa to unlock ${feature === 'read' ? 'reading' : feature === 'live' ? 'live streaming' : 'uploads'}.`);
+    return res.redirect('/dashboard');
+  };
 }
 
 export function requireRole(...roles: UserRole[]) {

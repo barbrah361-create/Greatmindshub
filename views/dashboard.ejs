@@ -37,6 +37,21 @@
           <a href="/history" class="text-xs font-semibold text-brand-brown dark:text-brand-pink hover:underline">View Reading History</a>
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Reading streak</p>
+            <p class="mt-1 text-xl font-bold text-brand-brown"><%= typeof streak !== 'undefined' ? streak : 0 %> days</p>
+          </div>
+          <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Member tier</p>
+            <p class="mt-1 text-xl font-bold text-brand-brown"><%= premiumStatus %></p>
+          </div>
+          <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Achievements</p>
+            <p class="mt-1 text-sm font-bold text-brand-brown"><%= achievements.join(' • ') %></p>
+          </div>
+        </div>
+
         <% if (historyItems.length > 0) { %>
           <div class="space-y-6">
             <% historyItems.slice(0, 3).forEach(function(item) { %>
@@ -155,7 +170,7 @@
       <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm h-fit">
         <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-brand-pink mb-6 pb-4 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2.5">
           <i data-lucide="sparkles" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
-          Recommended
+          AI Recommendations
         </h2>
 
         <% if (recommendedNovels.length > 0) { %>
@@ -166,6 +181,7 @@
                 <div class="min-w-0 flex-grow">
                   <h3 class="font-serif text-sm font-bold text-gray-800 dark:text-white truncate group-hover:text-brand-brown dark:group-hover:text-brand-pink transition-colors"><%= novel.title %></h3>
                   <p class="text-[10px] text-gray-400">By <%= novel.authorName %></p>
+                  <p class="text-[10px] text-gray-500 mt-1"><%= novel.summary || 'A fresh literary discovery for your next reading session.' %></p>
                   <div class="flex items-center gap-1 mt-1.5">
                     <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>
                     <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300"><%= novel.rating %></span>

@@ -65,5 +65,88 @@
     "genre": "Free Verse",
     "submittedBy": "83v6pkw84q7s3w0ti0nq1",
     "updatedAt": "2026-07-21T13:30:24.926Z"
+  },
+  {
+    "_id": "yns0omrre3rzv9n7271mlh",
+    "id": "yns0omrre3rzv9n7271mlh",
+    "createdAt": "2026-07-23T10:21:53.437Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "approved",
+    "tags": [
+      "LOVE"
+    ],
+    "title": "LIFE",
+    "content": "Life under the scorching sun.....",
+    "authorId": "lb6a7832axpf5d8yhi86h",
+    "authorName": "Novelist",
+    "genre": "Spoken Word / Rap",
+    "submittedBy": "lb6a7832axpf5d8yhi86h",
+    "updatedAt": "2026-07-23T10:21:53.475Z"
+  },
+  {
+    "_id": "zha2708m6ky2nmzlmsk8",
+    "id": "zha2708m6ky2nmzlmsk8",
+    "createdAt": "2026-08-02T09:19:39.511Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [
+      {
+        "_id": "zy6gxeqkcx",
+        "userId": "z1ck9a5pcaszgpazw581l",
+        "username": "guru",
+        "userAvatar": "/uploads/default-avatar.png",
+        "content": "hey great poem",
+        "replies": [
+          {
+            "_id": "r7w7hzer33e",
+            "userId": "z1ck9a5pcaszgpazw581l",
+            "username": "guru",
+            "userAvatar": "/uploads/default-avatar.png",
+            "content": "❤️thank you",
+            "replies": [],
+            "createdAt": "2026-08-02T09:20:37.125Z"
+          }
+        ],
+        "createdAt": "2026-08-02T09:19:59.820Z"
+      }
+    ],
+    "bookmarks": [],
+    "viewCount": 3,
+    "approvalStatus": "approved",
+    "tags": [
+      "NATURE"
+    ],
+    "title": "WHEN THE SUN GOES DOWN",
+    "content": "when the sun goes down",
+    "authorId": "z1ck9a5pcaszgpazw581l",
+    "authorName": "guru",
+    "genre": "Sonnets",
+    "submittedBy": "z1ck9a5pcaszgpazw581l",
+    "updatedAt": "2026-08-02T09:20:37.137Z"
+  },
+  {
+    "_id": "6flulq4iyjfaa73h8qh6wm",
+    "id": "6flulq4iyjfaa73h8qh6wm",
+    "createdAt": "2026-08-02T09:41:37.251Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "approved",
+    "tags": [
+      "nature"
+    ],
+    "title": "Echoes of the morning",
+    "content": "We all rise to the pretty glow",
+    "authorId": "z1ck9a5pcaszgpazw581l",
+    "authorName": "guru",
+    "genre": "Odes & Elegies",
+    "submittedBy": "z1ck9a5pcaszgpazw581l",
+    "updatedAt": "2026-08-02T09:41:37.295Z"
   }
 ]

@@ -397,43 +397,6 @@ export const NovelController = {
     }
   },
 
-  // 8. Reply to comment
-  postCommentReply: (req: Request, res: Response) => {
-    const { id, commentId } = req.params;
-    const { replyContent } = req.body;
-    const user = res.locals.user;
-    if (!user) {
-      req.flash('error', 'You must be logged in to reply.');
-      return res.redirect('/auth/login');
-    }
-
-    if (!replyContent) {
-      req.flash('error', 'Reply content cannot be empty.');
-      return res.redirect(`/novels/${id}`);
-    }
-
-    try {
-      const comment = CommentModel.findById(commentId);
-      if (comment) {
-        const replies = comment.replies || [];
-        replies.push({
-          username: user.username,
-          userAvatar: user.avatar || '/uploads/default-avatar.png',
-          content: sanitizeText(replyContent, 1000),
-          createdAt: new Date().toISOString()
-        });
-        CommentModel.findByIdAndUpdate(commentId, { replies });
-        req.flash('success', 'Reply posted successfully.');
-      } else {
-        req.flash('error', 'Comment not found.');
-      }
-      res.redirect(`/novels/${id}`);
-    } catch (error) {
-      console.error('Reply submit error:', error);
-      req.flash('error', 'Could not post reply.');
-      res.redirect(`/novels/${id}`);
-    }
-  },
 
   // 9. Report Comment
   postReportComment: (req: Request, res: Response) => {
