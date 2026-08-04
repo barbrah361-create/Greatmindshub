@@ -16,7 +16,7 @@
   <div class="book-card p-6 sm:p-10 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-md rounded-2xl relative overflow-hidden">
     <div class="absolute top-0 left-0 right-0 h-1 bg-brand-brown"></div>
 
-    <form action="/poems/submit" method="POST" class="space-y-6">
+    <form id="uploadPaymentForm" action="/poems/submit" method="POST" class="space-y-6">
       
       <!-- Title -->
       <div>
@@ -55,18 +55,96 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-brand-brown/10 dark:border-brand-brown/15">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-brand-brown/10 dark:border-brand-brown/15">
         <a href="/poems" class="w-full sm:w-auto text-center px-6 py-3 border border-brand-brown/15 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-brand-cream/20 transition-colors">
           Cancel Submission
         </a>
-        <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow-md transition-all">
+        <button id="submitPoemBtn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow-md transition-all duration-200">
           <i data-lucide="send" class="w-4 h-4"></i>
-          Publish Poem
+          Upload Poem
         </button>
       </div>
+      <p id="uploadPayStatus" class="mt-3 text-sm text-gray-600 dark:text-gray-300"><% if (!uploadAccessPaid) { %>Complete the form, then click Upload to receive a payment request immediately. <% } else { %>You already have upload access; click Upload to submit your poem. <% } %></p>
 
     </form>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('uploadPaymentForm');
+    const statusEl = document.getElementById('uploadPayStatus');
+    const submitBtn = document.getElementById('submitPoemBtn');
+    const uploadAccessPaid = <%= uploadAccessPaid ? 'true' : 'false' %>;
+    let paymentInProgress = false;
+
+    if (!form || !submitBtn) return;
+
+    form.addEventListener('submit', async (event) => {
+      if (uploadAccessPaid || paymentInProgress) return;
+      event.preventDefault();
+      paymentInProgress = true;
+      submitBtn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Starting payment for upload — please follow the M-Pesa prompt on your phone...';
+
+      try {
+        const res = await fetch('/api/payments/access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feature: 'upload' })
+        });
+        if (res.status === 401) {
+          window.location.href = '/auth/login';
+          return;
+        }
+        const data = await res.json();
+        if (!data?.success) {
+          if (statusEl) statusEl.textContent = data?.message || 'Could not start the upload payment. Please try again.';
+          paymentInProgress = false;
+          submitBtn.disabled = false;
+          return;
+        }
+        if (statusEl) statusEl.innerHTML = `Payment started. Complete the M-Pesa prompt on <strong>${data.phoneNumber}</strong>.`;
+        const checkoutId = data.payment?.checkoutRequestId || data.checkoutRequestId;
+        if (!checkoutId) {
+          paymentInProgress = false;
+          submitBtn.disabled = false;
+          return;
+        }
+
+        let attempts = 0;
+        const interval = setInterval(async () => {
+          attempts++;
+          try {
+            const poll = await fetch(`/api/payments/status?checkoutRequestId=${encodeURIComponent(checkoutId)}`);
+            if (poll.status === 401) {
+              clearInterval(interval);
+              window.location.href = '/auth/login';
+              return;
+            }
+            const pollData = await poll.json();
+            if (pollData?.success && pollData.status === 'completed') {
+              clearInterval(interval);
+              if (statusEl) statusEl.innerHTML = '<span class="text-green-600">Upload payment completed. Submitting your poem now...</span>';
+              form.submit();
+            }
+          } catch (err) {
+            // ignore
+          }
+          if (attempts >= 20) {
+            clearInterval(interval);
+            if (statusEl) statusEl.textContent = 'Payment is taking longer than expected. Confirm the M-Pesa prompt and try again if needed.';
+            paymentInProgress = false;
+            submitBtn.disabled = false;
+          }
+        }, 3000);
+      } catch (error) {
+        if (statusEl) statusEl.textContent = 'Unable to start payment. Check your connection and try again.';
+        paymentInProgress = false;
+        submitBtn.disabled = false;
+      }
+    });
+  });
+</script>
 
 <%- include('partials/footer') %>

@@ -6,9 +6,9 @@ import { submissionLimiter } from '../middleware/securityMiddleware.js';
 const router = Router();
 
 router.get('/', PoemController.getPoems);
-router.get('/submit', requireAuth, requireVerified, requireAccessPayment('upload'), PoemController.getSubmitPoem);
+router.get('/submit', requireAuth, requireVerified, PoemController.getSubmitPoem);
 router.post('/submit', requireAuth, requireVerified, requireAccessPayment('upload'), submissionLimiter, PoemController.postSubmitPoem);
-router.get('/:id', requireAccessPayment('read'), PoemController.getPoemDetails);
+router.get('/:id', PoemController.getPoemDetails);
 router.post('/:id/like', requireAuth, requireVerified, PoemController.postLike);
 router.post('/:id/comment', PoemController.postComment);
 router.post('/:id/comment/:commentId/reply', PoemController.postCommentReply);

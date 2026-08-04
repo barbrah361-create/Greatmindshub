@@ -56,6 +56,15 @@
           <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white"><%= profileUser.username %></h2>
           <span class="inline-flex items-center justify-center mt-3 px-4 py-2 rounded-full bg-brand-pink/20 text-brand-brown dark:text-brand-pink text-xs font-semibold uppercase tracking-[0.24em] border border-brand-pink/30"> <%= profileUser.role %> Member </span>
           <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Member since <span class="font-semibold text-gray-800 dark:text-white"><%= new Date(profileUser.createdAt).toLocaleDateString() %></span></p>
+          <div class="mt-4 rounded-2xl border border-brand-pink/20 bg-brand-cream/70 dark:bg-white/5 px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold">Profile completion</span>
+              <span class="font-semibold text-brand-brown dark:text-brand-pink"><%= typeof profileCompletion !== 'undefined' ? profileCompletion : 0 %>%</span>
+            </div>
+            <div class="h-2 rounded-full bg-brand-brown/10 dark:bg-white/10 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-brand-brown to-brand-pink" style="width:<%= typeof profileCompletion !== 'undefined' ? profileCompletion : 0 %>%"></div>
+            </div>
+          </div>
         </div>
 
         <div class="mt-8 space-y-4">
@@ -69,10 +78,10 @@
           </div>
 
           <div class="grid grid-cols-1 gap-3">
-            <% if (profileUser.location) { %>
+            <% if (profileUser.location || profileUser.nationality) { %>
               <div class="rounded-3xl bg-white dark:bg-[#24180F] border border-brand-brown/10 dark:border-brand-brown/20 p-4">
                 <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-[0.24em] mb-2">Location</p>
-                <p class="text-base font-semibold text-gray-900 dark:text-white"><%= profileUser.location %></p>
+                <p class="text-base font-semibold text-gray-900 dark:text-white"><%= profileUser.location || profileUser.nationality %></p>
               </div>
             <% } %>
             <% if (profileUser.website) { %>
@@ -81,18 +90,27 @@
                 <a href="<%= profileUser.website %>" target="_blank" rel="noopener noreferrer" class="text-brand-brown dark:text-brand-pink font-semibold hover:underline break-words"><%= profileUser.website %></a>
               </div>
             <% } %>
-            <% if (profileUser.twitter || profileUser.instagram || profileUser.linkedin) { %>
+            <% if (profileUser.twitter || profileUser.instagram || profileUser.linkedin || profileUser.facebook || profileUser.tiktok || profileUser.youtube) { %>
               <div class="rounded-3xl bg-white dark:bg-[#24180F] border border-brand-brown/10 dark:border-brand-brown/20 p-4">
                 <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-[0.24em] mb-3">Social links</p>
-                <div class="space-y-2 text-sm">
+                <div class="flex flex-wrap gap-2 text-sm">
                   <% if (profileUser.twitter) { %>
-                    <a href="<%= profileUser.twitter %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="twitter" class="w-4 h-4"></i><span>Twitter</span></a>
+                    <a href="<%= profileUser.twitter %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="twitter" class="w-4 h-4"></i><span>Twitter</span></a>
                   <% } %>
                   <% if (profileUser.instagram) { %>
-                    <a href="<%= profileUser.instagram %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="instagram" class="w-4 h-4"></i><span>Instagram</span></a>
+                    <a href="<%= profileUser.instagram %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="instagram" class="w-4 h-4"></i><span>Instagram</span></a>
                   <% } %>
                   <% if (profileUser.linkedin) { %>
-                    <a href="<%= profileUser.linkedin %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-gray-900 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="linkedin" class="w-4 h-4"></i><span>LinkedIn</span></a>
+                    <a href="<%= profileUser.linkedin %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="linkedin" class="w-4 h-4"></i><span>LinkedIn</span></a>
+                  <% } %>
+                  <% if (profileUser.facebook) { %>
+                    <a href="<%= profileUser.facebook %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="facebook" class="w-4 h-4"></i><span>Facebook</span></a>
+                  <% } %>
+                  <% if (profileUser.tiktok) { %>
+                    <a href="<%= profileUser.tiktok %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="music-2" class="w-4 h-4"></i><span>TikTok</span></a>
+                  <% } %>
+                  <% if (profileUser.youtube) { %>
+                    <a href="<%= profileUser.youtube %>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-brand-cream/80 px-3 py-2 text-gray-900 dark:bg-white/5 dark:text-white hover:text-brand-brown dark:hover:text-brand-pink"><i data-lucide="youtube" class="w-4 h-4"></i><span>YouTube</span></a>
                   <% } %>
                 </div>
               </div>
@@ -132,6 +150,17 @@
                 <input type="text" id="location" name="location" value="<%= profileUser.location %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Lagos, Nigeria" />
               </div>
               <div>
+                <label for="country" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Country</label>
+                <input type="text" id="country" name="country" value="<%= profileUser.nationality %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Nigeria" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="languages" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Languages</label>
+                <input type="text" id="languages" name="languages" value="<%= profileUser.writingStyle %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="English, Swahili" />
+              </div>
+              <div>
                 <label for="website" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
                 <input type="url" id="website" name="website" value="<%= profileUser.website %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://" />
               </div>
@@ -140,7 +169,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label for="twitter" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Twitter</label>
-                <input type="url" id="twitter" name="twitter" value="<%= profileUser.twitter %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://twitter.com/yourhandle" />
+                <input type="url" id="twitter" name="twitter" value="<%= profileUser.twitter %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://x.com/yourhandle" />
               </div>
               <div>
                 <label for="instagram" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Instagram</label>
@@ -148,9 +177,37 @@
               </div>
             </div>
 
-            <div>
-              <label for="linkedin" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">LinkedIn</label>
-              <input type="url" id="linkedin" name="linkedin" value="<%= profileUser.linkedin %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://linkedin.com/in/yourname" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="linkedin" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">LinkedIn</label>
+                <input type="url" id="linkedin" name="linkedin" value="<%= profileUser.linkedin %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://linkedin.com/in/yourname" />
+              </div>
+              <div>
+                <label for="facebook" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Facebook</label>
+                <input type="url" id="facebook" name="facebook" value="<%= profileUser.facebook %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://facebook.com/yourname" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="tiktok" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">TikTok</label>
+                <input type="url" id="tiktok" name="tiktok" value="<%= profileUser.tiktok %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://tiktok.com/@yourhandle" />
+              </div>
+              <div>
+                <label for="youtube" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">YouTube</label>
+                <input type="url" id="youtube" name="youtube" value="<%= profileUser.youtube %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="https://youtube.com/@yourchannel" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="genres" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Favorite Genres</label>
+                <input type="text" id="genres" name="genres" value="<%= (profileUser.genres || []).join(', ') %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Fantasy, Romance" />
+              </div>
+              <div>
+                <label for="favoriteAuthors" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Favorite Authors</label>
+                <input type="text" id="favoriteAuthors" name="favoriteAuthors" value="<%= (profileUser.awards || []).join(', ') %>" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-2xl bg-brand-cream/10 dark:bg-[#2E1E12] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Aminata, Chinua" />
+              </div>
             </div>
 
             <div>

@@ -4,6 +4,7 @@ import { EmailService } from '../services/emailService.js';
 import { sanitizePlainText } from '../utils/sanitize.js';
 
 import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
+import { calculateProfileCompletion, normalizeSocialUrl } from '../utils/profile.js';
 
 export const AuthController = {
   getRegister: (req: Request, res: Response) => {
@@ -256,6 +257,20 @@ export const AuthController = {
     const followersCount = user.followers ? user.followers.length : 0;
     const followingCount = user.following ? user.following.length : 0;
     const streak = (user.readingHistory || []).length > 0 ? Math.min(7, Math.max(1, Math.round((user.readingHistory || []).length / 2))) : 0;
+    const completion = calculateProfileCompletion({
+      avatar: user.avatar,
+      coverPhoto: user.coverPhoto,
+      bio: user.bio,
+      country: user.nationality,
+      languages: user.writingStyle,
+      website: user.website,
+      favoriteGenres: user.genres || [],
+      favoriteAuthors: user.awards || [],
+      twitter: user.twitter,
+      instagram: user.instagram,
+      linkedin: user.linkedin,
+      facebook: user.facebook
+    });
 
     // People You May Know (Suggested Users / Creators with accounts)
     const allUsers = UserModel.find().exec()
@@ -282,6 +297,8 @@ export const AuthController = {
       tiktokLikes: likesInfo.formattedLikes,
       followersCount: formatTikTokMetric(followersCount),
       followingCount: formatTikTokMetric(followingCount),
+      streak,
+      profileCompletion: completion,
       suggestedUsers
     });
   },
@@ -290,7 +307,7 @@ export const AuthController = {
     const user = res.locals.user;
     if (!user) return res.redirect('/auth/login');
 
-    const { username, bio, location, website, twitter, instagram, linkedin, nationality, occupation, writingStyle } = req.body;
+    const { username, bio, location, website, twitter, instagram, linkedin, facebook, tiktok, youtube, nationality, occupation, writingStyle, genres, favoriteAuthors, country, languages } = req.body;
 
     if (!username) {
       req.flash('error', 'Username is required.');
@@ -303,14 +320,41 @@ export const AuthController = {
       return res.redirect('/profile');
     }
 
+    const normalizedSocialLinks = {
+      website: normalizeSocialUrl(website, 'website'),
+      twitter: normalizeSocialUrl(twitter, 'twitter'),
+      instagram: normalizeSocialUrl(instagram, 'instagram'),
+      linkedin: normalizeSocialUrl(linkedin, 'linkedin'),
+      facebook: normalizeSocialUrl(facebook, 'facebook'),
+      tiktok: normalizeSocialUrl(tiktok, 'tiktok'),
+      youtube: normalizeSocialUrl(youtube, 'youtube')
+    };
+
+    const favoriteGenres = Array.isArray(genres)
+      ? genres.map((item: string) => sanitizePlainText(item, 40)).filter(Boolean)
+      : String(genres || '').split(',').map((item: string) => sanitizePlainText(item, 40)).filter(Boolean);
+
+    const favoriteAuthorsList = Array.isArray(favoriteAuthors)
+      ? favoriteAuthors.map((item: string) => sanitizePlainText(item, 60)).filter(Boolean)
+      : String(favoriteAuthors || '').split(',').map((item: string) => sanitizePlainText(item, 60)).filter(Boolean);
+
     UserModel.findByIdAndUpdate(user._id, {
       username: sanitizePlainText(username, 50),
       bio: sanitizePlainText(bio || '', 1000),
       location: sanitizePlainText(location || '', 100),
-      nationality: sanitizePlainText(nationality || '', 100),
+      nationality: sanitizePlainText(country || nationality || '', 100),
       occupation: sanitizePlainText(occupation || '', 100),
-      writingStyle: sanitizePlainText(writingStyle || '', 200),
-      website, twitter, instagram, linkedin
+      writingStyle: sanitizePlainText(languages || writingStyle || '', 200),
+      website: normalizedSocialLinks.website,
+      twitter: normalizedSocialLinks.twitter,
+      instagram: normalizedSocialLinks.instagram,
+      linkedin: normalizedSocialLinks.linkedin,
+      facebook: normalizedSocialLinks.facebook,
+      tiktok: normalizedSocialLinks.tiktok,
+      youtube: normalizedSocialLinks.youtube,
+      genres: favoriteGenres,
+      awards: favoriteAuthorsList,
+      coverPhoto: user.coverPhoto || ''
     });
 
     req.flash('success', 'Profile updated successfully.');

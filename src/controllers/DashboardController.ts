@@ -3,6 +3,7 @@ import { NovelModel } from '../models/Novel.js';
 import { UserModel } from '../models/User.js';
 import { getLocalNovelCover } from '../utils/novelPhoto.js';
 import { buildRecommendationSet, calculateReadingStreak, summarizeText } from '../utils/ecosystem.js';
+import { calculateProfileCompletion } from '../utils/profile.js';
 
 export const DashboardController = {
   // User Dashboard
@@ -79,6 +80,20 @@ export const DashboardController = {
       });
 
       const streak = calculateReadingStreak(user.readingHistory || []);
+      const profileCompletion = calculateProfileCompletion({
+        avatar: user.avatar,
+        coverPhoto: user.coverPhoto,
+        bio: user.bio,
+        country: user.nationality,
+        languages: user.writingStyle,
+        website: user.website,
+        favoriteGenres: user.genres || [],
+        favoriteAuthors: user.awards || [],
+        twitter: user.twitter,
+        instagram: user.instagram,
+        linkedin: user.linkedin,
+        facebook: user.facebook
+      });
       const achievements = [
         streak >= 3 ? 'Consistency Champion' : 'New Reader',
         (user.bookmarks || []).length > 0 ? 'Bookmark Curator' : 'Explorer',
@@ -93,6 +108,7 @@ export const DashboardController = {
         recommendedNovels,
         streak,
         achievements,
+        profileCompletion,
         premiumStatus: user.role === 'admin' ? 'Editorial Access' : 'Member'
       });
     } catch (error) {

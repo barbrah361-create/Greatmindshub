@@ -81,6 +81,11 @@
         <span class="text-[10px] uppercase font-bold text-gray-400 tracking-widest font-mono">Archive Record</span>
         <h2 class="font-serif text-lg sm:text-xl font-bold mt-1 text-brand-brown dark:text-brand-pink"><%= novel.title %></h2>
         <p class="text-xs text-gray-500">Page <%= pageIndex + 1 %> of <%= novel.contentPages.length %></p>
+        <div class="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-gray-600 dark:text-gray-300">
+          <span class="rounded-full bg-brand-cream/80 px-3 py-1">Estimated read: <%= readingTime %> min</span>
+          <span class="rounded-full bg-brand-cream/80 px-3 py-1">Progress: <%= progressPercent %>%</span>
+          <span class="rounded-full bg-brand-cream/80 px-3 py-1">Focus note: <%= readerSummary %></span>
+        </div>
       </div>
 
       <!-- Real Reading Content with configurable properties -->

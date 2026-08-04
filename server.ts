@@ -100,6 +100,8 @@ async function bootstrap() {
 
   app.post('/api/mpesa/callback', PaymentController.mpesaCallback);
   app.post('/api/payments/access', requireAuth, PaymentController.initiateAccessPayment);
+  app.get('/api/payments/status', requireAuth, PaymentController.getPaymentStatus);
+  app.get('/api/payments/stream', requireAuth, PaymentController.streamPayments);
   app.get('/dashboard/payments', requireAuth, PaymentController.getPaymentHistory);
   app.get('/dashboard/submissions', requireAuth, PaymentController.getSubmissions);
   app.get('/notifications', requireAuth, SocialController.getNotifications);

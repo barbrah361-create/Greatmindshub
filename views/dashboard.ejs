@@ -3,6 +3,8 @@
 <%- include('partials/flash') %>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  <!-- Real-time toasts container -->
+  <div id="realtimeToasts" class="fixed top-6 right-6 z-50 flex flex-col gap-3"></div>
   
   <!-- 1. Welcome Header Banner -->
   <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-brown to-brand-dark text-white p-8 sm:p-12 shadow-md mb-12 border-2 border-brand-pink/10">
@@ -45,6 +47,10 @@
           <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Member tier</p>
             <p class="mt-1 text-xl font-bold text-brand-brown"><%= premiumStatus %></p>
+          </div>
+          <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Profile strength</p>
+            <p class="mt-1 text-xl font-bold text-brand-brown"><%= typeof profileCompletion !== 'undefined' ? profileCompletion : 0 %>%</p>
           </div>
           <div class="rounded-xl border border-brand-brown/10 bg-brand-cream/40 p-3">
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-brown/70">Achievements</p>
@@ -202,3 +208,26 @@
 </div>
 
 <%- include('partials/footer') %>
+
+<script>
+  (function() {
+    if (typeof EventSource === 'undefined') return;
+    try {
+      const es = new EventSource('/api/payments/stream');
+      const toasts = document.getElementById('realtimeToasts');
+      es.addEventListener('payment', (evt) => {
+        try {
+          const payload = JSON.parse(evt.data);
+          if (payload?.status === 'completed') {
+            const el = document.createElement('div');
+            el.className = 'px-4 py-2 rounded-lg shadow-md bg-white text-sm text-gray-800 border border-brand-brown/10';
+            el.innerHTML = `<strong>Payment received</strong><div class="text-xs">${payload.amount} KES — Invoice ${payload.invoiceNumber}</div>`;
+            toasts.prepend(el);
+            setTimeout(() => el.remove(), 7000);
+          }
+        } catch (e) {}
+      });
+      es.onerror = () => {};
+    } catch (e) {}
+  })();
+</script>

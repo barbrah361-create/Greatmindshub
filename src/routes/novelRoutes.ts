@@ -8,12 +8,12 @@ const router = Router();
 // Guest/Public routes
 router.get('/', NovelController.getNovels);
 router.get('/categories', NovelController.getCategories);
-router.get('/submit', requireAuth, requireAccessPayment('upload'), NovelController.getSubmitNovel);
+router.get('/submit', requireAuth, NovelController.getSubmitNovel);
 router.post('/submit', requireAuth, requireAccessPayment('upload'), upload.single('coverImage'), NovelController.postSubmitNovel);
 router.get('/:id', NovelController.getNovelDetails);
 
 // Auth required routes for interactive operations
-router.get('/:id/read', requireAccessPayment('read'), NovelController.getReadNovel);
+router.get('/:id/read', NovelController.getReadNovel);
 router.post('/:id/bookmark', requireAuth, NovelController.postBookmark);
 router.post('/:id/favorite', requireAuth, NovelController.postFavorite);
 router.post('/:id/comment', NovelController.postComment);

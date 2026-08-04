@@ -12,6 +12,8 @@ import { getLocalNovelCover, getCategoryCover } from '../utils/novelPhoto.js';
 import { CATEGORY_DETAILS } from '../config/categoryDetails.js';
 import { PoemModel } from '../models/Poem.js';
 import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
+import { buildReaderSummary, estimateReadingTime } from '../utils/profile.js';
+import { hasCompletedAccessPayment } from '../middleware/authMiddleware.js';
 
 export const NovelController = {
   // 1. Landing Page
@@ -220,15 +222,20 @@ export const NovelController = {
 
       // Check if bookmarked if logged in
       const isBookmarked = user ? (user.bookmarks || []).some((b: any) => String(b.novelId) === String(id) && b.pageIndex === pageIndex) : false;
+      const currentPageText = novel.contentPages[pageIndex] || '';
+      const readingTime = estimateReadingTime(currentPageText);
+      const readerSummary = buildReaderSummary(currentPageText);
 
       res.render('read-novel', {
         title: `Reading - ${novel.title}`,
         novel,
-        currentPageContent: novel.contentPages[pageIndex],
+        currentPageContent: currentPageText,
         pageIndex,
         totalPages,
         progressPercent,
-        isBookmarked
+        isBookmarked,
+        readingTime,
+        readerSummary
       });
     } catch (error) {
       console.error('Read novel error:', error);
@@ -668,7 +675,8 @@ export const NovelController = {
         'African Literature', 'Science Fiction', 'Horror', 
         'Thriller', 'Adventure', 'Classics', 'Poetry', 'Drama'
       ];
-      res.render('submit-novel', { title: 'Submit a New Novel', authors, categories });
+      const uploadAccessPaid = hasCompletedAccessPayment(res.locals.user, 'upload');
+      res.render('submit-novel', { title: 'Submit a New Novel', authors, categories, uploadAccessPaid });
     } catch (error) {
       console.error('Submit novel form load error:', error);
       res.status(500).render('error', { statusCode: 500, message: 'Could not open submission form.' });

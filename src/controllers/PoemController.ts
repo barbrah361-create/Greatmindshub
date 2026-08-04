@@ -6,6 +6,7 @@ import { NotificationModel } from '../models/Notification.js';
 import { EmailService } from '../services/emailService.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { sanitizeText } from '../utils/sanitize.js';
+import { hasCompletedAccessPayment } from '../middleware/authMiddleware.js';
 
 export const PoemController = {
   getPoems: (req: Request, res: Response) => {
@@ -41,7 +42,8 @@ export const PoemController = {
   },
 
   getSubmitPoem: (req: Request, res: Response) => {
-    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE });
+    const uploadAccessPaid = hasCompletedAccessPayment(res.locals.user, 'upload');
+    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE, uploadAccessPaid });
   },
 
   postSubmitPoem: async (req: Request, res: Response) => {
