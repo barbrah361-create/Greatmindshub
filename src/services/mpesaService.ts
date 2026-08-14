@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-const SUBMISSION_FEE = 50;
+const SUBMISSION_FEE = 100;
 
 interface StkPushResult {
   success: boolean;
@@ -81,7 +81,7 @@ export const MpesaService = {
           PartyA: formattedPhone,
           PartyB: process.env.MPESA_SHORTCODE || '174379',
           PhoneNumber: formattedPhone,
-          CallBackURL: callbackUrl,
+          CallBackURL: "https://ending-disaster-waged.ngrok-free.dev/api/mpesa/callback",
           AccountReference: accountReference.slice(0, 12),
           TransactionDesc: description.slice(0, 13)
         })

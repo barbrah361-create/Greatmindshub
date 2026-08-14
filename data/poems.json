@@ -148,5 +148,47 @@
     "genre": "Odes & Elegies",
     "submittedBy": "z1ck9a5pcaszgpazw581l",
     "updatedAt": "2026-08-02T09:41:37.295Z"
+  },
+  {
+    "_id": "6aeicmgsvl5z1oa2w5kqmr",
+    "id": "6aeicmgsvl5z1oa2w5kqmr",
+    "createdAt": "2026-08-14T06:33:41.401Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "approved",
+    "tags": [
+      "Nature"
+    ],
+    "title": "tttt",
+    "content": "treees",
+    "authorId": "8mw94d9al73qmmimhru3f",
+    "authorName": "albert",
+    "genre": "Free Verse",
+    "submittedBy": "8mw94d9al73qmmimhru3f",
+    "updatedAt": "2026-08-14T06:33:41.412Z"
+  },
+  {
+    "_id": "qq3l2gayfanh1tmawttu",
+    "id": "qq3l2gayfanh1tmawttu",
+    "createdAt": "2026-08-14T06:44:52.110Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "approved",
+    "tags": [
+      "Politics"
+    ],
+    "title": "Echoes of war",
+    "content": "Butere",
+    "authorId": "8mw94d9al73qmmimhru3f",
+    "authorName": "albert",
+    "genre": "Free Verse",
+    "submittedBy": "8mw94d9al73qmmimhru3f",
+    "updatedAt": "2026-08-14T06:44:52.667Z"
   }
 ]
