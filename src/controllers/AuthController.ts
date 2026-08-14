@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/User.js';
+import { PoemModel } from '../models/Poem.js';
+import { NovelModel } from '../models/Novel.js';
 import { EmailService } from '../services/emailService.js';
 import { sanitizePlainText } from '../utils/sanitize.js';
 
@@ -291,6 +293,19 @@ export const AuthController = {
       };
     }).slice(0, 12);
 
+    // Fetch user's uploaded poems and novels
+    const userPoems = PoemModel.find({ submittedBy: user._id }).sort({ createdAt: -1 }).exec();
+    const userNovels = NovelModel.find({ submittedBy: user._id }).sort({ createdAt: -1 }).exec();
+
+    // Fetch reposted poems
+    const repostEntries: { poemId: string; repostedAt: string }[] = user.reposts || [];
+    const userReposts = repostEntries
+      .map((r: any) => {
+        const poem = PoemModel.findById(r.poemId);
+        return poem ? { ...poem, repostedAt: r.repostedAt } : null;
+      })
+      .filter(Boolean);
+
     res.render('profile', {
       title: 'My Profile',
       profileUser: user,
@@ -299,7 +314,10 @@ export const AuthController = {
       followingCount: formatTikTokMetric(followingCount),
       streak,
       profileCompletion: completion,
-      suggestedUsers
+      suggestedUsers,
+      userPoems,
+      userNovels,
+      userReposts
     });
   },
 

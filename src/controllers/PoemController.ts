@@ -6,7 +6,6 @@ import { NotificationModel } from '../models/Notification.js';
 import { EmailService } from '../services/emailService.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { sanitizeText } from '../utils/sanitize.js';
-import { hasCompletedAccessPayment } from '../middleware/authMiddleware.js';
 
 export const PoemController = {
   getPoems: (req: Request, res: Response) => {
@@ -38,24 +37,36 @@ export const PoemController = {
       return res.status(404).render('error', { status: 404, message: 'Poem not found.' });
     }
     PoemModel.findByIdAndUpdate(poem._id, { viewCount: (poem.viewCount || 0) + 1 });
-    res.render('poem-details', { title: poem.title, poem });
+    res.render('poem-details', { title: poem.title, poem, user: res.locals.user });
   },
 
   getSubmitPoem: (req: Request, res: Response) => {
-    const uploadAccessPaid = hasCompletedAccessPayment(res.locals.user, 'upload');
-    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE, uploadAccessPaid });
+    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE });
   },
 
+  // Step 1: Create poem pending payment, initiate STK push
   postSubmitPoem: async (req: Request, res: Response) => {
     const user = res.locals.user;
-    const { title, content, genre, tags } = req.body;
+    const { title, content, genre, tags, phoneNumber } = req.body;
 
     if (!title || !content) {
       req.flash('error', 'Title and content are required.');
       return res.redirect('/poems/submit');
     }
 
+    if (!phoneNumber) {
+      req.flash('error', 'M-Pesa phone number is required to publish.');
+      return res.redirect('/poems/submit');
+    }
+
+    const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
+    if (!kenyanPhoneRegex.test(phoneNumber.trim())) {
+      req.flash('error', 'Please provide a valid Kenyan M-Pesa phone number.');
+      return res.redirect('/poems/submit');
+    }
+
     try {
+      // Create poem in pending state first
       const poem = PoemModel.create({
         title: sanitizeText(title, 200),
         content: sanitizeText(content, 10000),
@@ -64,22 +75,56 @@ export const PoemController = {
         genre: genre || 'Poetry',
         tags: (tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
         submittedBy: user._id,
-        approvalStatus: 'approved'
+        approvalStatus: 'pending'
       });
 
-      try {
-        await EmailService.sendUploadReceived(user.email, user.username, 'poem', poem.title);
-      } catch (err) {
-        console.warn('Email send warning:', err);
+      // Initiate STK push for KES 100
+      const result = await MpesaService.initiateStkPush(
+        phoneNumber.trim(),
+        `POEM-${poem._id.slice(0, 8)}`,
+        'Poem Upload - KES 100'
+      );
+
+      if (!result.success) {
+        // Delete the pending poem if payment failed to initiate
+        PoemModel.findByIdAndDelete(poem._id);
+        req.flash('error', result.error || 'Payment could not be started. Please try again.');
+        return res.redirect('/poems/submit');
       }
-      
-      req.flash('success', 'Your poem has been published successfully!');
-      return res.redirect(`/poems/${poem._id}`);
+
+      // Record the payment linked to this poem
+      PaymentModel.create({
+        userId: user._id,
+        feature: 'upload',
+        contentType: 'poem',
+        contentId: poem._id,
+        contentTitle: poem.title,
+        amount: MpesaService.SUBMISSION_FEE,
+        phoneNumber: phoneNumber.trim(),
+        checkoutRequestId: result.checkoutRequestId,
+        merchantRequestId: result.merchantRequestId,
+        invoiceNumber: `INV-POEM-${Date.now()}`
+      });
+
+      // Redirect to a status page with the poem & checkout IDs
+      return res.redirect(`/poems/payment-status?poemId=${poem._id}&checkoutRequestId=${encodeURIComponent(result.checkoutRequestId!)}`);
     } catch (error) {
       console.error('Poem submit error:', error);
-      req.flash('error', 'Could not publish poem.');
+      req.flash('error', 'Could not submit poem. Please try again.');
       res.redirect('/poems/submit');
     }
+  },
+
+  // Payment status polling page for poem upload
+  getPaymentStatus: (req: Request, res: Response) => {
+    const { poemId, checkoutRequestId } = req.query as { poemId: string; checkoutRequestId: string };
+    const poem = poemId ? PoemModel.findById(poemId) : null;
+    res.render('poem-payment-status', {
+      title: 'Processing Payment',
+      poem,
+      checkoutRequestId,
+      fee: MpesaService.SUBMISSION_FEE
+    });
   },
 
   postLike: (req: Request, res: Response) => {

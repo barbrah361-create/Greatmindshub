@@ -115,6 +115,20 @@ This is the text of Page/Chapter 2.</pre>
       <textarea id="contentText" name="contentText" rows="12" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white font-serif placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Write or paste your book content pages separated by ---PAGE--- here..."></textarea>
     </div>
 
+    <!-- M-Pesa Payment Details -->
+    <div class="p-6 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/15 dark:border-brand-brown/25 space-y-4">
+      <h3 class="font-serif font-bold text-gray-800 dark:text-white text-base flex items-center gap-2">
+        <i data-lucide="wallet" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+        M-Pesa Payment Details
+      </h3>
+      <p class="text-xs text-gray-500 dark:text-gray-400">To publish this novel, please complete an M-Pesa payment of <strong>KES 100</strong>.</p>
+      
+      <div>
+        <label for="phoneNumber" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">M-Pesa Phone Number</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" required placeholder="e.g. 0712345678" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed">
+      </div>
+    </div>
+
     <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-brand-brown/10 dark:border-brand-brown/25">
       <a href="/novels" class="w-full sm:w-auto px-5 py-3 rounded-xl border border-brand-brown/20 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-brand-cream/10 text-center">Cancel</a>
       <button id="submitNovelBtn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm">
@@ -122,7 +136,6 @@ This is the text of Page/Chapter 2.</pre>
         Upload Novel
       </button>
     </div>
-    <p id="uploadPayStatus" class="mt-3 text-sm text-gray-600 dark:text-gray-300"><% if (!uploadAccessPaid) { %>Complete the form, then click Upload to receive a payment request immediately. <% } else { %>You already have upload access; click Upload to submit your novel. <% } %></p>
 
   </form>
 </div>
@@ -130,75 +143,28 @@ This is the text of Page/Chapter 2.</pre>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('uploadPaymentForm');
-    const statusEl = document.getElementById('uploadPayStatus');
     const submitBtn = document.getElementById('submitNovelBtn');
-    const uploadAccessPaid = <%= uploadAccessPaid ? 'true' : 'false' %>;
-    let paymentInProgress = false;
 
     if (form && submitBtn) {
-      form.addEventListener('submit', async (event) => {
-        if (uploadAccessPaid || paymentInProgress) return;
-        event.preventDefault();
-        paymentInProgress = true;
-        submitBtn.disabled = true;
-        if (statusEl) statusEl.textContent = 'Starting payment for upload — please follow the M-Pesa prompt on your phone...';
+      form.addEventListener('submit', (event) => {
+        const phoneInput = document.getElementById('phoneNumber');
+        const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
 
-        try {
-          const res = await fetch('/api/payments/access', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ feature: 'upload' })
-          });
-          if (res.status === 401) {
-            window.location.href = '/auth/login';
-            return;
-          }
-          const data = await res.json();
-          if (!data?.success) {
-            if (statusEl) statusEl.textContent = data?.message || 'Could not start the upload payment. Please try again.';
-            paymentInProgress = false;
-            submitBtn.disabled = false;
-            return;
-          }
-          if (statusEl) statusEl.innerHTML = `Payment started. Complete the M-Pesa prompt on <strong>${data.phoneNumber}</strong>.`;
-          const checkoutId = data.payment?.checkoutRequestId || data.checkoutRequestId;
-          if (!checkoutId) {
-            paymentInProgress = false;
-            submitBtn.disabled = false;
-            return;
-          }
-
-          let attempts = 0;
-          const interval = setInterval(async () => {
-            attempts++;
-            try {
-              const poll = await fetch(`/api/payments/status?checkoutRequestId=${encodeURIComponent(checkoutId)}`);
-              if (poll.status === 401) {
-                clearInterval(interval);
-                window.location.href = '/auth/login';
-                return;
-              }
-              const pollData = await poll.json();
-              if (pollData?.success && pollData.status === 'completed') {
-                clearInterval(interval);
-                if (statusEl) statusEl.innerHTML = '<span class="text-green-600">Upload payment completed. Submitting your novel now...</span>';
-                form.submit();
-              }
-            } catch (err) {
-              // ignore
-            }
-            if (attempts >= 20) {
-              clearInterval(interval);
-              if (statusEl) statusEl.textContent = 'Payment is taking longer than expected. Confirm the M-Pesa prompt and try again if needed.';
-              paymentInProgress = false;
-              submitBtn.disabled = false;
-            }
-          }, 3000);
-        } catch (error) {
-          if (statusEl) statusEl.textContent = 'Unable to start payment. Check your connection and try again.';
-          paymentInProgress = false;
-          submitBtn.disabled = false;
+        if (!phoneNumber) {
+          alert('Please enter a valid M-Pesa phone number.');
+          event.preventDefault();
+          return;
         }
+
+        const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
+        if (!kenyanPhoneRegex.test(phoneNumber)) {
+          alert('Please enter a valid Kenyan phone number (e.g., 0712345678 or 254712345678).');
+          event.preventDefault();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></i>Initiating Payment...';
       });
     }
 

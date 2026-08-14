@@ -20,10 +20,17 @@ test('summarizeText condenses content into a concise blurb', () => {
 });
 
 test('calculateReadingStreak produces a positive value from history items', () => {
+  const today = new Date();
+  const d1 = new Date(today);
+  const d2 = new Date(today);
+  const d3 = new Date(today);
+  d2.setDate(today.getDate() - 1);
+  d3.setDate(today.getDate() - 2);
+
   const streak = calculateReadingStreak([
-    { lastReadAt: '2026-08-01T10:00:00.000Z' },
-    { lastReadAt: '2026-07-31T09:00:00.000Z' },
-    { lastReadAt: '2026-07-30T08:00:00.000Z' }
+    { lastReadAt: d1.toISOString() },
+    { lastReadAt: d2.toISOString() },
+    { lastReadAt: d3.toISOString() }
   ]);
   assert.ok(streak >= 3);
 });

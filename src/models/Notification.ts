@@ -4,7 +4,7 @@ export interface Notification {
   _id: string;
   id: string;
   userId: string;
-  type: 'follow' | 'comment' | 'reply' | 'approval' | 'rejection' | 'payment' | 'mention' | 'announcement';
+  type: 'follow' | 'comment' | 'reply' | 'approval' | 'rejection' | 'payment' | 'mention' | 'announcement' | 'repost';
   title: string;
   message: string;
   link?: string;

@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="min-h-screen flex items-center justify-center px-4 py-16 bg-brand-cream dark:bg-[#120C08]">
+  <div class="w-full max-w-lg">
+    <div class="bg-white dark:bg-[#1E150F] rounded-[32px] border border-brand-brown/10 dark:border-brand-brown/20 shadow-2xl p-8 sm:p-10 text-center">
+      
+      <div id="payment-status-icon" class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-brand-pink/20">
+        <svg id="icon-pending" class="w-10 h-10 text-brand-brown dark:text-brand-pink animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+        </svg>
+        <svg id="icon-success" class="w-10 h-10 text-green-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <svg id="icon-failed" class="w-10 h-10 text-red-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+
+      <h1 id="status-title" class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        Waiting for Payment...
+      </h1>
+      <p id="status-desc" class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-2">
+        Check your phone for the M-Pesa prompt and enter your PIN to complete the KES <%= fee %> payment.
+      </p>
+      <% if (novel) { %>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-6">Novel: <span class="font-semibold text-gray-700 dark:text-gray-300"><%= novel.title %></span></p>
+      <% } %>
+
+      <div id="action-buttons" class="hidden flex flex-col sm:flex-row gap-3 justify-center mt-4">
+        <a id="view-novel-link" href="#" class="hidden inline-flex items-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white rounded-2xl font-semibold text-sm transition-all shadow">
+          <i data-lucide="book-open" class="w-4 h-4"></i> View Your Novel
+        </a>
+        <a href="/novels/submit" class="inline-flex items-center gap-2 px-6 py-3 border border-brand-brown/30 text-brand-brown dark:text-brand-pink rounded-2xl font-semibold text-sm hover:bg-brand-pink/10 transition-all">
+          Upload Another
+        </a>
+      </div>
+
+      <div id="error-actions" class="hidden flex flex-col sm:flex-row gap-3 justify-center mt-4">
+        <a href="/novels/submit" class="inline-flex items-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white rounded-2xl font-semibold text-sm transition-all shadow">
+          Try Again
+        </a>
+      </div>
+
+      <p class="text-[11px] text-gray-400 mt-8">Payment ID: <span class="font-mono"><%= checkoutRequestId %></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const checkoutRequestId = '<%= checkoutRequestId ? checkoutRequestId.replace(/'/g, "\\'") : "" %>';
+  const novelId = '<% if (novel) { %><%= novel._id %><% } %>';
+  let pollCount = 0;
+  const maxPolls = 40;
+
+  function setStatus(state) {
+    const iconPending = document.getElementById('icon-pending');
+    const iconSuccess = document.getElementById('icon-success');
+    const iconFailed = document.getElementById('icon-failed');
+    const title = document.getElementById('status-title');
+    const desc = document.getElementById('status-desc');
+    const actionButtons = document.getElementById('action-buttons');
+    const errorActions = document.getElementById('error-actions');
+    const iconBox = document.getElementById('payment-status-icon');
+
+    if (state === 'success') {
+      iconPending.classList.add('hidden');
+      iconSuccess.classList.remove('hidden');
+      iconBox.classList.replace('bg-brand-pink/20', 'bg-green-100');
+      title.textContent = 'Payment Confirmed! 🎉';
+      desc.textContent = 'Your novel has been published and is now live!';
+      actionButtons.classList.remove('hidden');
+      if (novelId) {
+        const viewLink = document.getElementById('view-novel-link');
+        viewLink.href = '/novels/' + novelId;
+        viewLink.classList.remove('hidden');
+      }
+    } else if (state === 'failed' || state === 'timeout') {
+      iconPending.classList.add('hidden');
+      iconFailed.classList.remove('hidden');
+      iconBox.classList.replace('bg-brand-pink/20', 'bg-red-100');
+      title.textContent = state === 'timeout' ? 'Payment Timed Out' : 'Payment Failed';
+      desc.textContent = 'The payment was not completed. Your novel has not been published. Please try again.';
+      errorActions.classList.remove('hidden');
+    }
+  }
+
+  async function poll() {
+    if (!checkoutRequestId || pollCount >= maxPolls) {
+      setStatus('timeout');
+      return;
+    }
+    pollCount++;
+    try {
+      const res = await fetch('/payment/status?checkoutRequestId=' + encodeURIComponent(checkoutRequestId));
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'completed') {
+          setStatus('success');
+          return;
+        }
+      }
+    } catch(e) {}
+    setTimeout(poll, 3000);
+  }
+
+  setTimeout(poll, 3000);
+})();
+</script>
+
+<%- include('partials/footer') %>

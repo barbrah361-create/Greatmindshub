@@ -33,6 +33,48 @@ export const SocialController = {
     res.redirect(redirect);
   },
 
+  postRepost: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const poemId = req.params.id;
+    const poem = PoemModel.findById(poemId);
+    if (!poem) {
+      req.flash('error', 'Poem not found.');
+      return res.redirect('/poems');
+    }
+
+    const reposts: { poemId: string; repostedAt: string }[] = user.reposts || [];
+    const alreadyReposted = reposts.some((r: any) => r.poemId === poemId);
+
+    if (alreadyReposted) {
+      // Toggle off — remove repost
+      UserModel.findByIdAndUpdate(user._id, {
+        reposts: reposts.filter((r: any) => r.poemId !== poemId)
+      });
+      req.flash('success', 'Repost removed.');
+    } else {
+      // Add repost
+      UserModel.findByIdAndUpdate(user._id, {
+        reposts: [...reposts, { poemId, repostedAt: new Date().toISOString() }]
+      });
+      // Notify original poet
+      if (poem.submittedBy && poem.submittedBy !== user._id) {
+        try {
+          NotificationModel.notify(
+            poem.submittedBy,
+            'repost',
+            'Your poem was reposted',
+            `${user.username} reposted your poem "${poem.title}"`,
+            `/poems/${poemId}`
+          );
+        } catch (err) {}
+      }
+      req.flash('success', `"${poem.title}" added to your reposts.`);
+    }
+
+    const redirect = req.get('Referer') || `/poems/${poemId}`;
+    res.redirect(redirect);
+  },
+
   getNotifications: (req: Request, res: Response) => {
     const user = res.locals.user;
     const notifications = NotificationModel.find({ userId: user._id })

@@ -17,109 +17,83 @@ interface StkCallbackResult {
   error?: string;
 }
 
-function getAccessToken(): Promise<string | null> {
-  const consumerKey = process.env.MPESA_CONSUMER_KEY;
-  const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
-  const env = process.env.MPESA_ENV || 'sandbox';
-  const baseUrl = env === 'production'
-    ? 'https://api.safaricom.co.ke'
-    : 'https://sandbox.safaricom.co.ke';
-
-  if (!consumerKey || !consumerSecret) {
-    console.log('[M-Pesa] Credentials not configured - using dev mode');
-    return Promise.resolve(null);
-  }
-
-  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
-  return fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${auth}` }
-  })
-    .then(r => r.json())
-    .then(data => data.access_token || null)
-    .catch(() => null);
-}
-
-function generatePassword(): string {
-  const shortcode = process.env.MPESA_SHORTCODE || '174379';
-  const passkey = process.env.MPESA_PASSKEY || '';
-  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-  return Buffer.from(shortcode + passkey + timestamp).toString('base64');
-}
-
 export const MpesaService = {
   SUBMISSION_FEE,
 
   async initiateStkPush(phoneNumber: string, accountReference: string, description: string): Promise<StkPushResult> {
     const formattedPhone = phoneNumber.replace(/\D/g, '').replace(/^0/, '254');
-    const token = await getAccessToken();
+    
+    // PayHero Credentials
+    const basicAuthToken = process.env.PAYHERO_BASIC_AUTH || 'Y3lUMVpIUHlBMzY0YUVNaW95UEk6ZTN5Mks4ZUNsNGdNV0FoZEV3Ykg5NDlqbUNFdkNTSG4ySFl6a3hRVg==';
+    const channelId = parseInt(process.env.PAYHERO_CHANNEL_ID || '11558', 10);
+    const callbackUrl = `${process.env.APP_URL || 'https://ending-disaster-waged.ngrok-free.dev'}/api/mpesa/callback`;
 
-    if (!token) {
+    // Simulate if PAYHERO_SIMULATE is explicitly 'true'
+    if (process.env.PAYHERO_SIMULATE === 'true') {
+      console.log('[MpesaService] Running in Development Mode - Simulating STK Push');
       const devId = `DEV_${crypto.randomBytes(8).toString('hex')}`;
       return { success: true, checkoutRequestId: devId, merchantRequestId: devId };
     }
 
-    const env = process.env.MPESA_ENV || 'sandbox';
-    const baseUrl = env === 'production'
-      ? 'https://api.safaricom.co.ke'
-      : 'https://sandbox.safaricom.co.ke';
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-    const callbackUrl = `${process.env.APP_URL || 'http://localhost:3000'}/api/mpesa/callback`;
-
     try {
-      const response = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
+      const response = await fetch('https://backend.payhero.co.ke/api/v2/payments', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Basic ${basicAuthToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          BusinessShortCode: process.env.MPESA_SHORTCODE || '174379',
-          Password: generatePassword(),
-          Timestamp: timestamp,
-          TransactionType: 'CustomerPayBillOnline',
-          Amount: SUBMISSION_FEE,
-          PartyA: formattedPhone,
-          PartyB: process.env.MPESA_SHORTCODE || '174379',
-          PhoneNumber: formattedPhone,
-          CallBackURL: "https://ending-disaster-waged.ngrok-free.dev/api/mpesa/callback",
-          AccountReference: accountReference.slice(0, 12),
-          TransactionDesc: description.slice(0, 13)
+          amount: SUBMISSION_FEE,
+          phone_number: formattedPhone,
+          channel_id: channelId,
+          provider: 'm-pesa',
+          external_reference: accountReference.slice(0, 20),
+          callback_url: callbackUrl
         })
       });
+
       const data = await response.json();
-      if (data.ResponseCode === '0') {
+
+      if (response.ok && (data.success === true || data.status === 'success' || data.CheckoutRequestID)) {
         return {
           success: true,
-          checkoutRequestId: data.CheckoutRequestID,
-          merchantRequestId: data.MerchantRequestID
+          checkoutRequestId: data.CheckoutRequestID || data.checkout_request_id || `PAY_${Date.now()}`,
+          merchantRequestId: data.MerchantRequestID || data.merchant_request_id || `MERCH_${Date.now()}`
         };
       }
-      return { success: false, error: data.errorMessage || data.ResponseDescription || 'STK push failed' };
+      return { success: false, error: data.message || data.error || `PayHero STK push failed (Status ${response.status})` };
     } catch (err: any) {
-      return { success: false, error: err.message || 'M-Pesa request failed' };
+      console.error('[MpesaService] PayHero STK Push Error:', err);
+      return { success: false, error: err.message || 'PayHero request failed' };
     }
   },
 
   parseCallback(body: any): StkCallbackResult {
     try {
-      const result = body?.Body?.stkCallback;
-      if (!result) return { success: false, error: 'Invalid callback' };
+      if (!body) return { success: false, error: 'Empty callback body' };
 
-      if (result.ResultCode !== 0) {
-        return { success: false, error: result.ResultDesc || 'Payment failed' };
+      // PayHero Callback Format
+      const checkoutRequestId = body.CheckoutRequestID || body.checkoutRequestID || body.checkout_request_id;
+      const status = String(body.status || body.Status || '');
+      const isSuccess = status.toLowerCase() === 'success' || body.ResultCode === 0 || body.ResultCode === '0';
+
+      if (!checkoutRequestId) {
+        return { success: false, error: 'Missing checkout request ID' };
       }
 
-      const metadata = result.CallbackMetadata?.Item || [];
-      const get = (name: string) => metadata.find((i: any) => i.Name === name)?.Value;
+      if (!isSuccess) {
+        return { success: false, error: body.message || body.ResultDesc || 'Payment failed' };
+      }
 
       return {
         success: true,
-        receiptNumber: String(get('MpesaReceiptNumber') || ''),
-        amount: Number(get('Amount') || SUBMISSION_FEE),
-        phoneNumber: String(get('PhoneNumber') || '')
+        receiptNumber: String(body.MpesaReceiptNumber || body.mpesa_receipt_number || body.receipt || body.MPESA_Reference || `REC_${Date.now()}`),
+        amount: Number(body.amount || body.Amount || SUBMISSION_FEE),
+        phoneNumber: String(body.phoneNumber || body.phone_number || body.phone || '')
       };
-    } catch {
-      return { success: false, error: 'Callback parse error' };
+    } catch (err: any) {
+      console.error('[MpesaService] Callback Parse Error:', err);
+      return { success: false, error: 'Callback parse error: ' + err.message };
     }
   }
 };

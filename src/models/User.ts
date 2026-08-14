@@ -49,6 +49,7 @@ export interface User {
   favorites: string[];
   bookmarks: Bookmark[];
   readingHistory: ReadingHistoryItem[];
+  reposts: { poemId: string; repostedAt: string }[];
   awards?: string[];
   achievements?: string[];
   createdAt: string;
@@ -109,6 +110,7 @@ export const UserModel = {
       favorites: [],
       bookmarks: [],
       readingHistory: [],
+      reposts: [],
       awards: [],
       achievements: []
     });

@@ -3,6 +3,7 @@ import { NovelModel } from '../models/Novel.js';
 import { AuthorModel } from '../models/Author.js';
 import { CommentModel } from '../models/Comment.js';
 import { UserModel } from '../models/User.js';
+import { PaymentModel } from '../models/Payment.js';
 import { generateQRCode } from '../utils/qrcode.js';
 import { CATEGORIES } from '../types/common.js';
 import { sanitizeText } from '../utils/sanitize.js';
@@ -13,7 +14,8 @@ import { CATEGORY_DETAILS } from '../config/categoryDetails.js';
 import { PoemModel } from '../models/Poem.js';
 import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
 import { buildReaderSummary, estimateReadingTime } from '../utils/profile.js';
-import { hasCompletedAccessPayment } from '../middleware/authMiddleware.js';
+import { MpesaService } from '../services/mpesaService.js';
+import { NotificationModel } from '../models/Notification.js';
 
 export const NovelController = {
   // 1. Landing Page
@@ -675,7 +677,7 @@ export const NovelController = {
         'African Literature', 'Science Fiction', 'Horror', 
         'Thriller', 'Adventure', 'Classics', 'Poetry', 'Drama'
       ];
-      const uploadAccessPaid = hasCompletedAccessPayment(res.locals.user, 'upload');
+      const uploadAccessPaid = false;
       res.render('submit-novel', { title: 'Submit a New Novel', authors, categories, uploadAccessPaid });
     } catch (error) {
       console.error('Submit novel form load error:', error);
@@ -749,16 +751,73 @@ export const NovelController = {
         ratingCount: 0,
         readerCount: 0,
         contentPages,
-        approvalStatus: 'approved',
+        approvalStatus: 'pending',  // starts pending until payment confirmed
         submittedBy: user._id
       });
 
-      req.flash('success', 'Your novel has been published successfully! Welcome to the digital stacks.');
-      res.redirect(`/novels/${novel._id}`);
+      // Initiate per-upload payment
+      const phoneNumber = (req.body.phoneNumber || '').trim();
+      if (!phoneNumber) {
+        NovelModel.findByIdAndDelete(novel._id);
+        req.flash('error', 'M-Pesa phone number is required to publish.');
+        return res.redirect('/novels/submit');
+      }
+
+      const result = await MpesaService.initiateStkPush(
+        phoneNumber,
+        `NOVEL-${novel._id.slice(0, 8)}`,
+        'Novel Upload - KES 100'
+      );
+
+      if (!result.success) {
+        NovelModel.findByIdAndDelete(novel._id);
+        req.flash('error', result.error || 'Payment could not be started. Please try again.');
+        return res.redirect('/novels/submit');
+      }
+
+      PaymentModel.create({
+        userId: user._id,
+        feature: 'upload',
+        contentType: 'book',
+        contentId: novel._id,
+        contentTitle: novel.title,
+        amount: MpesaService.SUBMISSION_FEE,
+        phoneNumber,
+        checkoutRequestId: result.checkoutRequestId,
+        merchantRequestId: result.merchantRequestId,
+        invoiceNumber: `INV-NOVEL-${Date.now()}`
+      });
+
+      return res.redirect(`/novels/payment-status?novelId=${novel._id}&checkoutRequestId=${encodeURIComponent(result.checkoutRequestId!)}`);
     } catch (error) {
       console.error('Submit novel error:', error);
       req.flash('error', 'Could not publish novel. Please verify parameters.');
       res.redirect('/novels/submit');
     }
+  },
+
+  getPaymentStatus: (req: Request, res: Response) => {
+    const { novelId, checkoutRequestId } = req.query as { novelId: string; checkoutRequestId: string };
+    const novel = novelId ? NovelModel.findById(novelId) : null;
+    res.render('novel-payment-status', {
+      title: 'Processing Payment',
+      novel,
+      checkoutRequestId,
+      fee: MpesaService.SUBMISSION_FEE
+    });
+  },
+
+  postLike: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const novel = NovelModel.findById(req.params.id);
+    if (!novel) return res.redirect('/novels');
+
+    const likes: string[] = novel.likes || [];
+    const idx = likes.indexOf(user._id);
+    if (idx >= 0) likes.splice(idx, 1);
+    else likes.push(user._id);
+
+    NovelModel.findByIdAndUpdate(novel._id, { likes });
+    res.redirect(`/novels/${novel._id}`);
   }
 };

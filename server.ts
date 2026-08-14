@@ -27,8 +27,9 @@ import articleRoutes from './src/routes/articleRoutes.js';
 import poemRoutes from './src/routes/poemRoutes.js';
 import liveRoutes from './src/routes/liveRoutes.js';
 
+const app = express();
+
 async function bootstrap() {
-  const app = express();
   app.set('trust proxy', 1);
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
@@ -122,7 +123,7 @@ async function bootstrap() {
     });
   });
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
     app.use((req, res, next) => {
       if (req.url.startsWith('/@') || req.url.startsWith('/src/') || req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.css')) {
@@ -149,9 +150,13 @@ async function bootstrap() {
     });
   });
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Readers] Server online at http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[Readers] Server online at http://localhost:${PORT}`);
+    });
+  }
 }
 
 bootstrap().catch((err) => console.error('Failed to start server:', err));
+
+export default app;

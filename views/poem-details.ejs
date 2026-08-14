@@ -74,11 +74,26 @@
             <span class="font-bold pl-1 border-l border-current/25"><%= poem.likes ? poem.likes.length : 0 %></span>
           </button>
         </form>
-
         <button onclick="navigator.clipboard.writeText(window.location.href); alert('Poem link copied to clipboard!');" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30">
           <i data-lucide="share-2" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
           Share
         </button>
+
+        <!-- Repost Action Form -->
+        <% if (typeof user !== 'undefined' && user) { %>
+          <form action="/poems/<%= poem._id %>/repost" method="POST" class="inline">
+            <% const alreadyReposted = user.reposts && user.reposts.some(r => String(r.poemId) === String(poem._id)); %>
+            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border transition-all duration-200 <%= alreadyReposted ? 'bg-brand-pink text-white border-brand-pink hover:bg-brand-pink/90' : 'bg-brand-cream dark:bg-brand-brown/10 hover:bg-brand-pink/30 text-gray-750 dark:text-gray-200 border-brand-brown/15' %>">
+              <i data-lucide="repeat-2" class="w-4 h-4 <%= alreadyReposted ? 'animate-pulse' : '' %>"></i>
+              <%= alreadyReposted ? 'Reposted' : 'Repost' %>
+            </button>
+          </form>
+        <% } else { %>
+          <a href="/auth/login" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30">
+            <i data-lucide="repeat-2" class="w-4 h-4 text-gray-400"></i>
+            Repost
+          </a>
+        <% } %>
       </div>
     </div>
   </article>

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PaymentModel } from '../models/Payment.js';
 import { PoemModel } from '../models/Poem.js';
+import { NovelModel } from '../models/Novel.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { EmailService } from '../services/emailService.js';
 import { UserModel } from '../models/User.js';
@@ -45,7 +46,8 @@ export const PaymentController = {
       return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
 
-    const payment = PaymentModel.findOne({ checkoutRequestId: req.body?.Body?.stkCallback?.CheckoutRequestID });
+    const checkoutRequestId = req.body?.CheckoutRequestID || req.body?.checkoutRequestID || req.body?.checkout_request_id || req.body?.Body?.stkCallback?.CheckoutRequestID;
+    const payment = PaymentModel.findOne({ checkoutRequestId });
     if (!payment || payment.status === 'completed') {
       return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
     }
@@ -56,13 +58,24 @@ export const PaymentController = {
       completedAt: new Date().toISOString()
     });
 
+    // Auto-approve the linked poem or novel on payment success
+    if (payment.contentId && payment.contentType === 'poem') {
+      PoemModel.findByIdAndUpdate(payment.contentId, { approvalStatus: 'approved' });
+      console.log(`[Payment] Poem ${payment.contentId} approved after payment ${payment._id}`);
+    } else if (payment.contentId && payment.contentType === 'book') {
+      NovelModel.findByIdAndUpdate(payment.contentId, { approvalStatus: 'approved' });
+      console.log(`[Payment] Novel ${payment.contentId} approved after payment ${payment._id}`);
+    }
+
     // Broadcast update to any connected SSE clients for this user
     broadcastPayment(String(payment.userId), {
       status: 'completed',
-      checkoutRequestId: req.body?.Body?.stkCallback?.CheckoutRequestID,
+      checkoutRequestId: checkoutRequestId,
       mpesaReceiptNumber: result.receiptNumber,
       amount: payment.amount,
-      invoiceNumber: payment.invoiceNumber
+      invoiceNumber: payment.invoiceNumber,
+      contentType: payment.contentType,
+      contentId: payment.contentId
     });
 
     const user = UserModel.findById(payment.userId);
@@ -80,7 +93,18 @@ export const PaymentController = {
     }
 
     const feature = (req.body.feature as 'upload' | 'live' | 'read') || 'read';
-    const result = await MpesaService.initiateStkPush(ACCESS_PHONE, `ACCESS-${feature}-${user._id.slice(0, 6)}`, `Unlock ${feature} access`);
+    
+    let phoneToUse = req.body.phoneNumber ? String(req.body.phoneNumber).trim() : '';
+    if (!phoneToUse) {
+      phoneToUse = ACCESS_PHONE;
+    } else {
+      const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
+      if (!kenyanPhoneRegex.test(phoneToUse)) {
+        return res.status(400).json({ success: false, message: 'Please provide a valid Kenyan M-Pesa phone number.' });
+      }
+    }
+
+    const result = await MpesaService.initiateStkPush(phoneToUse, `ACCESS-${feature}-${user._id.slice(0, 6)}`, `Unlock ${feature} access`);
 
     if (!result.success) {
       return res.status(400).json({ success: false, message: result.error || 'Payment could not be started.' });
@@ -92,13 +116,13 @@ export const PaymentController = {
       contentType: 'book',
       contentTitle: `${feature} access`,
       amount: ACCESS_FEE_KES,
-      phoneNumber: ACCESS_PHONE,
+      phoneNumber: phoneToUse,
       checkoutRequestId: result.checkoutRequestId,
       merchantRequestId: result.merchantRequestId,
       invoiceNumber: `INV-${feature.toUpperCase()}-${Date.now()}`
     });
 
-    return res.json({ success: true, payment, phoneNumber: ACCESS_PHONE, amount: ACCESS_FEE_KES, message: `Please complete the M-Pesa prompt on ${ACCESS_PHONE} to unlock this feature.` });
+    return res.json({ success: true, payment, phoneNumber: phoneToUse, amount: ACCESS_FEE_KES, message: `Please complete the M-Pesa prompt on ${phoneToUse} to unlock this feature.` });
   },
 
   getPaymentHistory: (req: Request, res: Response) => {
