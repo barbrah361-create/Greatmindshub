@@ -131,9 +131,17 @@
   <!-- Mobile Drawer Menu -->
   <div id="mobile-menu-drawer" class="hidden md:hidden border-t border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] transition-all duration-300 shadow-lg">
     <div class="px-4 pt-3 pb-6 space-y-2">
+      <!-- Mobile Search -->
+      <form action="/search" method="GET" class="relative mb-3">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+        </span>
+        <input type="search" name="q" placeholder="Search books, authors, poems..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-brown/10 focus:outline-none focus:ring-1 focus:ring-brand-brown dark:text-white">
+      </form>
       <a href="/" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Home</a>
       <a href="/novels" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Novels</a>
       <a href="/authors" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Authors</a>
+      <a href="/poems" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Poetry</a>
       <a href="/live" class="block px-4 py-2.5 rounded-lg text-base font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live Stage & Studio
       </a>

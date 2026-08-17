@@ -110,27 +110,143 @@
       font: inherit;
     }
 
-    @media (max-width: 640px) {
-      body {
-        font-size: 15px;
-      }
+    /* =====================================================
+       GLOBAL RESPONSIVE SYSTEM — phones / tablets / laptops
+       ===================================================== */
 
-      .mobile-safe-stack {
+    /* Prevent any element from overflowing horizontally */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: hidden; max-width: 100vw; }
+
+    /* All images & embeds stay within their container */
+    img, video, iframe, embed, object, canvas, svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Tables scroll horizontally instead of breaking layout */
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    table.normal-table { display: table; white-space: normal; }
+
+    /* Ensure no fixed-width causes overflow */
+    .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+
+    /* ---- PHONE  (≤ 639px) ---- */
+    @media (max-width: 639px) {
+      body { font-size: 14px; }
+
+      /* Collapse multi-col grids to single column */
+      [class*="grid-cols-"]:not([class*="sm:"]):not([class*="md:"]):not([class*="lg:"]) {
         grid-template-columns: 1fr !important;
       }
-      /* Make common action buttons and inputs adapt to small screens */
-      .btn-responsive {
-        display: block !important;
-        width: 100% !important;
+
+      /* Typography scale-down */
+      h1 { font-size: clamp(1.6rem, 7vw, 2.4rem) !important; line-height: 1.2 !important; }
+      h2 { font-size: clamp(1.25rem, 5.5vw, 1.8rem) !important; }
+      h3 { font-size: clamp(1rem, 4vw, 1.35rem) !important; }
+
+      /* Section padding */
+      section, .py-24 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+      .py-16 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
+      .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+
+      /* Full-width buttons on mobile */
+      .btn-responsive, .mobile-full { display: block !important; width: 100% !important; }
+
+      /* Inputs & selects full width */
+      .input-responsive { width: 100% !important; }
+
+      /* Stack flex rows vertically */
+      .flex-row-mobile { flex-direction: column !important; }
+
+      /* Modals: near-full width */
+      .modal-responsive, [class*="max-w-"][class*="modal"] {
+        max-width: 95vw !important;
+        margin-left: 0.75rem !important;
+        margin-right: 0.75rem !important;
       }
-      .input-responsive {
-        width: 100% !important;
-      }
-      .modal-responsive {
-        max-width: 95% !important;
-        margin: 0 12px !important;
-      }
+
+      /* Hero height: avoid content cut on small phones */
+      .h-screen { min-height: 100svh; }
+
+      /* Make hero text comfortable */
+      .hero-content { padding: 0 1rem !important; }
+
+      /* Cards: remove excess horizontal padding */
+      .book-card, .glass-card { padding: 1rem !important; }
+
+      /* Gap reduction on tiny screens */
+      .gap-8 { gap: 1.25rem !important; }
+      .gap-6 { gap: 1rem !important; }
+
+      /* Prevent long words breaking layouts */
+      p, span, a, li, td, th { word-break: break-word; overflow-wrap: break-word; }
+
+      /* Touch-friendly tap targets (min 44×44px) */
+      a, button, [role="button"] { min-height: 36px; }
+
+      /* Profile / dashboard grid: always stack */
+      .profile-grid, .dashboard-grid { grid-template-columns: 1fr !important; }
+
+      /* Poem & novel cards: full width on phone */
+      .poem-card, .novel-card { width: 100% !important; min-width: unset !important; }
+
+      /* Tab pills: allow horizontal scroll */
+      .tab-scroll { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+
+      /* Footer: single column */
+      footer .grid { grid-template-columns: 1fr !important; }
+
+      /* Hide decorative-only wide elements */
+      .decorative-wide { display: none !important; }
+
+      /* Poem filters: stack vertically */
+      .poem-filters { flex-direction: column !important; align-items: stretch !important; }
     }
+
+    /* ---- TABLET  (640px – 1023px) ---- */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      body { font-size: 15px; }
+
+      /* 3-col grids → 2-col on tablet */
+      .lg\:grid-cols-3:not([class*="md:grid-cols"]),
+      .lg\:grid-cols-4:not([class*="md:grid-cols"]) {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+
+      /* 4-col → 2-col */
+      .xl\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+
+      /* Section padding */
+      section, .py-24 { padding-top: 4rem !important; padding-bottom: 4rem !important; }
+
+      /* Navbar: ensure no overflow */
+      nav { overflow: hidden; }
+
+      /* Cards: comfortable padding */
+      .book-card, .glass-card { padding: 1.25rem !important; }
+
+      /* Hero text */
+      h1 { font-size: clamp(2rem, 5vw, 3.5rem) !important; }
+    }
+
+    /* ---- LARGE TABLET / SMALL LAPTOP (1024px – 1279px) ---- */
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      /* Tighten navbar link padding */
+      nav a { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+    }
+
+    /* ---- SAFE SVH for all mobile browsers ---- */
+    @supports (height: 100svh) {
+      .h-screen { height: 100svh; }
+      .min-h-screen { min-height: 100svh; }
+    }
+
+    /* Utilities */
+    .mobile-safe-stack { grid-template-columns: 1fr !important; }
+    .btn-responsive { display: block !important; width: 100% !important; }
+    .input-responsive { width: 100% !important; }
+    .modal-responsive { max-width: 95vw !important; margin: 0 0.75rem !important; }
 
     /* Elegant Theme Utility Classes */
     .btn-brown {
