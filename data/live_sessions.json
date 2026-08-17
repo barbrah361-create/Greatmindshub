@@ -14,5 +14,40 @@
     "type": "poem",
     "workTitle": "Live Recitation",
     "updatedAt": "2026-07-21T16:02:52.464Z"
+  },
+  {
+    "_id": "fkz3jq7viiu0r8t0r81igf",
+    "id": "fkz3jq7viiu0r8t0r81igf",
+    "createdAt": "2026-08-17T16:15:11.463Z",
+    "viewersCount": 1,
+    "likesCount": 38,
+    "isLive": false,
+    "workContent": "When morning comes",
+    "gifts": [
+      {
+        "userId": "83v6pkw84q7s3w0ti0nq1",
+        "username": "Barbrah",
+        "giftType": "africa_star",
+        "points": 200,
+        "sentAt": "2026-08-17T16:16:04.505Z"
+      },
+      {
+        "userId": "83v6pkw84q7s3w0ti0nq1",
+        "username": "Barbrah",
+        "giftType": "diamond",
+        "points": 50,
+        "sentAt": "2026-08-17T16:26:44.418Z"
+      }
+    ],
+    "totalGiftPoints": 250,
+    "coHosts": [],
+    "coHostRequests": [],
+    "hostId": "83v6pkw84q7s3w0ti0nq1",
+    "hostName": "Barbrah",
+    "hostAvatar": "/uploads/avatar-1784639225679-575970180.jpeg",
+    "title": "latest verse",
+    "type": "poem",
+    "workTitle": "MORNING",
+    "updatedAt": "2026-08-17T17:35:28.206Z"
   }
 ]

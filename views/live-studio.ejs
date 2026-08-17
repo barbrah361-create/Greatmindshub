@@ -43,10 +43,15 @@
           STUDIO PREVIEW
         </span>
 
-        <!-- Active Filter Badge Overlay -->
-        <span id="activeFilterLabel" class="absolute top-4 right-4 bg-black/60 backdrop-blur text-brand-pink text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 uppercase tracking-wider">
-          Filter: Glam Glow
-        </span>
+        <!-- Camera Switcher & Active Filter Badge Overlay -->
+        <div class="absolute top-4 right-4 flex items-center gap-1.5 z-20">
+          <button type="button" onclick="switchStudioCamera()" class="bg-black/60 backdrop-blur hover:bg-black/80 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-wider flex items-center gap-1">
+            <i data-lucide="camera" class="w-3 h-3"></i> Switch Cam
+          </button>
+          <span id="activeFilterLabel" class="bg-black/60 backdrop-blur text-brand-pink text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 uppercase tracking-wider">
+            Filter: Glam Glow
+          </span>
+        </div>
       </div>
 
       <!-- Real-Time Beauty Face Filter Toolbar -->
@@ -169,6 +174,9 @@
 
 <script>
 let activeFilter = 'glam';
+let studioCameras = [];
+let studioCameraIndex = 0;
+let studioStream = null;
 
 function applyFilter(filterName, label) {
   activeFilter = filterName;
@@ -182,25 +190,89 @@ function applyFilter(filterName, label) {
   }
 }
 
-async function enableCamera() {
+async function loadStudioCameras() {
   try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    studioCameras = devices.filter(d => d.kind === 'videoinput');
+    
+    // Prefer built-in laptop camera if Iriun/virtual is default
+    const builtInIndex = studioCameras.findIndex(d => 
+      d.label.toLowerCase().includes('integrated') || 
+      d.label.toLowerCase().includes('built-in') || 
+      d.label.toLowerCase().includes('hd') ||
+      d.label.toLowerCase().includes('webcam') && !d.label.toLowerCase().includes('iriun')
+    );
+    if (builtInIndex > 0) {
+      studioCameraIndex = builtInIndex;
+    }
+  } catch (err) {
+    console.warn('Could not enumerate studio cameras:', err);
+  }
+}
+
+async function enableCamera(deviceId = null) {
+  try {
+    if (studioStream) {
+      studioStream.getTracks().forEach(t => t.stop());
+    }
+
+    const videoConstraints = {
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    };
+
+    if (deviceId) {
+      videoConstraints.deviceId = { exact: deviceId };
+    } else if (studioCameras.length > 0 && studioCameras[studioCameraIndex]) {
+      videoConstraints.deviceId = { exact: studioCameras[studioCameraIndex].deviceId };
+    } else {
+      videoConstraints.facingMode = "user";
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+      video: videoConstraints,
       audio: true
     });
+
+    studioStream = stream;
     const video = document.getElementById('studioWebcam');
     const placeholder = document.getElementById('camPlaceholder');
     video.srcObject = stream;
     await video.play();
     video.classList.remove('hidden');
     placeholder.classList.add('hidden');
-    applyFilter('glam', 'Glam Glow');
+    applyFilter(activeFilter, 'Glam Glow');
+
+    await loadStudioCameras();
   } catch (err) {
-    alert('Camera access note: Please grant camera permissions in your browser address bar.');
+    console.warn('Primary camera failed, falling back:', err);
+    try {
+      const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      studioStream = fallbackStream;
+      const video = document.getElementById('studioWebcam');
+      const placeholder = document.getElementById('camPlaceholder');
+      video.srcObject = fallbackStream;
+      await video.play();
+      video.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+    } catch (e) {
+      alert('Camera access note: Please grant camera permissions in your browser address bar.');
+    }
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+async function switchStudioCamera() {
+  await loadStudioCameras();
+  if (studioCameras.length <= 1) {
+    alert('Only 1 camera detected.');
+    return;
+  }
+  studioCameraIndex = (studioCameraIndex + 1) % studioCameras.length;
+  await enableCamera(studioCameras[studioCameraIndex].deviceId);
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadStudioCameras();
   enableCamera();
 });
 </script>
