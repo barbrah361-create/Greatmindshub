@@ -1,19 +1,19 @@
 <nav id="main-navbar" class="sticky top-0 z-50 bg-white/95 dark:bg-[#1C120C]/95 backdrop-blur-md border-b border-brand-brown/10 dark:border-brand-brown/20 transition-all duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-20">
+    <div class="flex items-center justify-between h-20 gap-2">
       
       <!-- Logo and Brand -->
-      <div class="flex items-center">
-        <a href="/" class="flex items-center gap-3 group">
-          <img src="/logo.jpg" alt="Readers Africa" class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-brand-brown/20 group-hover:ring-brand-brown/60 transition-all duration-200">
-          <span class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-brand-brown dark:text-brand-pink">
-            Readers<span class="font-sans font-light text-gray-500 dark:text-gray-400">.africa</span>
+      <div class="flex items-center shrink-0">
+        <a href="/" class="flex items-center gap-2 group">
+          <img src="/logo.jpg" alt="Readers Africa" class="w-9 h-9 rounded-full object-cover shadow-md ring-2 ring-brand-brown/20 group-hover:ring-brand-brown/60 transition-all duration-200">
+          <span class="font-serif text-lg font-bold tracking-tight text-brand-brown dark:text-brand-pink">
+            Readers<span class="font-sans font-light text-gray-500 dark:text-gray-400 text-base">.africa</span>
           </span>
         </a>
       </div>
 
       <!-- Desktop Navigation Menu -->
-      <div class="hidden md:flex items-center space-x-1 lg:space-x-2">
+      <div class="hidden md:flex flex-1 items-center justify-center space-x-0.5 lg:space-x-1 min-w-0">
         <a href="/" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath === '/' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Home</a>
         <a href="/novels" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/novels') && !currentPath.includes('/categories') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Novels</a>
         <a href="/authors" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/authors') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Authors</a>
@@ -31,12 +31,12 @@
       <!-- Search -->
       <form action="/search" method="GET" class="hidden lg:flex items-center">
         <div class="relative">
-          <input type="search" name="q" placeholder="Search books, authors, poems..." class="w-48 xl:w-64 pl-10 pr-4 py-2 text-sm rounded-full border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-brown/10 focus:outline-none focus:ring-1 focus:ring-brand-brown">
+          <input type="search" name="q" placeholder="Search..." class="w-32 xl:w-44 pl-9 pr-3 py-2 text-sm rounded-full border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-brown/10 focus:outline-none focus:ring-1 focus:ring-brand-brown">
           <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
         </div>
       </form>
 
-      <div class="hidden md:flex items-center space-x-4">
+      <div class="hidden md:flex items-center space-x-2 shrink-0">
         <!-- Dark Mode Toggle -->
         <button id="theme-toggle-btn" class="p-2.5 rounded-full text-gray-500 hover:text-brand-brown dark:text-gray-400 dark:hover:text-brand-pink hover:bg-gray-100 dark:hover:bg-brand-brown/20 transition-all duration-200" title="Toggle Theme">
           <i data-lucide="sun" id="sun-icon" class="w-5 h-5 hidden dark:block"></i>

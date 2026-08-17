@@ -306,7 +306,7 @@
     "reactions": [],
     "comments": [],
     "bookmarks": [],
-    "viewCount": 0,
+    "viewCount": 1,
     "approvalStatus": "approved",
     "tags": [
       "test",
@@ -322,6 +322,6 @@
     "backgroundPosition": "center",
     "backgroundSize": "cover",
     "backgroundOverlay": 0.4,
-    "updatedAt": "2026-08-17T08:38:54.948Z"
+    "updatedAt": "2026-08-17T09:38:29.306Z"
   }
 ]
