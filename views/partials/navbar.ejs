@@ -1,125 +1,135 @@
-<nav id="main-navbar" class="sticky top-0 z-50 bg-white/95 dark:bg-[#1C120C]/95 backdrop-blur-md border-b border-brand-brown/10 dark:border-brand-brown/20 transition-all duration-300">
+<nav id="main-navbar" class="sticky top-0 z-50 bg-white/95 dark:bg-[#1C120C]/95 backdrop-blur-md border-b border-brand-brown/10 dark:border-brand-brown/20 transition-shadow duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-20 gap-2">
+    <div class="flex items-center justify-between h-16 md:h-20 gap-3">
       
-      <!-- Logo and Brand -->
-      <div class="flex items-center shrink-0">
-        <a href="/" class="flex items-center gap-2 group">
-          <img src="/logo.jpg" alt="Readers Africa" class="w-9 h-9 rounded-full object-cover shadow-md ring-2 ring-brand-brown/20 group-hover:ring-brand-brown/60 transition-all duration-200">
-          <span class="font-serif text-lg font-bold tracking-tight text-brand-brown dark:text-brand-pink">
-            Readers<span class="font-sans font-light text-gray-500 dark:text-gray-400 text-base">.africa</span>
+      <!-- 1. Brand Logo & Name (Protected from being squeezed or blocked) -->
+      <div class="flex items-center shrink-0 min-w-max">
+        <a href="/" class="flex items-center gap-2.5 group">
+          <img src="/logo.jpg" alt="Readers Africa" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shadow-md ring-2 ring-brand-brown/25 group-hover:ring-brand-brown transition-all duration-200">
+          <span class="font-serif text-lg sm:text-xl font-bold tracking-tight text-brand-brown dark:text-brand-pink select-none">
+            Readers<span class="font-sans font-normal text-gray-500 dark:text-gray-400 text-sm sm:text-base">.africa</span>
           </span>
         </a>
       </div>
 
-      <!-- Desktop Navigation Menu -->
-      <div class="hidden md:flex flex-1 items-center justify-center space-x-0.5 lg:space-x-1 min-w-0">
-        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath === '/' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Home</a>
-        <a href="/novels" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/novels') && !currentPath.includes('/categories') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Novels</a>
-        <a href="/authors" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/authors') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Authors</a>
-        <a href="/poems" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/poems') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Poetry</a>
-        <a href="/live" class="px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 <%= currentPath.startsWith('/live') ? 'text-red-500 bg-red-500/10' : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20' %>">
+      <!-- 2. Desktop Navigation Menu (XL Screens: All links; MD-LG Screens: Core + More Dropdown) -->
+      <div class="hidden xl:flex items-center justify-center space-x-1 flex-1 px-2">
+        <a href="/" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath === '/' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Home</a>
+        <a href="/novels" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/novels') && !currentPath.includes('/categories') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Novels</a>
+        <a href="/authors" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/authors') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Authors</a>
+        <a href="/poems" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/poems') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Poetry</a>
+        <a href="/live" class="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 <%= currentPath.startsWith('/live') ? 'text-red-500 bg-red-500/10' : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20' %>">
           <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live Stage
         </a>
-        <a href="/novels/categories" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath === '/novels/categories' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Categories</a>
-        <a href="/articles" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath.startsWith('/articles') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Articles</a>
-        <a href="/about" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath === '/about' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">About</a>
-        <a href="/contact" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <%= currentPath === '/contact' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/50 dark:bg-brand-brown/20' : 'text-gray-600 dark:text-gray-300 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/30 dark:hover:bg-brand-brown/10' %>">Contact</a>
+        <a href="/novels/categories" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath === '/novels/categories' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Categories</a>
+        <a href="/articles" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/articles') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Articles</a>
+        <a href="/about" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath === '/about' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">About</a>
+        <a href="/contact" class="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors <%= currentPath === '/contact' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 dark:hover:bg-brand-brown/10' %>">Contact</a>
       </div>
 
-      <!-- Action Buttons and User Controls -->
-      <!-- Search -->
-      <form action="/search" method="GET" class="hidden lg:flex items-center">
-        <div class="relative">
-          <input type="search" name="q" placeholder="Search..." class="w-32 xl:w-44 pl-9 pr-3 py-2 text-sm rounded-full border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-brown/10 focus:outline-none focus:ring-1 focus:ring-brand-brown">
-          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-        </div>
-      </form>
+      <!-- Mid-Size Screen Navigation (768px - 1279px): Compact with 'More' dropdown -->
+      <div class="hidden md:flex xl:hidden items-center justify-center space-x-1 flex-1 px-1">
+        <a href="/" class="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors <%= currentPath === '/' ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown' %>">Home</a>
+        <a href="/novels" class="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/novels') && !currentPath.includes('/categories') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown' %>">Novels</a>
+        <a href="/authors" class="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/authors') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown' %>">Authors</a>
+        <a href="/poems" class="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors <%= currentPath.startsWith('/poems') ? 'text-brand-brown dark:text-brand-pink bg-brand-cream/60 dark:bg-brand-brown/20 font-bold' : 'text-gray-700 dark:text-gray-200 hover:text-brand-brown' %>">Poetry</a>
+        <a href="/live" class="px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap text-red-600 dark:text-red-400 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Live
+        </a>
 
-      <div class="hidden md:flex items-center space-x-2 shrink-0">
-        <!-- Dark Mode Toggle -->
-        <button id="theme-toggle-btn" class="p-2.5 rounded-full text-gray-500 hover:text-brand-brown dark:text-gray-400 dark:hover:text-brand-pink hover:bg-gray-100 dark:hover:bg-brand-brown/20 transition-all duration-200" title="Toggle Theme">
-          <i data-lucide="sun" id="sun-icon" class="w-5 h-5 hidden dark:block"></i>
-          <i data-lucide="moon" id="moon-icon" class="w-5 h-5 block dark:hidden"></i>
+        <!-- More Dropdown -->
+        <div class="relative inline-block" id="more-nav-dropdown-container">
+          <button id="more-nav-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-200 hover:text-brand-brown dark:hover:text-brand-pink hover:bg-brand-cream/40 flex items-center gap-1">
+            More <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+          </button>
+          <div id="more-nav-menu" class="hidden absolute left-0 mt-2 w-44 rounded-xl bg-white dark:bg-[#1E150F] shadow-xl border border-brand-brown/10 dark:border-brand-brown/20 py-1.5 z-50">
+            <a href="/novels/categories" class="block px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">Categories</a>
+            <a href="/articles" class="block px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">Articles</a>
+            <a href="/about" class="block px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">About</a>
+            <a href="/contact" class="block px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">Contact</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Action Controls & User Account -->
+      <div class="hidden md:flex items-center gap-2 shrink-0">
+        <!-- Quick Search -->
+        <form action="/search" method="GET" class="relative">
+          <input type="search" name="q" placeholder="Search..." class="w-28 lg:w-36 pl-8 pr-3 py-1.5 text-xs rounded-full border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-brown/10 focus:outline-none focus:ring-1 focus:ring-brand-brown dark:text-white">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </form>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="p-2 rounded-full text-gray-500 hover:text-brand-brown dark:text-gray-400 dark:hover:text-brand-pink hover:bg-gray-100 dark:hover:bg-brand-brown/20 transition-all" title="Toggle Theme">
+          <i data-lucide="sun" id="sun-icon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" id="moon-icon" class="w-4 h-4 block dark:hidden"></i>
         </button>
 
         <% if (user) { %>
-          <!-- Authenticated Menu -->
+          <!-- User Dropdown -->
           <div class="relative inline-block text-left" id="user-dropdown-container">
-            <button id="user-menu-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-brand-brown/20 hover:border-brand-brown bg-brand-cream/20 hover:bg-brand-cream/40 transition-all duration-200">
-              <img class="h-8 w-8 rounded-full object-cover ring-2 ring-brand-pink" src="<%= user.avatar || '/uploads/default-avatar.png' %>" alt="<%= user.username %>">
-              <span class="text-sm font-semibold text-gray-700 dark:text-amber-50/80"><%= user.username %></span>
-              <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+            <button id="user-menu-btn" class="flex items-center gap-2 px-3 py-1 rounded-full border border-brand-brown/20 hover:border-brand-brown bg-brand-cream/20 hover:bg-brand-cream/40 transition-all">
+              <img class="h-7 w-7 rounded-full object-cover ring-2 ring-brand-pink" src="<%= user.avatar || '/uploads/default-avatar.png' %>" alt="<%= user.username %>">
+              <span class="text-xs font-semibold text-gray-700 dark:text-amber-50/90 max-w-[100px] truncate"><%= user.username %></span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500"></i>
             </button>
             
-            <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#1E150F] shadow-xl border border-brand-brown/10 dark:border-brand-brown/20 ring-1 ring-black/5 divide-y divide-gray-100 dark:divide-brand-brown/10 focus:outline-none">
-              <div class="px-4 py-3 text-sm">
+            <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#1E150F] shadow-xl border border-brand-brown/10 dark:border-brand-brown/20 divide-y divide-gray-100 dark:divide-brand-brown/10 z-50">
+              <div class="px-4 py-3 text-xs">
                 <p class="text-gray-500 dark:text-gray-400">Signed in as</p>
                 <p class="font-bold text-gray-800 dark:text-brand-pink truncate"><%= user.email %></p>
-                <span class="inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-pink/20 text-brand-brown dark:text-brand-pink border border-brand-pink/10 capitalize">
+                <span class="inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-pink/20 text-brand-brown dark:text-brand-pink border border-brand-pink/10 capitalize">
                   <%= user.role %>
                 </span>
               </div>
               <div class="py-1">
-                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="layout-dashboard" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  Reader Dashboard
+                <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="layout-dashboard" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Reader Dashboard
                 </a>
-                <a href="/feed" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="rss" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  Reading Feed
+                <a href="/feed" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="rss" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Reading Feed
                 </a>
-                <a href="/notifications" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="bell" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  Notifications
+                <a href="/notifications" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="bell" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Notifications
                 </a>
-                <a href="/poems/submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="pen-line" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  Publish Poem
+                <a href="/poems/submit" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="pen-line" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Publish Poem
                 </a>
-                <a href="/novels/submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="book-plus" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  Publish Novel
+                <a href="/novels/submit" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="book-plus" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Publish Novel
                 </a>
                 <% if (user.role === 'admin' || user.role === 'moderator') { %>
-                  <a href="/admin" class="flex items-center gap-3 px-4 py-2.5 text-sm text-amber-800 dark:text-brand-pink font-semibold hover:bg-brand-pink/10 dark:hover:bg-brand-brown/30">
-                    <i data-lucide="shield-alert" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                    Admin Portal
+                  <a href="/admin" class="flex items-center gap-2.5 px-4 py-2 text-xs text-amber-800 dark:text-brand-pink font-bold hover:bg-brand-pink/10 dark:hover:bg-brand-brown/30">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Admin Portal
                   </a>
                 <% } %>
-                <a href="/auth/profile" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="user-cog" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-                  My Profile
+                <a href="/auth/profile" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="user-cog" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> My Profile
                 </a>
-                <a href="/favorites" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
-                  <i data-lucide="heart" class="w-4 h-4 text-red-500"></i>
-                  My Favorites
+                <a href="/favorites" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="heart" class="w-4 h-4 text-red-500"></i> My Favorites
                 </a>
               </div>
               <div class="py-1">
-                <a href="/auth/logout" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20">
-                  <i data-lucide="log-out" class="w-4 h-4"></i>
-                  Sign Out
+                <a href="/auth/logout" class="flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20">
+                  <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
                 </a>
               </div>
             </div>
           </div>
         <% } else { %>
-          <!-- Guests Buttons -->
-          <a href="/auth/login" class="px-5 py-2 text-sm font-semibold text-brand-brown dark:text-brand-pink hover:text-brand-accent transition-colors duration-200">Sign In</a>
-          <a href="/auth/register" class="px-5 py-2.5 bg-brand-brown hover:bg-brand-accent text-brand-cream text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Get Started</a>
+          <a href="/auth/login" class="px-3.5 py-1.5 text-xs font-semibold text-brand-brown dark:text-brand-pink hover:text-brand-accent transition-colors">Sign In</a>
+          <a href="/auth/register" class="px-4 py-1.5 bg-brand-brown hover:bg-brand-accent text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow transition-all">Get Started</a>
         <% } %>
       </div>
 
-      <!-- Mobile Menu Button -->
-      <div class="md:hidden flex items-center gap-2">
-        <!-- Theme Toggle Mobile -->
+      <!-- 4. Mobile Menu Hamburger Button -->
+      <div class="md:hidden flex items-center gap-1.5 shrink-0">
         <button id="theme-toggle-btn-mobile" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-brand-brown/20">
-          <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-          <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
         </button>
-
-        <button id="mobile-menu-toggle" class="p-2 rounded-lg text-gray-500 hover:text-brand-brown dark:text-gray-400 hover:bg-brand-cream/20">
+        <button id="mobile-menu-toggle" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-brand-cream/20">
           <i data-lucide="menu" id="menu-open-icon" class="w-6 h-6 block"></i>
           <i data-lucide="x" id="menu-close-icon" class="w-6 h-6 hidden"></i>
         </button>
@@ -184,11 +194,9 @@
   const navbar = document.getElementById('main-navbar');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 20) {
-      navbar.classList.add('shadow-md', 'h-16');
-      navbar.classList.remove('h-20');
+      navbar.classList.add('shadow-md');
     } else {
-      navbar.classList.remove('shadow-md', 'h-16');
-      navbar.classList.add('h-20');
+      navbar.classList.remove('shadow-md');
     }
   });
 
@@ -203,6 +211,23 @@
       drawer.classList.toggle('hidden');
       openIcon.classList.toggle('hidden');
       closeIcon.classList.toggle('hidden');
+    });
+  }
+
+  // More Navigation Dropdown (Mid-size screens)
+  const moreNavBtn = document.getElementById('more-nav-btn');
+  const moreNavMenu = document.getElementById('more-nav-menu');
+  const moreNavContainer = document.getElementById('more-nav-dropdown-container');
+
+  if (moreNavBtn && moreNavMenu) {
+    moreNavBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moreNavMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (moreNavContainer && !moreNavContainer.contains(e.target)) {
+        moreNavMenu.classList.add('hidden');
+      }
     });
   }
 
