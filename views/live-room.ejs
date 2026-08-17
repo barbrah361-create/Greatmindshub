@@ -52,8 +52,9 @@
       </div>
 
       <!-- Microphone Mute / Unmute Toggle (Broadcasters only) -->
-      <button id="micToggleBtn" onclick="toggleMicrophone()" title="Mute/Unmute Mic" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-green-400 hover:bg-white/20 transition-all">
-        <i data-lucide="mic" id="micIcon" class="w-4 h-4"></i>
+      <button id="micToggleBtn" onclick="toggleMicrophone()" title="Mute / Unmute Microphone (Shortcut: Press M)" class="px-3 py-1.5 rounded-full bg-green-600/30 hover:bg-green-600/50 border border-green-500/50 flex items-center gap-1.5 text-xs text-green-400 font-bold transition-all shadow-md">
+        <i data-lucide="mic" id="micIcon" class="w-3.5 h-3.5 text-green-400"></i>
+        <span id="micStatusText" class="hidden sm:inline">Mic On</span>
       </button>
 
       <!-- Camera Switcher -->
@@ -113,12 +114,17 @@
     <div id="hostVideoWrapper" class="relative w-full h-full flex-1 flex items-center justify-center bg-black overflow-hidden transition-all duration-300">
       <video id="liveVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300 filter-glam" autoplay playsinline></video>
       
-      <!-- Speaking Audio Equalizer Waveform Indicator -->
-      <div id="hostSpeakingIndicator" class="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
-        <span class="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></span>
-        <span class="w-1.5 h-4 bg-green-400 rounded-full animate-bounce delay-100"></span>
-        <span class="w-1.5 h-2 bg-green-400 rounded-full animate-bounce delay-200"></span>
-        <span class="text-[10px] font-bold text-green-400 ml-1">Speaking</span>
+      <!-- Speaking Audio Indicator & Quick Mute Overlay -->
+      <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
+        <div id="hostSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
+          <span class="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></span>
+          <span class="w-1.5 h-4 bg-green-400 rounded-full animate-bounce delay-100"></span>
+          <span class="w-1.5 h-2 bg-green-400 rounded-full animate-bounce delay-200"></span>
+          <span class="text-[10px] font-bold text-green-400 ml-1" id="hostMicLabel">Mic Active</span>
+        </div>
+        <div id="hostMutedBadge" class="hidden bg-red-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
+          <i data-lucide="mic-off" class="w-3 h-3"></i> Muted
+        </div>
       </div>
 
       <div class="absolute top-4 left-4 z-20 bg-red-600/80 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-md">
@@ -130,11 +136,16 @@
     <div id="guestVideoWrapper" class="hidden relative w-full h-full flex-1 flex items-center justify-center bg-gray-950 border-t-2 md:border-t-0 md:border-l-2 border-brand-brown/40 overflow-hidden transition-all duration-300">
       <video id="guestVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300" autoplay playsinline></video>
       
-      <!-- Guest Speaking Indicator -->
-      <div id="guestSpeakingIndicator" class="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
-        <span class="w-1.5 h-3 bg-blue-400 rounded-full animate-bounce"></span>
-        <span class="w-1.5 h-4 bg-blue-400 rounded-full animate-bounce delay-100"></span>
-        <span class="text-[10px] font-bold text-blue-400 ml-1" id="guestStageName">Co-Host</span>
+      <!-- Guest Speaking Indicator & Muted Badge -->
+      <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
+        <div id="guestSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
+          <span class="w-1.5 h-3 bg-blue-400 rounded-full animate-bounce"></span>
+          <span class="w-1.5 h-4 bg-blue-400 rounded-full animate-bounce delay-100"></span>
+          <span class="text-[10px] font-bold text-blue-400 ml-1" id="guestStageName">Co-Host</span>
+        </div>
+        <div id="guestMutedBadge" class="hidden bg-red-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
+          <i data-lucide="mic-off" class="w-3 h-3"></i> Guest Muted
+        </div>
       </div>
 
       <!-- Host Action: Drop Guest Button -->
@@ -685,22 +696,46 @@ function enableViewerAudio() {
 // ── Microphone Toggle (Host & Guest) ──
 function toggleMicrophone() {
   const stream = currentMediaStream || myGuestStream;
-  if (!stream) return;
+  if (!stream) {
+    showCameraToast('No active microphone found.');
+    return;
+  }
 
   const audioTrack = stream.getAudioTracks()[0];
   if (audioTrack) {
     isMicMuted = !isMicMuted;
     audioTrack.enabled = !isMicMuted;
+
     const btn = document.getElementById('micToggleBtn');
+    const micText = document.getElementById('micStatusText');
+    const hostWave = document.getElementById('hostSpeakingIndicator');
+    const hostMuted = document.getElementById('hostMutedBadge');
+
     if (isMicMuted) {
-      btn.className = 'w-8 h-8 rounded-full bg-red-600/80 backdrop-blur-md border border-red-400 flex items-center justify-center text-white transition-all';
-      showCameraToast('🔇 Microphone Muted');
+      btn.className = 'px-3 py-1.5 rounded-full bg-red-600/80 hover:bg-red-600 border border-red-400 flex items-center gap-1.5 text-xs text-white font-bold transition-all shadow-md';
+      btn.innerHTML = '<i data-lucide="mic-off" class="w-3.5 h-3.5"></i> <span id="micStatusText" class="hidden sm:inline">Muted</span>';
+      if (hostWave) hostWave.classList.add('hidden');
+      if (hostMuted) hostMuted.classList.remove('hidden');
+      showCameraToast('🔇 Microphone Muted (Audio paused for audience)');
     } else {
-      btn.className = 'w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-green-400 hover:bg-white/20 transition-all';
-      showCameraToast('🎤 Microphone Active');
+      btn.className = 'px-3 py-1.5 rounded-full bg-green-600/30 hover:bg-green-600/50 border border-green-500/50 flex items-center gap-1.5 text-xs text-green-400 font-bold transition-all shadow-md';
+      btn.innerHTML = '<i data-lucide="mic" class="w-3.5 h-3.5 text-green-400"></i> <span id="micStatusText" class="hidden sm:inline">Mic On</span>';
+      if (hostWave) hostWave.classList.remove('hidden');
+      if (hostMuted) hostMuted.classList.add('hidden');
+      showCameraToast('🎤 Microphone Active (Speaking live)');
     }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
+
+// Keyboard shortcut 'M' for quick mute/unmute
+window.addEventListener('keydown', (e) => {
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  if (activeTag === 'input' || activeTag === 'textarea') return;
+  if (e.key === 'm' || e.key === 'M') {
+    toggleMicrophone();
+  }
+});
 
 // ── Co-Host / Multi-Guest Stage Management ──
 let pendingCoHostUserId = '';
