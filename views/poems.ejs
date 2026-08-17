@@ -93,8 +93,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <% poems.forEach(function(poem) { %>
         <div class="book-card p-6 flex flex-col hover:shadow-lg transition-all duration-300 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] relative group rounded-2xl">
-          <div class="absolute top-4 right-4 text-[10px] uppercase tracking-wider font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink px-2.5 py-1 rounded-full border border-brand-pink/30">
-            <%= poem.category || poem.genre || 'Poetry' %>
+          <div class="absolute top-4 right-4 flex items-center gap-1.5">
+            <% if (poem.isViral) { %>
+              <span class="text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/30 flex items-center gap-1 animate-pulse">
+                🔥 Viral (<%= poem.authorStreak || poem.authorViralScore %>⚡)
+              </span>
+            <% } %>
+            <div class="text-[10px] uppercase tracking-wider font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink px-2.5 py-1 rounded-full border border-brand-pink/30">
+              <%= poem.category || poem.genre || 'Poetry' %>
+            </div>
           </div>
 
           <div class="flex-grow mt-2">

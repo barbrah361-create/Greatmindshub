@@ -1,342 +1,429 @@
 <%- include('partials/header') %>
 <%- include('partials/navbar') %>
-<%- include('partials/flash') %>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow">
-  
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-    
-    <!-- LEFT & CENTER: Live Video Stream & Teleprompter (Col span 8) -->
-    <div class="lg:col-span-8 space-y-6">
-      
-      <!-- Video Container (TikTok Live Vertical/Horizontal Ratio) -->
-      <div class="relative bg-black rounded-3xl overflow-hidden aspect-video shadow-2xl border-2 border-brand-brown/20 flex items-center justify-center group">
-        <!-- Live Video Element (Mirrored like TikTok Selfie Cam) -->
-        <video id="liveVideoFeed" class="w-full h-full object-cover transition-all duration-300 transform -scale-x-100" autoplay playsinline muted></video>
+<!-- Socket.io Client -->
+<script src="/socket.io/socket.io.js"></script>
 
-        <!-- Tap to Start Camera Overlay (If browser permission required) -->
-        <div id="cameraStartOverlay" class="absolute inset-0 bg-black/80 backdrop-blur z-40 flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div class="w-20 h-20 rounded-full bg-red-600/20 text-red-500 flex items-center justify-center animate-pulse ring-4 ring-red-500/30">
-            <i data-lucide="video" class="w-10 h-10"></i>
-          </div>
-          <div>
-            <h3 class="font-serif text-2xl font-bold text-white">Join Live Recitation Stage</h3>
-            <p class="text-xs text-gray-300 max-w-sm mt-1">Tap below to enable your camera feed, audio stream, and real-time TikTok beauty filters.</p>
-          </div>
-          <button type="button" onclick="startLiveCamera()" class="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-red-500/30 transition-all text-xs flex items-center gap-2">
-            <i data-lucide="camera" class="w-4 h-4"></i> Enable Camera & Broadcast Live
-          </button>
-        </div>
+<!-- TikTok Live Room � Full Immersive Dark Layout -->
+<div id="live-room-wrapper" class="bg-black min-h-screen relative overflow-hidden">
 
-        <!-- Live Badge & Viewer Counter Overlay -->
-        <div class="absolute top-4 left-4 flex flex-wrap items-center gap-2 z-20">
-          <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-lg uppercase tracking-wider animate-pulse">
-            <span class="w-2 h-2 rounded-full bg-white"></span> LIVE STAGE
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur text-white border border-white/10">
-            <i data-lucide="users" class="w-3.5 h-3.5 text-red-400"></i>
-            <span id="roomViewerCount"><%= session.viewersCount || 124 %></span> Watching
-          </span>
-        </div>
-
-        <!-- Filter Selector & Controls Overlay (Top Right) -->
-        <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
-          <!-- Filter Select -->
-          <div class="flex items-center gap-1.5 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs text-white">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-            <select id="liveFilterSelect" onchange="applyLiveFilter(this.value)" class="bg-transparent text-white font-bold text-xs outline-none cursor-pointer">
-              <option value="glam" class="bg-gray-900 text-white" selected>🌟 Glam Glow</option>
-              <option value="none" class="bg-gray-900 text-white">✨ Natural</option>
-              <option value="golden" class="bg-gray-900 text-white">🌅 Golden Hour</option>
-              <option value="vibrant" class="bg-gray-900 text-white">🎨 Vibrant</option>
-              <option value="noir" class="bg-gray-900 text-white">🎬 Poetic Noir</option>
-            </select>
-          </div>
-
-          <!-- Flip Mirror Toggle -->
-          <button type="button" onclick="toggleMirror()" title="Toggle Camera Mirror" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white flex items-center justify-center hover:bg-black transition-colors">
-            <i data-lucide="flip-horizontal" class="w-4 h-4"></i>
-          </button>
-        </div>
-
-        <!-- TikTok Live Host Banner & Floating Hearts Trigger -->
-        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white z-20">
-          <div class="flex items-center gap-3 bg-black/60 backdrop-blur px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
-            <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-10 h-10 rounded-full object-cover ring-2 ring-red-500">
-            <div>
-              <h3 class="font-bold text-sm leading-snug flex items-center gap-1.5">
-                <%= session.hostName %>
-                <span class="bg-red-600 text-[9px] px-1.5 py-0.2 rounded font-bold uppercase">HOST</span>
-              </h3>
-              <p class="text-[11px] text-gray-300">Reciting: <%= session.workTitle %></p>
-            </div>
-          </div>
-
-          <!-- TikTok Style Big Floating Heart Button -->
-          <button onclick="sendLiveHeart('<%= session._id %>')" class="w-14 h-14 rounded-full bg-gradient-to-tr from-red-600 to-pink-500 hover:scale-110 text-white flex items-center justify-center shadow-2xl transition-transform active:scale-125 border-2 border-white/20">
-            <i data-lucide="heart" class="w-7 h-7 fill-white"></i>
-          </button>
-        </div>
-
-        <!-- Floating hearts animation overlay container -->
-        <div id="heartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
-        <!-- Gift Notification Banner Overlay -->
-        <div id="giftNotificationBanner" class="absolute top-16 left-4 z-30 pointer-events-none space-y-2"></div>
+  <!-- --- TOP BAR (Host Info + Viewers + Close) --- -->
+  <div class="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3">
+    <!-- Host badge -->
+    <div class="flex items-center gap-2.5 bg-black/60 backdrop-blur-lg px-3 py-1.5 rounded-full border border-white/10">
+      <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" class="w-9 h-9 rounded-full object-cover ring-2 ring-red-500" alt="">
+      <div class="leading-tight">
+        <span class="text-white text-xs font-bold flex items-center gap-1"><%= session.hostName %> <span class="bg-red-600 text-[8px] px-1.5 py-0.5 rounded font-black uppercase">HOST</span></span>
+        <span class="text-gray-400 text-[10px]"><%= session.workTitle %></span>
       </div>
-
-      <!-- TikTok Live Appreciation Gift Toolbar -->
-      <div class="bg-white dark:bg-[#1E150F] p-4 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-white">
-          <i data-lucide="gift" class="w-4.5 h-4.5 text-red-500"></i>
-          Send Live TikTok Gift:
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="sendGift('🌹 Rose')" class="px-3.5 py-1.5 rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
-            🌹 Rose
-          </button>
-          <button onclick="sendGift('📚 Golden Book')" class="px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
-            📚 Book
-          </button>
-          <button onclick="sendGift('💎 Diamond')" class="px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
-            💎 Diamond
-          </button>
-          <button onclick="sendGift('👑 Crown')" class="px-3.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/30 text-xs font-bold hover:scale-105 transition-transform flex items-center gap-1.5 shadow-sm">
-            👑 Crown
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Read-Along Teleprompter Card -->
-      <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/15 pb-4">
-          <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-pink bg-brand-pink/20 px-2.5 py-0.5 rounded-full">Read Along</span>
-            <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mt-1"><%= session.workTitle %></h2>
-          </div>
-          <% if (isHost) { %>
-            <form action="/live/<%= session._id %>/end" method="POST" onsubmit="return confirm('End your live stream session?');">
-              <button type="submit" class="px-4 py-2 bg-gray-900 hover:bg-black text-white font-bold rounded-xl text-xs shadow">
-                End Broadcast
-              </button>
-            </form>
-          <% } %>
-        </div>
-
-        <div class="prose prose-amber dark:prose-invert text-gray-700 dark:text-gray-200 text-base leading-relaxed max-h-72 overflow-y-auto pr-2 scrollbar-hide space-y-3 font-serif italic">
-          <% if (session.workContent) { %>
-            <% session.workContent.split('\n\n').forEach(function(p) { %>
-              <p class="py-1"><%= p %></p>
-            <% }) %>
-          <% } else { %>
-            <p class="text-gray-400 italic">No text provided. Listen live as <%= session.hostName %> recites!</p>
-          <% } %>
-        </div>
-      </div>
-
+      <% if (user && String(user._id) !== String(session.hostId)) { %>
+        <button onclick="followHost()" class="ml-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded-full transition-colors">Follow</button>
+      <% } %>
     </div>
 
-    <!-- RIGHT COLUMN: Real-Time Live Chat & Audience Feed (Col span 4) -->
-    <div class="lg:col-span-4 bg-white dark:bg-[#1E150F] rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col h-[650px] overflow-hidden">
-      
-      <!-- Chat Header -->
-      <div class="p-4 border-b border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/20 dark:bg-brand-brown/10 flex items-center justify-between">
-        <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
-          <i data-lucide="message-square" class="w-4 h-4 text-red-500"></i>
-          TikTok Live Stream Chat
-        </h3>
-        <span class="text-[11px] font-bold text-red-500 flex items-center gap-1">
-          <i data-lucide="heart" class="w-3.5 h-3.5 fill-red-500"></i>
-          <span id="liveLikesCount"><%= session.likesCount %></span> Hearts
-        </span>
+    <!-- Right side: viewers + close -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10">
+        <i data-lucide="eye" class="w-3.5 h-3.5 text-red-400"></i>
+        <span id="viewerCount" class="text-white text-xs font-bold"><%= session.viewersCount %></span>
       </div>
-
-      <!-- Chat Stream Feed -->
-      <div id="chatFeed" class="p-4 flex-grow overflow-y-auto space-y-3 text-xs">
-        <div class="bg-brand-cream/40 dark:bg-brand-brown/10 p-3 rounded-2xl border border-brand-brown/5 text-gray-500 dark:text-gray-400 italic text-center">
-          Welcome to <%= session.hostName %>'s live recitation stage! Keep comments encouraging and respectful.
-        </div>
-      </div>
-
-      <!-- Chat Form Input -->
-      <div class="p-4 border-t border-brand-brown/10 dark:border-brand-brown/15 bg-brand-cream/10">
-        <form onsubmit="sendChatMessage(event)" class="flex gap-2">
-          <input type="text" id="chatInput" placeholder="Send a live comment..." required class="flex-grow px-4 py-2.5 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1C120C] text-xs text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown">
-          <button type="submit" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow transition-colors">
-            Send
-          </button>
-        </form>
-      </div>
-
+      <a href="/live" class="w-8 h-8 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </a>
     </div>
-
   </div>
+
+  <!-- --- TOP GIFTERS BAR --- -->
+  <div class="absolute top-16 left-4 z-30 flex items-center gap-1.5">
+    <% topGifters.slice(0, 3).forEach(function(g, i) { %>
+      <div class="flex items-center gap-1 bg-gradient-to-r <%= i === 0 ? 'from-amber-500/30 to-amber-600/20 border-amber-500/30' : 'from-white/5 to-white/10 border-white/10' %> backdrop-blur px-2 py-1 rounded-full border text-[10px]">
+        <span class="<%= i === 0 ? 'text-amber-400' : 'text-gray-400' %> font-bold"><%= i === 0 ? '??' : i === 1 ? '??' : '??' %></span>
+        <span class="text-white font-semibold truncate max-w-[60px]"><%= g.username %></span>
+        <span class="text-amber-400 font-bold"><%= g.totalPoints %></span>
+      </div>
+    <% }) %>
+  </div>
+
+  <!-- --- VIDEO FEED (Full Screen Background) --- -->
+  <div class="absolute inset-0 z-0">
+    <video id="liveVideoFeed" class="w-full h-full object-cover transform -scale-x-100" autoplay playsinline muted></video>
+    <!-- Gradient overlay for readability -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40"></div>
+  </div>
+
+  <!-- Camera start overlay -->
+  <% if (isHost) { %>
+  <div id="cameraOverlay" class="absolute inset-0 z-50 bg-black/90 backdrop-blur flex flex-col items-center justify-center text-center space-y-4">
+    <div class="w-20 h-20 rounded-full bg-red-600/20 text-red-500 flex items-center justify-center animate-pulse ring-4 ring-red-500/30">
+      <i data-lucide="video" class="w-10 h-10"></i>
+    </div>
+    <h3 class="font-serif text-2xl font-bold text-white">Start Broadcasting</h3>
+    <p class="text-xs text-gray-400 max-w-xs">Enable your camera to go live. Your followers have been notified!</p>
+    <button onclick="startCamera()" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-sm flex items-center gap-2 shadow-lg">
+      <i data-lucide="camera" class="w-4 h-4"></i> Go Live Now
+    </button>
+  </div>
+  <% } %>
+
+  <!-- --- FLOATING HEARTS CONTAINER --- -->
+  <div id="heartsContainer" class="absolute right-4 bottom-48 w-16 h-64 pointer-events-none z-30 overflow-hidden"></div>
+
+  <!-- --- GIFT ANIMATION OVERLAY --- -->
+  <div id="giftOverlay" class="absolute inset-0 pointer-events-none z-40 flex items-center justify-center"></div>
+
+  <!-- --- CO-HOST REQUEST POPUP (Host Only) --- -->
+  <% if (isHost) { %>
+  <div id="coHostPopup" class="hidden absolute top-24 right-4 z-50 bg-black/90 backdrop-blur-lg border border-white/20 rounded-2xl p-4 w-72 space-y-3 shadow-2xl">
+    <h4 class="text-white text-sm font-bold flex items-center gap-2"><i data-lucide="hand-metal" class="w-4 h-4 text-amber-400"></i> Join Request</h4>
+    <div id="coHostRequestInfo" class="flex items-center gap-3">
+      <img id="coHostAvatar" src="" class="w-10 h-10 rounded-full object-cover ring-2 ring-amber-500" alt="">
+      <span id="coHostName" class="text-white text-sm font-semibold"></span>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="acceptCoHost()" class="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-colors">Accept</button>
+      <button onclick="rejectCoHost()" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors">Decline</button>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- --- BOTTOM SECTION: Chat + Actions --- -->
+  <div class="absolute bottom-0 left-0 right-0 z-30 p-4 space-y-3">
+
+    <!-- Live Chat Feed (TikTok floating style) -->
+    <div id="chatFeed" class="space-y-1.5 max-h-52 overflow-y-auto scrollbar-hide">
+      <div class="inline-block bg-white/10 backdrop-blur px-3 py-1.5 rounded-2xl">
+        <span class="text-gray-400 text-[11px]">Welcome to <%= session.hostName %>'s live stage! Be respectful ??</span>
+      </div>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="flex items-center gap-2">
+      <!-- Chat input -->
+      <form onsubmit="sendChat(event)" class="flex-1 relative">
+        <input type="text" id="chatInput" placeholder="Say something nice..." class="w-full pl-4 pr-10 py-2.5 bg-white/10 backdrop-blur border border-white/10 rounded-full text-white text-xs placeholder-gray-400 focus:outline-none focus:border-white/30" autocomplete="off">
+        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-white">
+          <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- Gift Button -->
+      <button onclick="toggleGiftPanel()" id="giftToggleBtn" class="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+        <i data-lucide="gift" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Heart Button -->
+      <button onclick="tapHeart()" class="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-pink-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-125">
+        <i data-lucide="heart" class="w-5 h-5 fill-white"></i>
+      </button>
+
+      <!-- Request to Join (Non-host) -->
+      <% if (user && String(user._id) !== String(session.hostId)) { %>
+      <button onclick="requestCoHost()" id="joinRequestBtn" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-colors" title="Request to join live">
+        <i data-lucide="hand-metal" class="w-5 h-5"></i>
+      </button>
+      <% } %>
+    </div>
+
+    <!-- Gift Panel (Hidden by default) -->
+    <div id="giftPanel" class="hidden bg-black/90 backdrop-blur-lg border border-white/10 rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-white text-xs font-bold">Send a Gift</span>
+        <button onclick="toggleGiftPanel()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <button onclick="sendGift('rose')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">??</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Rose</span>
+          <span class="text-[9px] text-amber-400 font-bold">5 pts</span>
+        </button>
+        <button onclick="sendGift('book')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">??</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Book</span>
+          <span class="text-[9px] text-amber-400 font-bold">15 pts</span>
+        </button>
+        <button onclick="sendGift('diamond')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">??</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Diamond</span>
+          <span class="text-[9px] text-amber-400 font-bold">50 pts</span>
+        </button>
+        <button onclick="sendGift('crown')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">??</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Crown</span>
+          <span class="text-[9px] text-amber-400 font-bold">100 pts</span>
+        </button>
+        <button onclick="sendGift('africa_star')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">?</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Africa Star</span>
+          <span class="text-[9px] text-amber-400 font-bold">200 pts</span>
+        </button>
+        <button onclick="sendGift('universe')" class="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+          <span class="text-2xl group-hover:scale-125 transition-transform">??</span>
+          <span class="text-[10px] text-gray-400 font-semibold">Universe</span>
+          <span class="text-[9px] text-amber-400 font-bold">500 pts</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- TELEPROMPTER PANEL (Slide-up) --- -->
+  <div id="teleprompterPanel" class="absolute bottom-0 left-0 right-0 z-20 transform translate-y-full transition-transform duration-500">
+    <div class="bg-black/95 backdrop-blur-lg border-t border-white/10 rounded-t-3xl p-6 max-h-[60vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-white font-serif text-lg font-bold"><%= session.workTitle %></h3>
+        <button onclick="toggleTeleprompter()" class="text-gray-400 hover:text-white"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>
+      </div>
+      <div class="text-gray-300 text-sm leading-relaxed font-serif italic space-y-3">
+        <% if (session.workContent) { %>
+          <% session.workContent.split('\n\n').forEach(function(p) { %>
+            <p><%= p %></p>
+          <% }) %>
+        <% } else { %>
+          <p class="text-gray-500">No text provided. Listen live!</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teleprompter toggle button -->
+  <button onclick="toggleTeleprompter()" class="absolute bottom-20 left-4 z-30 px-3 py-1.5 bg-white/10 backdrop-blur border border-white/10 rounded-full text-white text-[10px] font-bold flex items-center gap-1.5 hover:bg-white/20 transition-colors">
+    <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Read Along
+  </button>
+
+  <!-- End Stream button (Host only) -->
+  <% if (isHost) { %>
+  <form action="/live/<%= session._id %>/end" method="POST" class="absolute top-16 right-4 z-40" onsubmit="return confirm('End your live stream?');">
+    <button type="submit" class="px-4 py-2 bg-red-600/80 hover:bg-red-700 backdrop-blur text-white text-xs font-bold rounded-full border border-red-500/30 flex items-center gap-1.5 transition-colors">
+      <i data-lucide="square" class="w-3 h-3 fill-white"></i> End Live
+    </button>
+  </form>
+  <% } %>
 
 </div>
 
 <style>
-/* Beauty Face Filter Styles */
-.filter-glam {
-  filter: contrast(1.06) brightness(1.12) saturate(1.18) blur(0.2px) !important;
-}
-.filter-golden {
-  filter: sepia(0.25) contrast(1.1) brightness(1.08) saturate(1.25) hue-rotate(-10deg) !important;
-}
-.filter-vibrant {
-  filter: saturate(1.4) contrast(1.1) brightness(1.05) !important;
-}
-.filter-noir {
-  filter: grayscale(1) contrast(1.25) brightness(1.05) !important;
-}
+  /* Hide navbar & footer in live room for full immersion */
+  #main-navbar, footer { display: none !important; }
+  body { background: black !important; overflow: hidden; }
+
+  /* Floating heart animation */
+  .floating-heart {
+    position: absolute;
+    bottom: 0;
+    animation: floatUp 2.5s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    50% { opacity: 0.8; transform: translateY(-120px) scale(1.3) translateX(10px); }
+    100% { opacity: 0; transform: translateY(-250px) scale(0.8) translateX(-5px); }
+  }
+
+  /* Gift entrance animation */
+  .gift-entrance {
+    animation: giftBounce 2s ease-out forwards;
+  }
+  @keyframes giftBounce {
+    0% { opacity: 0; transform: scale(0.3) translateY(50px); }
+    30% { opacity: 1; transform: scale(1.5) translateY(-20px); }
+    50% { transform: scale(1.2) translateY(0); }
+    70% { transform: scale(1.3) translateY(-10px); }
+    100% { opacity: 0; transform: scale(1) translateY(-40px); }
+  }
+
+  /* Join notification */
+  .join-toast {
+    animation: slideIn 0.4s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes fadeOut { to { opacity: 0; } }
 </style>
 
 <script>
-let isMirrored = true;
+const ROOM_ID = '<%= session._id %>';
+const IS_HOST = <%= isHost ? 'true' : 'false' %>;
+const CURRENT_USER = {
+  id: '<%= user ? user._id : "" %>',
+  username: '<%= user ? user.username : "Guest" %>',
+  avatar: '<%= user ? (user.avatar || "/uploads/default-avatar.png") : "/uploads/default-avatar.png" %>'
+};
 
-function toggleMirror() {
-  const video = document.getElementById('liveVideoFeed');
-  isMirrored = !isMirrored;
-  if (isMirrored) {
-    video.classList.add('transform', '-scale-x-100');
-  } else {
-    video.classList.remove('transform', '-scale-x-100');
-  }
-}
+// -- Socket.io Connection --
+const socket = io();
+socket.emit('join-room', { roomId: ROOM_ID, userId: CURRENT_USER.id, username: CURRENT_USER.username, avatar: CURRENT_USER.avatar });
 
-// Apply live face filter to stream feed
-function applyLiveFilter(filterName) {
-  const video = document.getElementById('liveVideoFeed');
-  video.className = 'w-full h-full object-cover transition-all duration-300 ' + (isMirrored ? 'transform -scale-x-100' : '');
-  if (filterName !== 'none') {
-    video.classList.add('filter-' + filterName);
-  }
-}
-
-// Start Live Camera Stream
-async function startLiveCamera() {
-  try {
-    const video = document.getElementById('liveVideoFeed');
-    const overlay = document.getElementById('cameraStartOverlay');
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
-      audio: true
-    });
-    video.srcObject = stream;
-    await video.play();
-    overlay.classList.add('hidden');
-    applyLiveFilter('glam');
-  } catch (e) {
-    alert('Camera access note: Please allow camera permissions in your browser bar.');
-  }
-}
-
-// Auto attempt start camera on page load
-window.addEventListener('DOMContentLoaded', () => {
-  startLiveCamera();
+// Viewer count updates
+socket.on('viewer-count', (data) => {
+  document.getElementById('viewerCount').textContent = data.count;
 });
 
-// TikTok Live Automated Reader Audience Simulation (Hearts & Comments)
-const sampleAudienceComments = [
-  "Love this poem so much! ❤️",
-  "Your voice is so calming 🌹",
-  "Reading along from Nairobi! 📚",
-  "Such powerful prose ✨",
-  "Recite the second stanza again please!",
-  "Giving 5 stars to this live stage 💎",
-  "Brilliant recital! 👑",
-  "So inspiring! 🙌"
-];
-
-setInterval(() => {
-  // Random heart floating
-  if (Math.random() > 0.4) {
-    sendLiveHeart('<%= session._id %>');
-  }
-
-  // Random viewer comment
-  if (Math.random() > 0.6) {
-    const randomUser = "Reader_" + Math.floor(1000 + Math.random() * 9000);
-    const randomComment = sampleAudienceComments[Math.floor(Math.random() * sampleAudienceComments.length)];
-    const feed = document.getElementById('chatFeed');
-    const msg = document.createElement('div');
-    msg.className = 'flex items-start gap-2 p-2.5 rounded-2xl bg-brand-cream/50 dark:bg-brand-brown/15 border border-brand-brown/5';
-    msg.innerHTML = `
-      <span class="font-bold text-brand-brown dark:text-brand-pink shrink-0">${randomUser}:</span>
-      <span class="text-gray-800 dark:text-gray-200 leading-snug">${randomComment}</span>
-    `;
-    feed.appendChild(msg);
-    feed.scrollTop = feed.scrollHeight;
-  }
-}, 4000);
-
-// Send Audience Gift
-function sendGift(giftName) {
-  const user = "<%= user ? user.username : 'Reader' %>";
-  const banner = document.getElementById('giftNotificationBanner');
-  const toast = document.createElement('div');
-  toast.className = 'bg-black/90 backdrop-blur text-white text-xs font-bold px-4 py-2 rounded-2xl border border-amber-400/40 shadow-xl flex items-center gap-2 animate-bounce';
-  toast.innerHTML = `<span>✨ ${user} sent ${giftName}!</span>`;
-  banner.appendChild(toast);
-
-  // Add to live chat feed
+// User joined notification
+socket.on('user-joined', (data) => {
   const feed = document.getElementById('chatFeed');
-  const msg = document.createElement('div');
-  msg.className = 'p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-center';
-  msg.innerHTML = `🎁 ${user} sent ${giftName} to <%= session.hostName %>!`;
-  feed.appendChild(msg);
+  const div = document.createElement('div');
+  div.className = 'join-toast inline-flex items-center gap-1.5 bg-blue-500/20 backdrop-blur px-3 py-1.5 rounded-2xl';
+  div.innerHTML = '<img src="' + data.avatar + '" class="w-4 h-4 rounded-full">' +
+    '<span class="text-blue-300 text-[11px] font-semibold">' + data.username + ' joined the live</span>';
+  feed.appendChild(div);
   feed.scrollTop = feed.scrollHeight;
+  setTimeout(() => div.remove(), 3000);
+});
 
-  setTimeout(() => toast.remove(), 3000);
-}
+// -- Chat --
+socket.on('chat-message', (data) => {
+  const feed = document.getElementById('chatFeed');
+  const div = document.createElement('div');
+  div.className = 'inline-flex items-start gap-1.5 bg-white/10 backdrop-blur px-3 py-1.5 rounded-2xl max-w-[85%]';
+  div.innerHTML = '<span class="text-amber-400 text-[11px] font-bold shrink-0">' + data.username + '</span>' +
+    '<span class="text-white text-[11px]">' + data.message + '</span>';
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+});
 
-// Live Chat Simulation & Messaging
-function sendChatMessage(e) {
+function sendChat(e) {
   e.preventDefault();
   const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-
-  const feed = document.getElementById('chatFeed');
-  const msg = document.createElement('div');
-  msg.className = 'flex items-start gap-2 p-2.5 rounded-2xl bg-brand-cream/50 dark:bg-brand-brown/15 border border-brand-brown/5';
-  msg.innerHTML = `
-    <span class="font-bold text-brand-brown dark:text-brand-pink shrink-0"><%= user ? user.username : 'Guest Reader' %>:</span>
-    <span class="text-gray-800 dark:text-gray-200 leading-snug">${text}</span>
-  `;
-  feed.appendChild(msg);
-  feed.scrollTop = feed.scrollHeight;
+  const msg = input.value.trim();
+  if (!msg) return;
+  socket.emit('chat-message', { roomId: ROOM_ID, username: CURRENT_USER.username, avatar: CURRENT_USER.avatar, message: msg });
   input.value = '';
 }
 
-// Live TikTok-style Floating Hearts Animation
-async function sendLiveHeart(sessionId) {
-  try {
-    const res = await fetch('/live/' + sessionId + '/like', { method: 'POST' });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById('liveLikesCount').innerText = data.likesCount;
-    }
-  } catch (err) {}
+// -- Hearts --
+socket.on('heart-received', (data) => {
+  spawnFloatingHeart();
+});
 
-  // Trigger visual floating heart
+function tapHeart() {
+  socket.emit('send-heart', { roomId: ROOM_ID });
+  spawnFloatingHeart();
+}
+
+function spawnFloatingHeart() {
   const container = document.getElementById('heartsContainer');
   const heart = document.createElement('div');
-  heart.innerHTML = '❤️';
-  heart.style.position = 'absolute';
-  heart.style.bottom = '20px';
-  heart.style.right = (20 + Math.random() * 40) + 'px';
-  heart.style.fontSize = (20 + Math.random() * 20) + 'px';
-  heart.style.transition = 'all 2s ease-out';
-  heart.style.opacity = '1';
+  heart.className = 'floating-heart';
+  const emojis = ['??', '??', '??', '??', '??'];
+  heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+  heart.style.left = Math.random() * 40 + 'px';
+  heart.style.fontSize = (18 + Math.random() * 16) + 'px';
   container.appendChild(heart);
-
-  setTimeout(() => {
-    heart.style.transform = `translateY(-${150 + Math.random() * 150}px) scale(1.5)`;
-    heart.style.opacity = '0';
-  }, 50);
-
-  setTimeout(() => heart.remove(), 2100);
+  setTimeout(() => heart.remove(), 2600);
 }
-</script>
 
-<%- include('partials/footer') %>
+// -- Gifts --
+function toggleGiftPanel() {
+  document.getElementById('giftPanel').classList.toggle('hidden');
+}
+
+function sendGift(giftType) {
+  if (!CURRENT_USER.id) { alert('Please sign in to send gifts!'); return; }
+  socket.emit('send-gift', { roomId: ROOM_ID, userId: CURRENT_USER.id, username: CURRENT_USER.username, avatar: CURRENT_USER.avatar, giftType });
+  document.getElementById('giftPanel').classList.add('hidden');
+}
+
+socket.on('gift-received', (data) => {
+  // Big gift animation in center
+  const overlay = document.getElementById('giftOverlay');
+  const div = document.createElement('div');
+  div.className = 'gift-entrance text-center';
+  div.innerHTML = '<div class="text-7xl mb-2">' + data.emoji + '</div>' +
+    '<div class="text-white text-sm font-bold bg-black/60 backdrop-blur px-4 py-2 rounded-full">' +
+    data.username + ' sent ' + data.label + '!</div>';
+  overlay.appendChild(div);
+  setTimeout(() => div.remove(), 2500);
+
+  // Chat announcement
+  const feed = document.getElementById('chatFeed');
+  const msg = document.createElement('div');
+  msg.className = 'inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur px-3 py-1.5 rounded-2xl border border-amber-500/20';
+  msg.innerHTML = '<span class="text-amber-400 text-[11px] font-bold">?? ' + data.username + '</span>' +
+    '<span class="text-white text-[11px]">sent ' + data.emoji + ' ' + data.label + ' (+' + data.points + ' pts)</span>';
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+});
+
+// -- Co-Host Requests --
+let pendingCoHostUserId = '';
+
+function requestCoHost() {
+  if (!CURRENT_USER.id) { alert('Please sign in!'); return; }
+  socket.emit('co-host-request', { roomId: ROOM_ID, userId: CURRENT_USER.id, username: CURRENT_USER.username, avatar: CURRENT_USER.avatar });
+  const btn = document.getElementById('joinRequestBtn');
+  if (btn) { btn.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>'; btn.disabled = true; btn.classList.add('opacity-50'); }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+socket.on('co-host-request', (data) => {
+  if (!IS_HOST) return;
+  pendingCoHostUserId = data.userId;
+  const popup = document.getElementById('coHostPopup');
+  document.getElementById('coHostAvatar').src = data.avatar;
+  document.getElementById('coHostName').textContent = data.username + ' wants to join your live!';
+  popup.classList.remove('hidden');
+});
+
+function acceptCoHost() {
+  socket.emit('co-host-accept', { roomId: ROOM_ID, userId: pendingCoHostUserId, username: document.getElementById('coHostName').textContent.split(' wants')[0] });
+  document.getElementById('coHostPopup').classList.add('hidden');
+}
+
+function rejectCoHost() {
+  socket.emit('co-host-reject', { roomId: ROOM_ID, userId: pendingCoHostUserId });
+  document.getElementById('coHostPopup').classList.add('hidden');
+}
+
+socket.on('co-host-accepted', (data) => {
+  const feed = document.getElementById('chatFeed');
+  const div = document.createElement('div');
+  div.className = 'inline-flex items-center gap-1.5 bg-green-500/20 backdrop-blur px-3 py-1.5 rounded-2xl';
+  div.innerHTML = '<span class="text-green-400 text-[11px] font-bold">? ' + data.username + ' is now a co-host!</span>';
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+});
+
+socket.on('co-host-rejected', (data) => {
+  if (data.userId === CURRENT_USER.id) {
+    const feed = document.getElementById('chatFeed');
+    const div = document.createElement('div');
+    div.className = 'inline-block bg-red-500/20 backdrop-blur px-3 py-1.5 rounded-2xl';
+    div.innerHTML = '<span class="text-red-400 text-[11px]">Your join request was declined.</span>';
+    feed.appendChild(div);
+    feed.scrollTop = feed.scrollHeight;
+  }
+});
+
+// -- Stream ended --
+socket.on('stream-ended', () => {
+  const wrapper = document.getElementById('live-room-wrapper');
+  wrapper.innerHTML = '<div class="flex flex-col items-center justify-center min-h-screen text-center px-4 space-y-4">' +
+    '<div class="w-20 h-20 rounded-full bg-white/5 text-gray-500 flex items-center justify-center"><i data-lucide="video-off" class="w-10 h-10"></i></div>' +
+    '<h2 class="font-serif text-2xl font-bold text-white">Live stream has ended</h2>' +
+    '<p class="text-gray-400 text-sm">Thanks for watching!</p>' +
+    '<a href="/live" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm">Browse Live Rooms</a></div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+// -- Camera (Host only) --
+async function startCamera() {
+  try {
+    const video = document.getElementById('liveVideoFeed');
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: true });
+    video.srcObject = stream;
+    await video.play();
+    document.getElementById('cameraOverlay').classList.add('hidden');
+  } catch(e) { alert('Please allow camera access in your browser.'); }
+}
+
+// -- Teleprompter --
+let teleprompterOpen = false;
+function toggleTeleprompter() {
+  const panel = document.getElementById('teleprompterPanel');
+  teleprompterOpen = !teleprompterOpen;
+  panel.style.transform = teleprompterOpen ? 'translateY(0)' : 'translateY(100%)';
+}
+
+function followHost() { if (CURRENT_USER.id) fetch('/users/<%= session.hostId %>/follow', { method: 'POST' }); }
+
+// Init Lucide icons
+window.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+</script>

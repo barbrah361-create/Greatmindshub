@@ -17,6 +17,7 @@ import { buildReaderSummary, estimateReadingTime } from '../utils/profile.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { NotificationModel } from '../models/Notification.js';
 import { SignatureModel } from '../models/Signature.js';
+import { LiveSessionModel } from '../models/LiveSession.js';
 
 export const NovelController = {
   // 1. Landing Page
@@ -39,13 +40,25 @@ export const NovelController = {
 
       const categories = [...CATEGORIES];
 
+      // Viral Limelight: active live streams
+      const activeStreams = LiveSessionModel.findActive().sort({ viewersCount: -1 }).limit(4).exec();
+
+      // Top viral authors (by viralScore)
+      const allUsers = UserModel.find().exec();
+      const viralAuthors = allUsers
+        .filter((u: any) => (u.viralScore || 0) > 0)
+        .sort((a: any, b: any) => (b.viralScore || 0) - (a.viralScore || 0))
+        .slice(0, 6);
+
       res.render('home', {
         title: 'Home',
         featuredNovels: novels,
         featuredAuthors: authors,
         featuredArticles,
         categories,
-        shareQRCode
+        shareQRCode,
+        activeStreams,
+        viralAuthors
       });
     } catch (error) {
       console.error('Home page error:', error);
@@ -91,10 +104,22 @@ export const NovelController = {
       // Pagination
       const totalNovels = NovelModel.countDocuments(query);
       const rawNovels = queryChain.skip(skip).limit(limit).exec();
-      const novels = rawNovels.map((n: any) => ({
-        ...n,
-        coverImage: getLocalNovelCover(n)
-      }));
+      
+      const allUsers = UserModel.find().exec();
+      const userMap = new Map(allUsers.map((u: any) => [String(u._id), u]));
+
+      const novels = rawNovels.map((n: any) => {
+        const authorUser = n.submittedBy ? userMap.get(String(n.submittedBy)) : null;
+        const viralScore = authorUser?.viralScore || 0;
+        const streakPoints = authorUser?.streakPoints || 0;
+        return {
+          ...n,
+          coverImage: getLocalNovelCover(n),
+          authorViralScore: viralScore,
+          authorStreak: streakPoints,
+          isViral: viralScore > 0 || streakPoints > 0
+        };
+      });
       const totalPages = Math.ceil(totalNovels / limit);
 
       const authors = AuthorModel.findPublic().exec();

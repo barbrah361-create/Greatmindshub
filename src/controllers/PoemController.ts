@@ -29,9 +29,27 @@ export const PoemController = {
 
     let poems = chain.exec();
 
+    // Map authors to attach viral streaks
+    const allUsers = UserModel.find().exec();
+    const userMap = new Map(allUsers.map((u: any) => [String(u._id), u]));
+
+    const enrichedPoems = poems.map((p: any) => {
+      const authorUser = p.submittedBy ? userMap.get(String(p.submittedBy)) : null;
+      const viralScore = authorUser?.viralScore || 0;
+      const streakPoints = authorUser?.streakPoints || 0;
+      return {
+        ...p,
+        authorViralScore: viralScore,
+        authorStreak: streakPoints,
+        isViral: viralScore > 0 || streakPoints > 0
+      };
+    });
+
+    let finalPoems = enrichedPoems;
+
     if (search) {
       const lq = search.toLowerCase();
-      poems = poems.filter(p =>
+      finalPoems = finalPoems.filter((p: any) =>
         (p.title || '').toLowerCase().includes(lq) ||
         (p.content || '').toLowerCase().includes(lq) ||
         (p.authorName || '').toLowerCase().includes(lq) ||
@@ -39,8 +57,12 @@ export const PoemController = {
       );
     }
 
-    const total = poems.length;
-    const paginatedPoems = poems.slice(skip, skip + limit);
+    if (sort === 'viral') {
+      finalPoems = finalPoems.sort((a: any, b: any) => (b.authorViralScore || 0) - (a.authorViralScore || 0));
+    }
+
+    const total = finalPoems.length;
+    const paginatedPoems = finalPoems.slice(skip, skip + limit);
 
     res.render('poems', {
       title: 'Poetry Community',

@@ -1,10 +1,12 @@
 import { initDB } from './src/config/db.js';
 import express from 'express';
 import path from 'path';
+import http from 'http';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import { createServer as createViteServer } from 'vite';
+import { initSocketServer } from './src/config/socket.js';
 
 dotenv.config();
 initDB();
@@ -28,6 +30,8 @@ import poemRoutes from './src/routes/poemRoutes.js';
 import liveRoutes from './src/routes/liveRoutes.js';
 
 const app = express();
+const httpServer = http.createServer(app);
+const io = initSocketServer(httpServer);
 
 async function bootstrap() {
   app.set('trust proxy', 1);
@@ -152,7 +156,7 @@ async function bootstrap() {
   });
 
   if (!process.env.VERCEL) {
-    app.listen(PORT, '0.0.0.0', () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`[Readers] Server online at http://localhost:${PORT}`);
     });
   }

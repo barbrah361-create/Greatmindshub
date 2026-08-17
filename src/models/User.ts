@@ -52,6 +52,9 @@ export interface User {
   reposts: { poemId: string; repostedAt: string }[];
   awards?: string[];
   achievements?: string[];
+  giftPoints?: number;
+  streakPoints?: number;
+  viralScore?: number;
   currentStreak?: number;
   longestStreak?: number;
   lastActiveDate?: string;
@@ -116,6 +119,9 @@ export const UserModel = {
       reposts: [],
       awards: [],
       achievements: [],
+      giftPoints: 0,
+      streakPoints: 0,
+      viralScore: 0,
       currentStreak: 0,
       longestStreak: 0,
       lastActiveDate: ''

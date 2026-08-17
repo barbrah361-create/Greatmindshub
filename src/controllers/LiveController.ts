@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { LiveSessionModel } from '../models/LiveSession.js';
 import { PoemModel } from '../models/Poem.js';
 import { NovelModel } from '../models/Novel.js';
+import { UserModel } from '../models/User.js';
+import { NotificationModel } from '../models/Notification.js';
+import { GIFT_CATALOG } from '../config/socket.js';
 
 export const LiveController = {
   // 1. Live Recitations Directory
@@ -30,7 +33,7 @@ export const LiveController = {
     });
   },
 
-  // 3. POST Create Live Stream Room
+  // 3. POST Create Live Stream Room + Notify Followers
   postCreateLive: (req: Request, res: Response) => {
     const user = res.locals.user;
     if (!user) return res.redirect('/auth/login');
@@ -61,12 +64,26 @@ export const LiveController = {
       type: (type as any) || 'poem',
       workTitle,
       workContent,
-      viewersCount: Math.floor(Math.random() * 12) + 5,
-      likesCount: Math.floor(Math.random() * 50) + 10,
+      viewersCount: 1,
+      likesCount: 0,
       isLive: true
     });
 
-    req.flash('success', 'You are now LIVE! Share your stream with your followers.');
+    // ── Notify all followers that host is LIVE ──
+    const followers = user.followers || [];
+    followers.forEach((followerId: string) => {
+      NotificationModel.notify(
+        followerId,
+        'live',
+        `🔴 ${user.username} is LIVE!`,
+        `Now reciting: "${workTitle}" — Tap to join the live stage!`,
+        `/live/${session._id}`
+      );
+    });
+
+    console.log(`[Live] ${user.username} went LIVE. Notified ${followers.length} followers.`);
+
+    req.flash('success', 'You are now LIVE! Your followers have been notified.');
     res.redirect(`/live/${session._id}`);
   },
 
@@ -80,19 +97,28 @@ export const LiveController = {
       return res.redirect('/live');
     }
 
-    // Increment viewers count on entry
-    LiveSessionModel.findByIdAndUpdate(id, { viewersCount: session.viewersCount + 1 });
-
     const isHost = res.locals.user && String(res.locals.user._id) === String(session.hostId);
 
+    // Build top gifters leaderboard
+    const giftMap: Record<string, { username: string; totalPoints: number }> = {};
+    (session.gifts || []).forEach((g: any) => {
+      if (!giftMap[g.userId]) giftMap[g.userId] = { username: g.username, totalPoints: 0 };
+      giftMap[g.userId].totalPoints += g.points;
+    });
+    const topGifters = Object.values(giftMap)
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .slice(0, 5);
+
     res.render('live-room', {
-      title: `${session.title} - LIVE Stream`,
+      title: `${session.title} - LIVE`,
       session,
-      isHost
+      isHost,
+      topGifters,
+      giftCatalog: GIFT_CATALOG
     });
   },
 
-  // 5. Send Live Stream Like / Heart
+  // 5. Send Live Stream Like / Heart (HTTP fallback, Socket.io preferred)
   postLikeStream: (req: Request, res: Response) => {
     const { id } = req.params;
     const session = LiveSessionModel.findById(id);
@@ -112,7 +138,20 @@ export const LiveController = {
 
     if (session && user && String(user._id) === String(session.hostId)) {
       LiveSessionModel.findByIdAndUpdate(id, { isLive: false });
-      req.flash('success', 'Your live recitation stream has ended successfully.');
+
+      // Award bonus streak points for completing a live session
+      const totalGifts = session.totalGiftPoints || 0;
+      if (totalGifts > 0) {
+        const bonusStreak = Math.floor(totalGifts / 5);
+        const currentStreakPts = user.streakPoints || 0;
+        const currentGiftPts = user.giftPoints || 0;
+        UserModel.findByIdAndUpdate(user._id, {
+          streakPoints: currentStreakPts + bonusStreak,
+          viralScore: currentGiftPts + currentStreakPts + bonusStreak
+        });
+      }
+
+      req.flash('success', `Live session ended! You earned ${session.totalGiftPoints || 0} gift points.`);
     }
     res.redirect('/live');
   }

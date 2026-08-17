@@ -82,6 +82,11 @@
               <!-- Cover image -->
               <div class="relative h-64 overflow-hidden bg-brand-cream/50">
                 <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= novel.coverImage %>" alt="<%= novel.title %>" loading="lazy">
+                <% if (novel.isViral) { %>
+                  <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1 animate-pulse">
+                    🔥 Viral (<%= novel.authorStreak || novel.authorViralScore %>⚡)
+                  </span>
+                <% } %>
                 <div class="absolute top-3 right-3 bg-white/90 dark:bg-brand-dark/95 backdrop-blur px-2 py-1 rounded-lg border border-brand-brown/15 flex items-center gap-1 text-[11px] font-bold text-gray-800 dark:text-brand-pink">
                   <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>
                   <%= novel.rating %>

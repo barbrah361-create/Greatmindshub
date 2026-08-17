@@ -2,84 +2,98 @@
 <%- include('partials/navbar') %>
 <%- include('partials/flash') %>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
-  
-  <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-    <div>
-      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-600 dark:text-red-400 uppercase tracking-widest animate-pulse">
-        <span class="w-2 h-2 rounded-full bg-red-500"></span>
-        Live Stage
-      </span>
-      <h1 class="font-serif text-3xl sm:text-5xl font-bold mt-2 text-gray-800 dark:text-white">Poetry & Reading Live Rooms</h1>
-      <p class="text-gray-500 dark:text-gray-400 max-w-xl mt-3 text-sm sm:text-base leading-relaxed">
-        Watch poets recite their verses in real-time, join book reading sessions, read along live, and interact with fellow literary enthusiasts!
-      </p>
-    </div>
+<!-- TikTok-Style Live Directory -->
+<div class="min-h-screen bg-black">
 
-    <a href="/live/create" class="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-red-500/25 transition-all text-sm flex items-center justify-center gap-2">
-      <i data-lucide="video" class="w-5 h-5"></i>
-      Go Live Studio
-    </a>
+  <!-- Hero Header -->
+  <div class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-red-600/20 via-black to-black"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-red-500 text-xs font-black uppercase tracking-widest">Live Stage</span>
+          </div>
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-white leading-tight">Poetry & Reading<br><span class="text-red-500">Live Rooms</span></h1>
+          <p class="text-gray-400 max-w-lg mt-3 text-sm leading-relaxed">
+            Watch poets recite in real-time, send gifts, join as co-host, and interact with fellow literary enthusiasts.
+          </p>
+        </div>
+        <a href="/live/create" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-red-500/30 transition-all text-sm flex items-center justify-center gap-2.5 shrink-0">
+          <i data-lucide="video" class="w-5 h-5"></i> Go Live
+        </a>
+      </div>
+    </div>
   </div>
 
   <!-- Active Streams Grid -->
-  <% if (activeStreams && activeStreams.length > 0) { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      <% activeStreams.forEach(function(stream) { %>
-        <div class="group bg-white dark:bg-[#1E150F] rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-brand-brown/10 dark:border-brand-brown/20 flex flex-col justify-between">
-          <div class="relative h-60 bg-black overflow-hidden flex items-center justify-center">
-            <!-- Simulated video preview -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div class="relative z-10 flex flex-col items-center text-center p-4">
-              <img src="<%= stream.hostAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-16 h-16 rounded-full object-cover ring-4 ring-red-500 shadow-md mb-2">
-              <span class="text-xs font-bold text-white"><%= stream.hostName %></span>
-              <span class="text-[10px] text-gray-300">Reciting: <%= stream.workTitle %></span>
-            </div>
-
-            <span class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-red-600 text-white shadow-md uppercase tracking-wider animate-pulse">
-              <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
-            </span>
-
-            <span class="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/60 backdrop-blur text-white">
-              <i data-lucide="users" class="w-3 h-3 text-red-400"></i>
-              <%= stream.viewersCount %> watching
-            </span>
-          </div>
-
-          <div class="p-6 flex flex-col flex-grow justify-between">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-pink bg-brand-pink/20 px-2.5 py-0.5 rounded-full"><%= stream.type %></span>
-              <h2 class="font-serif text-xl font-bold text-gray-800 dark:text-white mt-2 truncate"><%= stream.title %></h2>
-              <p class="text-xs text-gray-500 dark:text-gray-300 line-clamp-2 mt-1 leading-relaxed italic">
-                "<%= stream.workContent %>"
-              </p>
-            </div>
-
-            <div class="flex items-center justify-between border-t border-brand-brown/10 dark:border-brand-brown/15 pt-4 mt-6">
-              <div class="flex items-center gap-1.5 text-xs text-red-500 font-bold">
-                <i data-lucide="heart" class="w-4 h-4 fill-red-500"></i>
-                <%= stream.likesCount %> hearts
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <% if (activeStreams && activeStreams.length > 0) { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <% activeStreams.forEach(function(stream) { %>
+          <a href="/live/<%= stream._id %>" class="group relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5 hover:border-red-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-500/10">
+            <!-- Stream Preview Card -->
+            <div class="relative aspect-[9/14] sm:aspect-[9/12] flex items-center justify-center bg-gradient-to-b from-gray-800 to-black">
+              <!-- Host Avatar centered -->
+              <div class="flex flex-col items-center text-center space-y-2">
+                <div class="relative">
+                  <img src="<%= stream.hostAvatar || '/uploads/default-avatar.png' %>" class="w-20 h-20 rounded-full object-cover ring-4 ring-red-500 shadow-xl group-hover:ring-red-400 transition-all" alt="">
+                  <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Live</span>
+                </div>
+                <span class="text-white text-sm font-bold"><%= stream.hostName %></span>
+                <span class="text-gray-400 text-[10px] px-3 line-clamp-2"><%= stream.title %></span>
               </div>
-              <a href="/live/<%= stream._id %>" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-sm transition-colors flex items-center gap-1.5">
-                Join Room &rarr;
-              </a>
+
+              <!-- Overlays -->
+              <div class="absolute top-3 left-3 flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase shadow-lg animate-pulse">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
+                </span>
+              </div>
+
+              <div class="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-black/60 backdrop-blur rounded-full">
+                <i data-lucide="eye" class="w-3 h-3 text-red-400"></i>
+                <span class="text-white text-[10px] font-bold"><%= stream.viewersCount %></span>
+              </div>
+
+              <!-- Bottom: Type + Gift Points -->
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full"><%= stream.type %></span>
+                  <div class="flex items-center gap-2">
+                    <span class="flex items-center gap-1 text-[10px] text-red-400 font-bold">
+                      <i data-lucide="heart" class="w-3 h-3 fill-red-500 text-red-500"></i> <%= stream.likesCount %>
+                    </span>
+                    <% if (stream.totalGiftPoints) { %>
+                    <span class="flex items-center gap-1 text-[10px] text-amber-400 font-bold">
+                      <i data-lucide="gift" class="w-3 h-3"></i> <%= stream.totalGiftPoints %>
+                    </span>
+                    <% } %>
+                  </div>
+                </div>
+                <p class="text-white text-xs font-semibold truncate"><%= stream.workTitle %></p>
+              </div>
             </div>
-          </div>
-        </div>
-      <% }) %>
-    </div>
-  <% } else { %>
-    <div class="bg-white dark:bg-[#1E150F] p-12 rounded-3xl border border-brand-brown/10 text-center text-gray-400 max-w-2xl mx-auto space-y-4">
-      <div class="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto animate-pulse">
-        <i data-lucide="video" class="w-8 h-8"></i>
+          </a>
+        <% }) %>
       </div>
-      <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white">No Live Stages Active Right Now</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Be the pioneer! Open your live studio, recite your poem or read a book chapter live to your followers.</p>
-      <a href="/live/create" class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md transition-colors">
-        <i data-lucide="video" class="w-4 h-4"></i> Start Reciting Live
-      </a>
-    </div>
-  <% } %>
+    <% } else { %>
+      <!-- No Active Streams -->
+      <div class="flex flex-col items-center justify-center py-24 text-center space-y-6">
+        <div class="w-24 h-24 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center animate-pulse">
+          <i data-lucide="video" class="w-12 h-12"></i>
+        </div>
+        <div>
+          <h2 class="font-serif text-3xl font-bold text-white mb-2">No Live Stages Active</h2>
+          <p class="text-gray-500 text-sm max-w-md">Be the first to go live! Recite your poem, read a chapter, and get gifts from your audience.</p>
+        </div>
+        <a href="/live/create" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-sm shadow-xl hover:shadow-red-500/30 transition-all flex items-center gap-2">
+          <i data-lucide="video" class="w-5 h-5"></i> Start Reciting Live
+        </a>
+      </div>
+    <% } %>
+  </div>
 
 </div>
 

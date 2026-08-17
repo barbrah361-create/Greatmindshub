@@ -53,6 +53,72 @@
   </div>
 </section>
 
+<!-- ─── 🔴 LIVE NOW Section ─── -->
+<% if (activeStreams && activeStreams.length > 0) { %>
+<section class="py-12 bg-black">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white">Live Now</h2>
+        <span class="text-xs text-red-400 font-bold"><%= activeStreams.length %> active</span>
+      </div>
+      <a href="/live" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-1">
+        View All <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+    <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+      <% activeStreams.forEach(function(stream) { %>
+        <a href="/live/<%= stream._id %>" class="shrink-0 w-40 sm:w-48 group">
+          <div class="relative aspect-[9/14] rounded-2xl overflow-hidden bg-gray-900 border border-white/5 group-hover:border-red-500/30 transition-all">
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3 bg-gradient-to-b from-gray-800 to-black">
+              <img src="<%= stream.hostAvatar || '/uploads/default-avatar.png' %>" class="w-14 h-14 rounded-full ring-3 ring-red-500 object-cover mb-2" alt="">
+              <span class="text-white text-xs font-bold truncate w-full"><%= stream.hostName %></span>
+              <span class="text-gray-400 text-[10px] truncate w-full mt-0.5"><%= stream.workTitle %></span>
+            </div>
+            <span class="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-[9px] font-black rounded-full uppercase animate-pulse">LIVE</span>
+            <span class="absolute top-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur text-white text-[9px] font-bold rounded-full flex items-center gap-1">
+              <i data-lucide="eye" class="w-2.5 h-2.5"></i> <%= stream.viewersCount %>
+            </span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- ─── 🔥 VIRAL LIMELIGHT Section ─── -->
+<% if (viralAuthors && viralAuthors.length > 0) { %>
+<section class="py-16 bg-gradient-to-b from-black via-[#0a0503] to-transparent">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <span class="text-amber-500 text-xs font-black uppercase tracking-widest">🔥 Trending</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">Viral Limelight</h2>
+        <p class="text-gray-500 text-xs mt-1">Authors with the highest gift points & streaks from live sessions</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <% viralAuthors.forEach(function(author, i) { %>
+        <a href="/profile?id=<%= author._id %>" class="group text-center bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-500/30 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1">
+          <div class="relative inline-block mb-3">
+            <img src="<%= author.avatar || '/uploads/default-avatar.png' %>" class="w-16 h-16 rounded-full object-cover ring-2 <%= i === 0 ? 'ring-amber-500' : i < 3 ? 'ring-amber-400/50' : 'ring-white/10' %>" alt="">
+            <% if (i < 3) { %>
+              <span class="absolute -top-1 -right-1 text-sm"><%= i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉' %></span>
+            <% } %>
+            <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-black text-[8px] font-black rounded-full uppercase">🔥 Viral</span>
+          </div>
+          <p class="text-white text-xs font-bold truncate"><%= author.username %></p>
+          <p class="text-amber-400 text-[10px] font-bold mt-0.5"><%= author.viralScore || 0 %> pts</p>
+          <p class="text-gray-500 text-[9px] mt-0.5"><%= author.giftPoints || 0 %> gifts · <%= author.streakPoints || 0 %> streaks</p>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
 <!-- 2. Featured Novels Section -->
 <section id="featured-section" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
