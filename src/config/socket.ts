@@ -13,6 +13,9 @@ export const GIFT_CATALOG: Record<string, { emoji: string; label: string; points
   universe:    { emoji: '🌍', label: 'Universe',     points: 500 }
 };
 
+// In-memory active room participants registry
+const activeRoomParticipants = new Map<string, Map<string, { socketId: string; userId: string; username: string; avatar: string; role: string }>>();
+
 let io: SocketServer;
 
 export function initSocketServer(httpServer: HttpServer): SocketServer {
@@ -24,21 +27,52 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
   io.on('connection', (socket: Socket) => {
     // ── Join a live room ──
-    socket.on('join-room', (data: { roomId: string; userId?: string; username?: string; avatar?: string }) => {
-      const { roomId, userId, username, avatar } = data;
+    socket.on('join-room', (data: { roomId: string; userId?: string; username?: string; avatar?: string; isHost?: boolean }) => {
+      const { roomId, userId, username, avatar, isHost } = data;
       socket.join(roomId);
       (socket as any)._roomId = roomId;
       (socket as any)._userId = userId;
       (socket as any)._username = username;
 
+      // Track participant in room
+      if (!activeRoomParticipants.has(roomId)) {
+        activeRoomParticipants.set(roomId, new Map());
+      }
+      const roomMap = activeRoomParticipants.get(roomId)!;
+      const participantKey = userId || socket.id;
+      roomMap.set(participantKey, {
+        socketId: socket.id,
+        userId: userId || '',
+        username: username || 'Reader',
+        avatar: avatar || '/uploads/default-avatar.png',
+        role: isHost ? 'host' : 'viewer'
+      });
+
       // Increment viewer count
       const session = LiveSessionModel.findById(roomId);
       if (session) {
-        const newCount = (session.viewersCount || 0) + 1;
+        const newCount = roomMap.size;
         LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: newCount });
         io.to(roomId).emit('viewer-count', { count: newCount });
+        
+        // Broadcast full real-time participants list to all clients in room
+        const participantsList = Array.from(roomMap.values());
+        io.to(roomId).emit('room-participants', { participants: participantsList });
+
         // Announce join
-        io.to(roomId).emit('user-joined', { username: username || 'Reader', avatar: avatar || '/uploads/default-avatar.png' });
+        io.to(roomId).emit('user-joined', { 
+          userId: userId || '',
+          username: username || 'Reader', 
+          avatar: avatar || '/uploads/default-avatar.png' 
+        });
+      }
+    });
+
+    // ── Request participants list ──
+    socket.on('get-participants', (data: { roomId: string }) => {
+      const roomMap = activeRoomParticipants.get(data.roomId);
+      if (roomMap) {
+        socket.emit('room-participants', { participants: Array.from(roomMap.values()) });
       }
     });
 
@@ -53,14 +87,40 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       });
     });
 
-    // ── Send heart ──
-    socket.on('send-heart', (data: { roomId: string }) => {
+    // ── Send heart / Like (Host cannot like own live; likes award points to host & co-hosts) ──
+    socket.on('send-heart', (data: { roomId: string; senderId?: string }) => {
       const session = LiveSessionModel.findById(data.roomId);
-      if (session) {
-        const newLikes = (session.likesCount || 0) + 1;
-        LiveSessionModel.findByIdAndUpdate(data.roomId, { likesCount: newLikes });
-        io.to(data.roomId).emit('heart-received', { likesCount: newLikes });
+      if (!session) return;
+
+      // Host cannot like their own live session
+      if (data.senderId && String(data.senderId) === String(session.hostId)) {
+        return;
       }
+
+      const newLikes = (session.likesCount || 0) + 1;
+      LiveSessionModel.findByIdAndUpdate(data.roomId, { likesCount: newLikes });
+
+      // Award points to host
+      const host = UserModel.findById(session.hostId);
+      if (host) {
+        const hostStreak = (host.streakPoints || 0) + 1;
+        const hostScore = (host.giftPoints || 0) + hostStreak;
+        UserModel.findByIdAndUpdate(session.hostId, { streakPoints: hostStreak, viralScore: hostScore });
+      }
+
+      // Award points to active co-host guests on stage
+      if (session.coHosts && session.coHosts.length > 0) {
+        for (const guestId of session.coHosts) {
+          const guestUser = UserModel.findById(guestId);
+          if (guestUser) {
+            const guestStreak = (guestUser.streakPoints || 0) + 1;
+            const guestScore = (guestUser.giftPoints || 0) + guestStreak;
+            UserModel.findByIdAndUpdate(guestId, { streakPoints: guestStreak, viralScore: guestScore });
+          }
+        }
+      }
+
+      io.to(data.roomId).emit('heart-received', { likesCount: newLikes });
     });
 
     // ── Send gift ──
@@ -215,13 +275,16 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     // ── Disconnect ──
     socket.on('disconnect', () => {
       const roomId = (socket as any)._roomId;
-      if (roomId) {
-        const session = LiveSessionModel.findById(roomId);
-        if (session && session.viewersCount > 0) {
-          const newCount = session.viewersCount - 1;
-          LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: Math.max(0, newCount) });
-          io.to(roomId).emit('viewer-count', { count: Math.max(0, newCount) });
-        }
+      const userId = (socket as any)._userId;
+      if (roomId && activeRoomParticipants.has(roomId)) {
+        const roomMap = activeRoomParticipants.get(roomId)!;
+        const participantKey = userId || socket.id;
+        roomMap.delete(participantKey);
+
+        const newCount = roomMap.size;
+        LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: newCount });
+        io.to(roomId).emit('viewer-count', { count: newCount });
+        io.to(roomId).emit('room-participants', { participants: Array.from(roomMap.values()) });
       }
     });
   });

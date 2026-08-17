@@ -38,11 +38,11 @@
         <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
       </span>
 
-      <!-- Viewers Count -->
-      <div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-full border border-white/15 text-xs">
-        <i data-lucide="eye" class="w-3.5 h-3.5 text-blue-400"></i>
-        <span id="viewerCount" class="font-bold font-mono"><%= session.viewersCount || 1 %></span>
-      </div>
+      <!-- Viewers & People In Live (Clickable for Everyone) -->
+      <button type="button" onclick="openParticipantsModal()" id="viewersPill" title="Tap to see everyone watching this live" class="flex items-center gap-1.5 bg-black/60 hover:bg-white/20 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-full border border-white/15 text-xs transition-all cursor-pointer group shadow-sm">
+        <i data-lucide="users" class="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-transform"></i>
+        <span id="viewerCount" class="font-bold font-mono text-white"><%= session.viewersCount || 1 %></span>
+      </button>
 
       <!-- Likes Counter -->
       <div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-full border border-red-500/30 text-xs text-red-400">
@@ -474,7 +474,37 @@
 
   </div>
 
-  <!-- 4c. HOST GUEST INVITATION & VIEWER MANAGER DRAWER -->
+  <!-- 4c. LIVE AUDIENCE & PARTICIPANTS MODAL (FOR EVERYONE) -->
+  <div id="liveParticipantsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-black/95 border border-white/20 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 rounded-xl bg-blue-500/20 text-blue-400">
+            <i data-lucide="users" class="w-4 h-4"></i>
+          </span>
+          <div>
+            <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span>People in this Live</span>
+              <span id="modalParticipantsCount" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-600 font-mono">1</span>
+            </h4>
+            <p class="text-[10px] text-gray-400">Follow each other, send messages & connect</p>
+          </div>
+        </div>
+        <button onclick="closeParticipantsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- Real-time Participants List -->
+      <div id="modalParticipantsList" class="max-h-72 overflow-y-auto space-y-2.5 pr-1 scrollbar-hide">
+        <!-- Injected dynamically via JavaScript -->
+      </div>
+
+      <div class="border-t border-white/10 pt-3 text-center text-[10px] text-gray-400">
+        <span>💡 Tap Follow on any participant to connect and grow together!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4d. HOST GUEST INVITATION & VIEWER MANAGER DRAWER -->
   <div id="guestManagerModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-black/95 border border-white/20 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
@@ -635,14 +665,96 @@ socket.emit('join-room', {
   roomId: ROOM_ID,
   userId: CURRENT_USER.id,
   username: CURRENT_USER.username,
-  avatar: CURRENT_USER.avatar
+  avatar: CURRENT_USER.avatar,
+  isHost: IS_HOST
 });
 
-// Viewers count
+// Viewers count & live participants registry
 socket.on('viewer-count', (data) => {
   const el = document.getElementById('viewerCount');
   if (el) el.textContent = data.count;
+  const countEl = document.getElementById('modalParticipantsCount');
+  if (countEl) countEl.textContent = data.count;
 });
+
+// Receive updated room participants list
+socket.on('room-participants', (data) => {
+  if (data && data.participants) {
+    roomViewers = data.participants;
+    renderParticipantsModalList();
+    renderActiveViewersList();
+  }
+});
+
+function openParticipantsModal() {
+  document.getElementById('liveParticipantsModal').classList.remove('hidden');
+  socket.emit('get-participants', { roomId: ROOM_ID });
+  renderParticipantsModalList();
+}
+
+function closeParticipantsModal() {
+  document.getElementById('liveParticipantsModal').classList.add('hidden');
+}
+
+function renderParticipantsModalList() {
+  const list = document.getElementById('modalParticipantsList');
+  if (!list) return;
+
+  const countEl = document.getElementById('modalParticipantsCount');
+  if (countEl) countEl.textContent = roomViewers.length;
+
+  if (roomViewers.length === 0) {
+    list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs"><p>Loading participants...</p></div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  roomViewers.forEach((p, idx) => {
+    const isMe = p.userId === CURRENT_USER.id;
+    const isRoomHost = p.role === 'host' || p.userId === '<%= session.hostId %>';
+    const isGuest = p.role === 'guest';
+
+    const card = document.createElement('div');
+    card.className = 'flex items-center justify-between bg-white/5 hover:bg-white/10 p-2.5 rounded-2xl border border-white/5 transition-all';
+    
+    let badgeHtml = '';
+    if (isRoomHost) {
+      badgeHtml = '<span class="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">HOST</span>';
+    } else if (isGuest) {
+      badgeHtml = '<span class="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">GUEST</span>';
+    } else {
+      badgeHtml = '<span class="bg-white/10 text-gray-300 text-[8px] font-bold px-1.5 py-0.5 rounded">VIEWER</span>';
+    }
+
+    let actionsHtml = '';
+    if (isMe) {
+      actionsHtml = '<span class="text-[10px] text-gray-400 font-bold px-2 py-1 bg-white/5 rounded-lg">You</span>';
+    } else {
+      actionsHtml = '<div class="flex items-center gap-1.5">' +
+        '<button onclick="toggleFollowUser(\'' + p.userId + '\', \'followBtn_' + idx + '\')" id="followBtn_' + idx + '" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded-xl transition-all flex items-center gap-1">' +
+          '<i data-lucide="user-plus" class="w-2.5 h-2.5"></i> <span>+ Follow</span>' +
+        '</button>' +
+        (p.userId ? '<a href="/messages/' + p.userId + '" target="_blank" title="Direct Message" class="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-brand-pink"><i data-lucide="message-square" class="w-3.5 h-3.5"></i></a>' : '') +
+        (IS_HOST ? '<button onclick="inviteViewerToCoHost(\'' + p.userId + '\', \'' + p.username + '\')" title="Invite on Stage" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-black text-[10px] font-bold rounded-xl"><i data-lucide="video" class="w-3 h-3"></i></button>' : '') +
+      '</div>';
+    }
+
+    card.innerHTML = '<div class="flex items-center gap-2.5 truncate">' +
+      '<img src="' + (p.avatar || '/uploads/default-avatar.png') + '" class="w-9 h-9 rounded-full object-cover ring-1 ring-white/20 shrink-0" alt="">' +
+      '<div class="truncate">' +
+        '<div class="flex items-center gap-1.5 truncate">' +
+          '<span class="text-xs font-bold text-white truncate">' + p.username + '</span>' +
+          badgeHtml +
+        '</div>' +
+        '<p class="text-[9px] text-gray-400 font-mono">In room</p>' +
+      '</div>' +
+    '</div>' + actionsHtml;
+
+    list.appendChild(card);
+  });
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
 // Likes count
 socket.on('heart-received', (data) => {
