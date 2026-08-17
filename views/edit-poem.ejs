@@ -8,27 +8,27 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
   <!-- Header -->
   <div class="text-center mb-10">
-    <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest">Publish Your Masterpiece</span>
-    <h1 class="font-serif text-4xl font-bold mt-2 text-gray-800 dark:text-white">Compose a Poem</h1>
+    <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest">Revise Your Masterpiece</span>
+    <h1 class="font-serif text-4xl font-bold mt-2 text-gray-800 dark:text-white">Edit Poem</h1>
     <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mt-2 text-sm">
-      Draft your stanzas, set custom layouts, choose music, and display your poetry in an artistic gallery.
+      Update your stanzas, refine formatting, or customize the background artwork and audio track.
     </p>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
     
-    <!-- LEFT PANEL: Writing Canvas & Form Controls (Col span 7) -->
+    <!-- LEFT PANEL: Form Controls (Col span 7) -->
     <div class="lg:col-span-7">
       <div class="book-card p-6 sm:p-8 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-lg rounded-2xl relative overflow-hidden">
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-brand-brown"></div>
 
-        <form id="uploadPaymentForm" action="/poems/submit" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form id="editPoemForm" action="/poems/<%= poem._id %>/edit" method="POST" enctype="multipart/form-data" class="space-y-6">
           <input type="hidden" name="content" id="poem-content-hidden">
 
           <!-- Title -->
           <div>
             <label for="poem-title" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Poem Title</label>
-            <input type="text" id="poem-title" name="title" required placeholder="e.g. Echoes of the Morning Wind" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed">
+            <input type="text" id="poem-title" name="title" required value="<%= poem.title %>" placeholder="e.g. Echoes of the Morning Wind" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed">
           </div>
 
           <!-- Genre (Category) & Tags -->
@@ -37,13 +37,13 @@
               <label for="poem-genre" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Poetry Category</label>
               <select id="poem-genre" name="genre" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-white dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white">
                 <% categories.forEach(function(cat) { %>
-                  <option value="<%= cat %>" <%= cat === 'Free Verse' ? 'selected' : '' %>><%= cat %></option>
+                  <option value="<%= cat %>" <%= poem.category === cat || poem.genre === cat ? 'selected' : '' %>><%= cat %></option>
                 <% }) %>
               </select>
             </div>
             <div>
               <label for="poem-tags" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Tags (Comma-separated)</label>
-              <input type="text" id="poem-tags" name="tags" placeholder="e.g. love, nature, memories" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed">
+              <input type="text" id="poem-tags" name="tags" value="<%= (poem.tags || []).join(', ') %>" placeholder="e.g. love, nature, memories" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed">
             </div>
           </div>
 
@@ -85,22 +85,38 @@
                   <button class="ql-clean"></button>
                 </span>
               </div>
-              <div id="editor" class="min-h-[280px] rounded-b-xl border-x border-b border-brand-brown/20 bg-brand-cream/5 font-serif text-lg p-4 italic"></div>
+              <div id="editor" class="min-h-[280px] rounded-b-xl border-x border-b border-brand-brown/20 bg-brand-cream/5 font-serif text-lg p-4 italic">
+                <%- poem.content %>
+              </div>
             </div>
 
             <!-- Plain Textarea (hidden by default) -->
-            <textarea id="poem-content-plain" rows="12" placeholder="Compose your stanzas here..." class="hidden w-full font-serif text-base sm:text-lg rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 p-5 focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-loose italic"></textarea>
+            <textarea id="poem-content-plain" rows="12" placeholder="Compose your stanzas here..." class="hidden w-full font-serif text-base sm:text-lg rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 p-5 focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-loose italic"><%= poem.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '') %></textarea>
           </div>
 
           <!-- Background Tune / Music -->
           <div class="p-4 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/10 space-y-4">
             <h3 class="font-serif font-bold text-gray-800 dark:text-white text-sm flex items-center gap-2">
               <i data-lucide="music" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-              Optional Background Music Track
+              Background Music Track
             </h3>
+            
+            <% if (poem.backgroundAudio) { %>
+              <div class="flex items-center justify-between p-3 bg-brand-brown/5 rounded-xl border border-brand-brown/10 mb-2">
+                <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <i data-lucide="headphones" class="w-4 h-4 text-brand-pink"></i>
+                  <span>Track attached</span>
+                </div>
+                <label class="flex items-center gap-1.5 text-xs text-red-500 font-semibold cursor-pointer">
+                  <input type="checkbox" name="removeBackgroundAudio" value="true" class="rounded accent-red-500">
+                  Remove audio
+                </label>
+              </div>
+            <% } %>
+
             <div>
               <input type="file" id="backgroundAudio" name="backgroundAudio" accept="audio/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-brown file:text-white hover:file:bg-brand-accent">
-              <p class="text-[10px] text-gray-400 mt-1">Allowed formats: mp3, wav, m4a, ogg, aac. Limit 10MB.</p>
+              <p class="text-[10px] text-gray-400 mt-1">Allowed formats: mp3, wav, m4a, ogg, aac. Limit 10MB. Uploading a new file replaces the existing one.</p>
             </div>
           </div>
 
@@ -110,18 +126,31 @@
               <i data-lucide="image" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
               Custom Background Image
             </h3>
+
+            <% if (poem.backgroundImage) { %>
+              <div class="flex items-center justify-between p-3 bg-brand-brown/5 rounded-xl border border-brand-brown/10 mb-2">
+                <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <img src="<%= poem.backgroundImage %>" alt="Cover" class="w-8 h-8 rounded object-cover">
+                  <span>Background artwork active</span>
+                </div>
+                <label class="flex items-center gap-1.5 text-xs text-red-500 font-semibold cursor-pointer">
+                  <input type="checkbox" name="removeBackgroundImage" value="true" class="rounded accent-red-500">
+                  Remove image
+                </label>
+              </div>
+            <% } %>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Upload Artwork</label>
+                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Upload New Artwork</label>
                 <input type="file" id="backgroundImage" name="backgroundImage" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-brown file:text-white hover:file:bg-brand-accent">
               </div>
               <div>
                 <label for="backgroundPosition" class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Image Alignment</label>
                 <select id="backgroundPosition" name="backgroundPosition" class="w-full rounded-lg border border-brand-brown/20 bg-white dark:bg-brand-dark/20 px-3 py-2 text-xs dark:text-white">
-                  <option value="center" selected>Center</option>
-                  <option value="top">Top</option>
-                  <option value="bottom">Bottom</option>
+                  <option value="center" <%= poem.backgroundPosition === 'center' ? 'selected' : '' %>>Center</option>
+                  <option value="top" <%= poem.backgroundPosition === 'top' ? 'selected' : '' %>>Top</option>
+                  <option value="bottom" <%= poem.backgroundPosition === 'bottom' ? 'selected' : '' %>>Bottom</option>
                 </select>
               </div>
             </div>
@@ -130,44 +159,47 @@
               <div>
                 <label for="backgroundSize" class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Image Size</label>
                 <select id="backgroundSize" name="backgroundSize" class="w-full rounded-lg border border-brand-brown/20 bg-white dark:bg-brand-dark/20 px-3 py-2 text-xs dark:text-white">
-                  <option value="cover" selected>Scale & Crop (Cover)</option>
-                  <option value="contain">Fit Completely (Contain)</option>
-                  <option value="auto">Original Size</option>
+                  <option value="cover" <%= poem.backgroundSize === 'cover' ? 'selected' : '' %>>Scale & Crop (Cover)</option>
+                  <option value="contain" <%= poem.backgroundSize === 'contain' ? 'selected' : '' %>>Fit Completely (Contain)</option>
+                  <option value="auto" <%= poem.backgroundSize === 'auto' ? 'selected' : '' %>>Original Size</option>
                 </select>
               </div>
               <div>
                 <label for="backgroundOverlay" class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Overlay Opacity (Readability)</label>
                 <div class="flex items-center gap-2">
-                  <input type="range" id="backgroundOverlay" name="backgroundOverlay" min="0" max="0.9" step="0.05" value="0.4" class="w-full accent-brand-brown">
-                  <span id="overlayVal" class="text-xs font-mono font-bold dark:text-white">40%</span>
+                  <input type="range" id="backgroundOverlay" name="backgroundOverlay" min="0" max="0.9" step="0.05" value="<%= poem.backgroundOverlay !== undefined ? poem.backgroundOverlay : 0.4 %>" class="w-full accent-brand-brown">
+                  <span id="overlayVal" class="text-xs font-mono font-bold dark:text-white"><%= Math.round((poem.backgroundOverlay !== undefined ? poem.backgroundOverlay : 0.4) * 100) %>%</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- M-Pesa -->
-          <div class="p-4 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/15 space-y-3">
-            <h3 class="font-serif font-bold text-gray-800 dark:text-white text-sm flex items-center gap-2">
-              <i data-lucide="wallet" class="w-4.5 h-4.5 text-brand-brown dark:text-brand-pink"></i>
-              M-Pesa Payment Details
-            </h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Publishing fees: <strong>KES <%= fee %></strong>. Complete payment to publish immediately.</p>
-            <div>
-              <label for="phoneNumber" class="block text-[10px] uppercase font-bold text-gray-400 mb-1">M-Pesa Phone Number</label>
-              <input type="text" id="phoneNumber" name="phoneNumber" required placeholder="e.g. 0712345678" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/10 dark:bg-brand-dark/20 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed">
-            </div>
-          </div>
-
           <!-- Action Buttons -->
           <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-brand-brown/10">
-            <a href="/poems" class="w-full sm:w-auto text-center px-6 py-3 border border-brand-brown/15 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-brand-cream/20 transition-colors">
-              Cancel Submission
+            <a href="/poems/<%= poem._id %>" class="w-full sm:w-auto text-center px-6 py-3 border border-brand-brown/15 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-brand-cream/20 transition-colors">
+              Cancel
             </a>
-            <button id="submitPoemBtn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow transition-all duration-200">
-              <i data-lucide="send" class="w-4 h-4"></i>
-              Upload Poem & Pay
+            <button id="savePoemBtn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl text-xs shadow transition-all duration-200">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Save Changes
             </button>
           </div>
+        </form>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="mt-6 p-6 border border-red-200 dark:border-red-900/30 bg-red-50/15 dark:bg-red-950/10 rounded-2xl space-y-3">
+        <h3 class="font-serif font-bold text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+          Danger Zone
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Permanently delete this poem and remove it from Readers Africa. This action is irreversible.
+        </p>
+        <form action="/poems/<%= poem._id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this poem? This action cannot be undone.');">
+          <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs shadow-sm transition-colors">
+            Delete Poem
+          </button>
         </form>
       </div>
     </div>
@@ -175,27 +207,27 @@
     <!-- RIGHT PANEL: Live Presentation Preview (Col span 5) -->
     <div class="lg:col-span-5 sticky top-24">
       <div class="text-center mb-4">
-        <span class="text-xs uppercase font-bold tracking-widest text-gray-400">Poem Artwork Live Preview</span>
+        <span class="text-xs uppercase font-bold tracking-widest text-gray-400">Artwork Presentation Preview</span>
       </div>
 
-      <div id="preview-container" class="w-full rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-lg relative overflow-hidden aspect-[4/5] flex flex-col justify-center p-6 text-center select-none bg-cover bg-center">
+      <div id="preview-container" class="w-full rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-lg relative overflow-hidden aspect-[4/5] flex flex-col justify-center p-6 text-center select-none bg-cover bg-center" style="background-image: <% if (poem.backgroundImage) { %> url('<%= poem.backgroundImage %>') <% } else { %> none <% } %>; background-position: <%= poem.backgroundPosition || 'center' %>; background-size: <%= poem.backgroundSize || 'cover' %>;">
         <!-- Optional dimming overlay -->
-        <div id="preview-overlay" class="absolute inset-0 bg-black/40 transition-colors duration-300"></div>
+        <div id="preview-overlay" class="absolute inset-0 bg-black/40 transition-colors duration-300" style="background-color: rgba(0, 0, 0, <%= poem.backgroundOverlay !== undefined ? poem.backgroundOverlay : 0.4 %>);"></div>
 
         <div class="relative z-10 space-y-6 text-white px-4">
           <span id="preview-category" class="text-[9px] uppercase tracking-[0.2em] font-bold px-2.5 py-1 bg-white/20 rounded-full border border-white/20 inline-block">
-            Free Verse
+            <%= poem.category || poem.genre || 'Poetry' %>
           </span>
           <h2 id="preview-title" class="font-serif text-2xl sm:text-3xl font-extrabold leading-tight drop-shadow-md">
-            Echoes of the Morning Wind
+            <%= poem.title %>
           </h2>
           <p class="text-[10px] text-gray-300">
-            By <span class="font-bold text-white"><%= user.username %></span>
+            By <span class="font-bold text-white"><%= poem.authorName %></span>
           </p>
           <div class="w-10 h-px bg-white/30 mx-auto"></div>
           
           <div id="preview-content" class="font-serif text-sm sm:text-base italic leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto scrollbar-hide drop-shadow-md">
-            Your verses will render here in real-time...
+            <%- poem.content %>
           </div>
         </div>
       </div>
@@ -208,7 +240,6 @@
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Setup Quill Editor
     const quill = new Quill('#editor', {
       theme: 'snow',
       modules: {
@@ -216,13 +247,11 @@
       }
     });
 
-    const isRichEditor = true;
     const richWrapper = document.getElementById('rich-editor-wrapper');
     const plainTextarea = document.getElementById('poem-content-plain');
     const toggleBtn = document.getElementById('toggleEditorBtn');
     let useRich = true;
 
-    // Toggle editor type
     toggleBtn.addEventListener('click', () => {
       useRich = !useRich;
       if (useRich) {
@@ -232,13 +261,11 @@
       } else {
         richWrapper.classList.add('hidden');
         plainTextarea.classList.remove('hidden');
-        // Extract text representation from Quill
         plainTextarea.value = quill.getText();
       }
       updatePreviewContent();
     });
 
-    // Link Live Preview elements
     const inputTitle = document.getElementById('poem-title');
     const selectGenre = document.getElementById('poem-genre');
     const inputBgImg = document.getElementById('backgroundImage');
@@ -253,7 +280,6 @@
     const previewContent = document.getElementById('preview-content');
     const overlayVal = document.getElementById('overlayVal');
 
-    // Synchronize inputs with preview
     inputTitle.addEventListener('input', (e) => {
       previewTitle.textContent = e.target.value.trim() || 'Poem Title';
     });
@@ -276,21 +302,16 @@
       previewContainer.style.backgroundSize = e.target.value;
     });
 
-    // Preview Background image file
     inputBgImg.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const url = URL.createObjectURL(file);
         previewContainer.style.backgroundImage = `url('${url}')`;
-      } else {
-        previewContainer.style.backgroundImage = 'none';
       }
     });
 
-    // Sync content
     function updatePreviewContent() {
       if (useRich) {
-        // Strip tags for clean preview representation (only show text inside preview pane)
         previewContent.innerHTML = quill.root.innerHTML;
       } else {
         previewContent.textContent = plainTextarea.value;
@@ -300,12 +321,10 @@
     quill.on('text-change', updatePreviewContent);
     plainTextarea.addEventListener('input', updatePreviewContent);
 
-    // Form submission processing
-    const form = document.getElementById('uploadPaymentForm');
-    const submitBtn = document.getElementById('submitPoemBtn');
+    const form = document.getElementById('editPoemForm');
+    const saveBtn = document.getElementById('savePoemBtn');
 
     form.addEventListener('submit', (e) => {
-      // Set value of hidden input to content from active editor
       const hiddenContent = document.getElementById('poem-content-hidden');
       if (useRich) {
         hiddenContent.value = quill.root.innerHTML;
@@ -313,27 +332,9 @@
         hiddenContent.value = plainTextarea.value;
       }
 
-      // Check phone number before sending
-      const phoneInput = document.getElementById('phoneNumber');
-      const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
-
-      if (!phoneNumber) {
-        alert('Please enter a valid M-Pesa phone number.');
-        e.preventDefault();
-        return;
-      }
-
-      const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
-      if (!kenyanPhoneRegex.test(phoneNumber)) {
-        alert('Please enter a valid Kenyan phone number (e.g., 0712345678).');
-        e.preventDefault();
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></i>Initiating Payment...';
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></i>Saving...';
     });
-
   });
 </script>
 

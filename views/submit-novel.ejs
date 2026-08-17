@@ -2,12 +2,15 @@
 <%- include('partials/navbar') %>
 <%- include('partials/flash') %>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+<!-- Quill Editor CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
   
   <div class="mb-8 border-b border-brand-brown/10 dark:border-brand-brown/25 pb-6">
     <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest">Publish Your Book</span>
     <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mt-2">Submit a New Novel</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Share your stories, fantasy lore, or historical biographies with the community.</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Create chapters, apply rich formatting, and build your novel page by page.</p>
   </div>
 
   <form id="uploadPaymentForm" action="/novels/submit" method="POST" enctype="multipart/form-data" class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl shadow-sm border border-brand-brown/10 dark:border-brand-brown/20 space-y-6">
@@ -18,7 +21,7 @@
       <input type="text" id="title" name="title" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="e.g. Whispers of the Savannah">
     </div>
 
-    <!-- Author Profile selection or input -->
+    <!-- Author Profile association -->
     <div class="p-5 sm:p-6 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 space-y-4">
       <h3 class="font-serif font-bold text-gray-800 dark:text-white text-base">Author Association</h3>
       <p class="text-xs text-gray-500 dark:text-gray-400">Associate this book with an existing author profile or create a new public author identity.</p>
@@ -100,20 +103,64 @@
       <textarea id="synopsis" name="synopsis" rows="4" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Describe the story, the stakes, and major themes..."></textarea>
     </div>
 
-    <!-- Novel Contents Text Area with paging instructions -->
-    <div>
-      <label for="contentText" class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-300 mb-2">Book Reading Content</label>
-      <div class="p-3 bg-brand-cream/40 dark:bg-brand-brown/5 text-brand-brown dark:text-gray-400 text-xs rounded-xl border border-brand-brown/10 mb-2 leading-relaxed">
-        <p class="font-bold mb-1">📖 Page Separation Guide:</p>
-        Use <span class="font-mono text-gray-800 dark:text-white bg-white dark:bg-black px-1.5 py-0.5 rounded border border-brand-brown/10">---PAGE---</span> on its own line to split chapters or pages. For example:
-        <pre class="font-mono mt-1 text-[10px] bg-white dark:bg-black p-2 rounded text-gray-500 overflow-x-auto">This is the text of Page/Chapter 1.
-
----PAGE---
-
-This is the text of Page/Chapter 2.</pre>
+    <!-- Chapter Builder Section -->
+    <div class="p-6 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/15 dark:border-brand-brown/25">
+      <div class="flex items-center justify-between border-b border-brand-brown/10 pb-3 mb-4">
+        <h3 class="font-serif font-bold text-gray-800 dark:text-white text-base flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+          Novel Chapter Builder
+        </h3>
+        <button type="button" id="addChapterBtn" class="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-brown text-white text-xs font-semibold rounded-lg hover:bg-brand-accent transition-colors shadow">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Chapter
+        </button>
       </div>
-      <textarea id="contentText" name="contentText" rows="12" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white font-serif placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Write or paste your book content pages separated by ---PAGE--- here..."></textarea>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        <!-- Sidebar: Chapter List (Col span 4) -->
+        <div class="md:col-span-4 bg-brand-cream/20 dark:bg-white/5 rounded-xl border border-brand-brown/10 p-4 space-y-3">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Chapters Outline</span>
+          <div id="chapter-list" class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            <!-- Dynamically injected chapters -->
+          </div>
+        </div>
+
+        <!-- Editor Pane: Current Chapter details (Col span 8) -->
+        <div class="md:col-span-8 space-y-4">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Current Chapter Heading</label>
+            <input type="text" id="chapterTitleInput" placeholder="e.g. Chapter 1: The Departure" class="w-full rounded-lg border border-brand-brown/20 bg-white dark:bg-brand-dark/20 px-3.5 py-2 text-sm dark:text-white focus:ring-1 focus:ring-brand-brown focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Chapter Content</label>
+            <div id="toolbar-container" class="rounded-t-lg border border-brand-brown/20 bg-brand-pink/5">
+              <span class="ql-formats">
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+              </span>
+              <span class="ql-formats">
+                <select class="ql-align"></select>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-clean"></button>
+              </span>
+            </div>
+            <div id="chapter-editor" class="min-h-[220px] max-h-[350px] overflow-y-auto rounded-b-lg border-x border-b border-brand-brown/20 bg-white font-serif text-base p-4 leading-relaxed"></div>
+          </div>
+          
+          <div class="flex justify-between items-center text-xs">
+            <button type="button" id="deleteChapterBtn" class="text-red-500 font-semibold hover:underline flex items-center gap-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Current Chapter
+            </button>
+            <span class="text-gray-400 font-mono" id="chapterCountLabel">Chapters: 1</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Hidden Textarea to submit compiled chapters -->
+    <textarea id="contentText" name="contentText" class="hidden"></textarea>
 
     <!-- M-Pesa Payment Details -->
     <div class="p-6 bg-brand-cream/10 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/15 dark:border-brand-brown/25 space-y-4">
@@ -129,24 +176,128 @@ This is the text of Page/Chapter 2.</pre>
       </div>
     </div>
 
+    <!-- Footer buttons -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-brand-brown/10 dark:border-brand-brown/25">
       <a href="/novels" class="w-full sm:w-auto px-5 py-3 rounded-xl border border-brand-brown/20 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-brand-cream/10 text-center">Cancel</a>
       <button id="submitNovelBtn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm">
         <i data-lucide="send" class="w-4 h-4"></i>
-        Upload Novel
+        Upload Novel & Pay
       </button>
     </div>
 
   </form>
 </div>
 
+<!-- Quill Editor JS & Chapter Builder Logic -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Setup Quill Editor for Chapter Content
+    const quill = new Quill('#chapter-editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: '#toolbar-container'
+      }
+    });
+
+    // Chapter State
+    let chapters = [
+      { title: 'Chapter 1: The Beginning', content: '<p>Write your chapter contents here...</p>' }
+    ];
+    let activeIndex = 0;
+
+    const listContainer = document.getElementById('chapter-list');
+    const titleInput = document.getElementById('chapterTitleInput');
+    const deleteBtn = document.getElementById('deleteChapterBtn');
+    const addBtn = document.getElementById('addChapterBtn');
+    const countLabel = document.getElementById('chapterCountLabel');
+
+    // Save current active chapter content
+    function saveActiveChapter() {
+      if (chapters[activeIndex]) {
+        chapters[activeIndex].title = titleInput.value.trim() || `Chapter ${activeIndex + 1}`;
+        chapters[activeIndex].content = quill.root.innerHTML;
+      }
+    }
+
+    // Load active chapter details
+    function loadActiveChapter() {
+      if (chapters[activeIndex]) {
+        titleInput.value = chapters[activeIndex].title;
+        quill.root.innerHTML = chapters[activeIndex].content;
+      }
+      renderChapterList();
+      countLabel.textContent = `Chapters: ${chapters.length}`;
+    }
+
+    // Render Sidebar list
+    function renderChapterList() {
+      listContainer.innerHTML = '';
+      chapters.forEach((ch, idx) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors truncate ${
+          idx === activeIndex
+            ? 'bg-brand-brown text-white shadow-sm'
+            : 'bg-white dark:bg-brand-dark/20 text-gray-700 dark:text-gray-300 border border-brand-brown/5 dark:border-brand-brown/10 hover:bg-brand-pink/5'
+        }`;
+        item.innerHTML = `
+          <span class="truncate flex items-center gap-1.5">
+            <span class="opacity-60">${idx + 1}.</span>
+            <span class="truncate">${ch.title}</span>
+          </span>
+        `;
+        item.addEventListener('click', () => {
+          saveActiveChapter();
+          activeIndex = idx;
+          loadActiveChapter();
+        });
+        listContainer.appendChild(item);
+      });
+    }
+
+    // Add new chapter
+    addBtn.addEventListener('click', () => {
+      saveActiveChapter();
+      chapters.push({
+        title: `Chapter ${chapters.length + 1}: Title`,
+        content: '<p>Compose new chapter details...</p>'
+      });
+      activeIndex = chapters.length - 1;
+      loadActiveChapter();
+    });
+
+    // Delete current active chapter
+    deleteBtn.addEventListener('click', () => {
+      if (chapters.length <= 1) {
+        alert('You must have at least one chapter in your novel!');
+        return;
+      }
+      if (confirm('Are you sure you want to delete this chapter?')) {
+        chapters.splice(activeIndex, 1);
+        activeIndex = Math.max(0, activeIndex - 1);
+        loadActiveChapter();
+      }
+    });
+
+    // Initialize list
+    loadActiveChapter();
+
+    // Form Submission Handling
     const form = document.getElementById('uploadPaymentForm');
     const submitBtn = document.getElementById('submitNovelBtn');
 
     if (form && submitBtn) {
       form.addEventListener('submit', (event) => {
+        saveActiveChapter();
+
+        // Compile chapters with delimiter \n\n---PAGE---\n\n
+        const compiledPages = chapters.map(ch => {
+          return `<h2>${ch.title}</h2>\n\n${ch.content}`;
+        }).join('\n\n---PAGE---\n\n');
+
+        document.getElementById('contentText').value = compiledPages;
+
         const phoneInput = document.getElementById('phoneNumber');
         const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
 
@@ -158,7 +309,7 @@ This is the text of Page/Chapter 2.</pre>
 
         const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
         if (!kenyanPhoneRegex.test(phoneNumber)) {
-          alert('Please enter a valid Kenyan phone number (e.g., 0712345678 or 254712345678).');
+          alert('Please enter a valid Kenyan phone number (e.g., 0712345678).');
           event.preventDefault();
           return;
         }
@@ -168,6 +319,7 @@ This is the text of Page/Chapter 2.</pre>
       });
     }
 
+    // Author radio toggles
     const authorTypeRadios = document.querySelectorAll('input[name="authorType"]');
     const existingAuthorContainer = document.getElementById('existing-author-container');
     const newAuthorContainer = document.getElementById('new-author-container');
@@ -190,7 +342,6 @@ This is the text of Page/Chapter 2.</pre>
       });
     });
 
-    // Init validation state
     authorSelect.setAttribute('required', 'required');
   });
 </script>

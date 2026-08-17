@@ -14,6 +14,12 @@ export const CATEGORIES = [
   'Historical Fiction', 'Memoir', 'Political Fiction'
 ] as const;
 
+export const POETRY_CATEGORIES = [
+  'Love', 'Sonnet', 'Haiku', 'Free Verse', 'Spoken Word', 'Nature', 'Romance',
+  'Sadness', 'Inspirational', 'Friendship', 'Life', 'Family', 'Motivation',
+  'Spiritual', 'Social/Political', 'Other'
+] as const;
+
 export const SUBMISSION_FEE_KES = 50;
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {

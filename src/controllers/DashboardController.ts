@@ -4,6 +4,8 @@ import { UserModel } from '../models/User.js';
 import { getLocalNovelCover } from '../utils/novelPhoto.js';
 import { buildRecommendationSet, calculateReadingStreak, summarizeText } from '../utils/ecosystem.js';
 import { calculateProfileCompletion } from '../utils/profile.js';
+import { PoemModel } from '../models/Poem.js';
+import { SignatureModel } from '../models/Signature.js';
 
 export const DashboardController = {
   // User Dashboard
@@ -94,11 +96,17 @@ export const DashboardController = {
         linkedin: user.linkedin,
         facebook: user.facebook
       });
-      const achievements = [
+      const persistentAchievements = user.achievements || [];
+      const calculatedAchievements = [
         streak >= 3 ? 'Consistency Champion' : 'New Reader',
         (user.bookmarks || []).length > 0 ? 'Bookmark Curator' : 'Explorer',
         (user.followers || []).length > 0 ? 'Community Voice' : 'Rising Star'
       ];
+      const achievementsList = Array.from(new Set([...calculatedAchievements, ...persistentAchievements]));
+
+      const userPoems = PoemModel.find({ submittedBy: user._id }).sort({ createdAt: -1 }).exec();
+      const userNovels = NovelModel.find({ submittedBy: user._id }).sort({ createdAt: -1 }).exec();
+      const hasSignature = !!SignatureModel.findOne({ authorId: user._id });
 
       res.render('dashboard', {
         title: 'Reader Dashboard',
@@ -107,9 +115,14 @@ export const DashboardController = {
         bookmarkItems,
         recommendedNovels,
         streak,
-        achievements,
+        achievements: achievementsList,
         profileCompletion,
-        premiumStatus: user.role === 'admin' ? 'Editorial Access' : 'Member'
+        premiumStatus: user.role === 'admin' ? 'Editorial Access' : 'Member',
+        userPoems,
+        userNovels,
+        authorStreak: user.currentStreak || 0,
+        longestAuthorStreak: user.longestStreak || 0,
+        hasSignature
       });
     } catch (error) {
       console.error('Dashboard load error:', error);

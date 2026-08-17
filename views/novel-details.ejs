@@ -2,51 +2,46 @@
 <%- include('partials/navbar') %>
 <%- include('partials/flash') %>
 
-<div class="flex-grow">
+<div class="flex flex-col min-h-screen">
   
-  <!-- 1. Blur Overlay Top Hero Banner -->
-  <div class="relative bg-brand-dark overflow-hidden py-16 sm:py-24 border-b border-brand-brown/10">
-    <div class="absolute inset-0 opacity-20 bg-cover bg-center filter blur-lg scale-110" style="background-image: url('<%= novel.coverImage %>');"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-[#1C120C] via-[#1C120C]/90 to-[#2A1D15]/80"></div>
+  <!-- 1. Hero Presentation Header Banner -->
+  <div class="bg-gradient-to-br from-[#2D1B10] to-[#140D09] text-white py-16 px-4 relative overflow-hidden">
+    <!-- Abstract overlay background shapes -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(254,180,187,0.08),transparent_50%)]"></div>
+    <div class="absolute -top-12 -left-12 w-48 h-48 bg-brand-pink/5 rounded-full blur-3xl"></div>
     
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-      <!-- Cover art -->
-      <div class="w-48 h-72 sm:w-56 sm:h-80 bg-brand-cream rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 flex-shrink-0 group relative">
-        <img src="<%= novel.coverImage %>" alt="<%= novel.title %>" class="w-full h-full object-cover">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-10 items-center relative z-10">
+      
+      <!-- Book Cover Image visualizer -->
+      <div class="w-48 sm:w-56 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group bg-brand-cream/10 relative">
+        <img src="<%= novel.coverImage %>" alt="<%= novel.title %>" class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+        <span class="absolute top-3 left-3 bg-brand-pink text-brand-dark font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+          <%= novel.genre %>
+        </span>
       </div>
 
-      <!-- Textual descriptors -->
-      <div class="text-center md:text-left text-white space-y-4 max-w-2xl">
-        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-pink/25 text-brand-pink border border-brand-pink/10 uppercase tracking-widest">
-            <%= novel.genre %>
-          </span>
-          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white/10 text-gray-300 border border-white/5 uppercase">
-            Published: <%= novel.publicationYear %>
-          </span>
+      <!-- Book Metadata and Title -->
+      <div class="flex-grow space-y-4 text-center md:text-left">
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 text-xs">
+          <span class="text-brand-pink font-semibold">Published <%= novel.publicationYear %></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-white/20"></span>
+          <span class="text-gray-300">By <%= novel.authorName %></span>
         </div>
 
-        <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight"><%= novel.title %></h1>
-        
-        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
-          <p class="text-sm text-gray-400 font-medium">
-            Written by <a href="/authors/<%= novel.authorId %>" class="text-brand-pink hover:underline font-bold text-base block sm:inline mt-1 sm:mt-0"><%= novel.authorName %></a>
-          </p>
-          <% if (novel.authorId) { %>
-            <form action="/authors/<%= novel.authorId %>/follow" method="POST" class="inline">
-              <button type="submit" class="px-3 py-1 rounded-full bg-brand-pink/20 hover:bg-brand-pink/40 text-brand-pink text-xs font-bold border border-brand-pink/30 flex items-center gap-1 transition-colors">
-                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                Follow Author
-              </button>
-            </form>
-          <% } %>
-        </div>
+        <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-md">
+          <%= novel.title %>
+        </h1>
 
-        <div class="flex items-center justify-center md:justify-start gap-6 pt-2 text-sm text-gray-300">
+        <p class="text-xs sm:text-sm text-gray-300 max-w-2xl leading-relaxed">
+          <%= novel.description %>
+        </p>
+
+        <!-- Stats row -->
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-6 text-xs text-gray-300 pt-2">
           <div class="flex items-center gap-1.5">
-            <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500"></i>
-            <span class="font-bold text-white text-base"><%= novel.rating %></span>
-            <span class="text-gray-400">/ 5.0</span>
+            <i data-lucide="star" class="w-5 h-5 text-amber-400 fill-amber-400"></i>
+            <span class="font-bold text-white"><%= novel.rating %></span> / 5 (<%= novel.ratingCount %> reviews)
           </div>
           <div class="w-px h-4 bg-white/10"></div>
           <div class="flex items-center gap-1.5">
@@ -58,8 +53,34 @@
     </div>
   </div>
 
+  <!-- Pending Payment Status Banner -->
+  <% if (novel.approvalStatus !== 'approved') { %>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 w-full">
+      <div class="p-6 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h3 class="font-serif font-bold text-yellow-800 dark:text-yellow-400 text-sm flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4.5 h-4.5"></i>
+            This novel is pending payment
+          </h3>
+          <p class="text-xs text-yellow-700 dark:text-yellow-300">
+            Only you can see this preview. Complete the payment of KES 100 to publish it to the community.
+          </p>
+        </div>
+
+        <% if (user && String(novel.submittedBy) === String(user._id)) { %>
+          <form action="/novels/<%= novel._id %>/complete-payment" method="POST" class="flex flex-col sm:flex-row gap-2 max-w-sm shrink-0">
+            <input type="text" name="phoneNumber" required value="<%= user.phoneNumber || '' %>" placeholder="M-Pesa Number (e.g. 0712345678)" class="px-3.5 py-2 rounded-xl border border-yellow-300 dark:border-yellow-900 bg-white dark:bg-brand-dark/20 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500">
+            <button type="submit" class="px-5 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-xl text-xs shadow-sm transition-colors">
+              Pay & Publish
+            </button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
   <!-- 2. Main details Body Columns -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
       
       <!-- LEFT COLUMN: Interactive Actions & QR Code Sharing (Col span 4) -->
@@ -67,7 +88,13 @@
         
         <!-- Action Dashboard Card -->
         <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-5">
-          <h2 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-2">Reading Desk</h2>
+          <div class="flex items-center justify-between border-b border-brand-brown/5 pb-2">
+            <h2 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink">Reading Desk</h2>
+            
+            <% if (user && String(novel.submittedBy) === String(user._id)) { %>
+              <a href="/novels/<%= novel._id %>/edit" class="text-xs text-brand-pink font-bold hover:underline">Edit Novel</a>
+            <% } %>
+          </div>
           
           <!-- Start/Continue Reading -->
           <% if (historyItem) { %>
@@ -130,69 +157,128 @@
           </div>
         </div>
 
-        <!-- QR Code Card for this book -->
-        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col items-center text-center">
+        <!-- Share Options & QR Code Card -->
+        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm flex flex-col items-center text-center relative">
           <h2 class="font-serif text-lg font-bold text-gray-800 dark:text-brand-pink mb-3">Share This Masterpiece</h2>
-          <p class="text-xs text-gray-400 max-w-xs mb-4">Scan this generated QR code on mobile devices to share this novel's details with other bibliophiles.</p>
-          <div class="p-3 bg-brand-cream rounded-xl border border-brand-pink/10 shadow-inner flex flex-col items-center justify-center w-52">
+          
+          <!-- Social sharing links -->
+          <div class="grid grid-cols-2 gap-2 w-full mb-5 text-xs text-left">
+            <a href="https://api.whatsapp.com/send?text=Read%20<%= encodeURIComponent(novel.title) %>%20on%20Readers%20Africa:%20<%= encodeURIComponent('http://localhost:3000/novels/' + novel._id) %>" target="_blank" class="flex items-center gap-2 p-2.5 bg-brand-cream/35 hover:bg-brand-pink/20 rounded-xl transition-all border border-brand-brown/5 dark:text-white">
+              💬 WhatsApp
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent('http://localhost:3000/novels/' + novel._id) %>" target="_blank" class="flex items-center gap-2 p-2.5 bg-brand-cream/35 hover:bg-brand-pink/20 rounded-xl transition-all border border-brand-brown/5 dark:text-white">
+              📘 Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent('http://localhost:3000/novels/' + novel._id) %>&text=Check%2520this%2520book%2520out!" target="_blank" class="flex items-center gap-2 p-2.5 bg-brand-cream/35 hover:bg-brand-pink/20 rounded-xl transition-all border border-brand-brown/5 dark:text-white">
+              🐦 Twitter/X
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=<%= encodeURIComponent('http://localhost:3000/novels/' + novel._id) %>" target="_blank" class="flex items-center gap-2 p-2.5 bg-brand-cream/35 hover:bg-brand-pink/20 rounded-xl transition-all border border-brand-brown/5 dark:text-white">
+              🔗 LinkedIn
+            </a>
+            <button type="button" onclick="showInstagramHelper(event)" class="col-span-2 flex items-center justify-center gap-2 p-2 bg-brand-cream/35 hover:bg-brand-pink/20 rounded-xl transition-all border border-brand-brown/5 dark:text-white">
+              📸 Share on Instagram
+            </button>
+            <button type="button" onclick="copyLink(event)" class="col-span-2 flex items-center justify-center gap-2 p-2.5 bg-brand-brown text-white rounded-xl transition-all font-bold">
+              📎 Copy Book Link
+            </button>
+          </div>
+
+          <p class="text-[11px] text-gray-400 max-w-xs mb-3">Or scan QR Code to read on mobile devices:</p>
+          <div class="p-2.5 bg-brand-cream rounded-xl border border-brand-pink/10 shadow-inner flex flex-col items-center justify-center w-36">
             <img src="<%= detailQRCode %>" alt="Book sharing QR Code" class="w-full aspect-square object-contain rounded">
-            <span class="text-[9px] font-bold text-brand-brown uppercase tracking-wider mt-2">Mobile Gate</span>
           </div>
         </div>
 
       </div>
 
-      <!-- RIGHT COLUMN: Synopsis & Guild Comments (Col span 8) -->
+      <!-- RIGHT COLUMN: Synopsis, Reviews, Chapters list (Col span 8) -->
       <div class="lg:col-span-8 space-y-12">
         
-        <!-- Synopsis Section -->
-        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-6">
-          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-brand-pink pb-3 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2">
-            <i data-lucide="quote" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
-            Synopsis & Historical Context
+        <!-- Plot Synopsis -->
+        <section class="bg-white dark:bg-[#1E150F] p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-4">
+          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2.5">
+            <i data-lucide="scroll" class="w-5.5 h-5.5 text-brand-brown dark:text-brand-pink"></i>
+            Plot Synopsis
           </h2>
-          
-          <div class="prose prose-amber dark:prose-invert text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed space-y-4">
-            <p class="font-bold text-gray-800 dark:text-white italic bg-brand-cream/30 dark:bg-brand-brown/10 p-4 rounded-xl border-l-4 border-brand-brown">
-              "<%= novel.description %>"
-            </p>
-            
-            <!-- Replace newlines with Paragraphs for neat layout -->
-            <% novel.synopsis.split('\n\n').forEach(function(para) { %>
-              <p><%= para %></p>
-            <% }) %>
-          </div>
-        </div>
+          <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed font-serif italic text-justify pl-3 border-l-2 border-brand-brown/20 dark:border-brand-pink/30">
+            <%= novel.synopsis %>
+          </p>
+        </section>
 
-        <!-- Guild reviews / Comments Section -->
-        <div class="bg-white dark:bg-[#1E150F] p-6 sm:p-10 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-8">
-          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-brand-pink pb-3 border-b border-brand-brown/10 dark:border-brand-brown/15 flex items-center gap-2.5">
-            <i data-lucide="message-square" class="w-6 h-6 text-brand-brown dark:text-brand-pink"></i>
-            The Literary Guild's Reviews
+        <!-- Reviews & Critiques Section -->
+        <section class="bg-white dark:bg-[#1E150F] p-8 rounded-2xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-6">
+          <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2.5">
+            <i data-lucide="message-square" class="w-5.5 h-5.5 text-brand-brown dark:text-brand-pink"></i>
+            Critiques & Reviews
+            <span class="text-xs bg-brand-pink/30 text-brand-brown dark:text-brand-pink px-2.5 py-0.5 rounded-full font-sans font-bold">
+              <%= comments.length %>
+            </span>
           </h2>
 
-          <!-- Add Comment Form -->
-          <form action="/novels/<%= novel._id %>/comments" method="POST" class="space-y-4">
-            <% if (!user) { %>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label for="guestName" class="block text-xs uppercase tracking-wider font-bold text-gray-550 dark:text-gray-350 mb-1.5">Your Name (Optional)</label>
-                  <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="block w-full px-4 py-2.5 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all">
-                </div>
-                <div class="flex items-end pb-1.5">
-                  <span class="text-xs text-gray-450">You are reviewing as a guest. Or <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Log in</a> to post.</span>
-                </div>
+          <!-- Write a Review Form -->
+          <form action="/novels/<%= novel._id %>/comment" method="POST" class="space-y-4 border-b border-brand-brown/10 pb-8 relative">
+            <input type="hidden" name="stickerUrl" id="stickerUrlInput">
+            <input type="hidden" name="gifUrl" id="gifUrlInput">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Star Rating selection -->
+              <div>
+                <label for="rating" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-1.5">Rating (Stars)</label>
+                <select id="rating" name="rating" required class="block w-full px-3 py-2 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-white dark:bg-[#1E150F] text-gray-800 dark:text-white focus:outline-none text-xs">
+                  <option value="5" selected>★★★★★ (5 - Masterpiece)</option>
+                  <option value="4">★★★★☆ (4 - Excellent)</option>
+                  <option value="3">★★★☆☆ (3 - Good Read)</option>
+                  <option value="2">★★☆☆☆ (2 - Fair)</option>
+                  <option value="1">★☆☆☆☆ (1 - Poor)</option>
+                </select>
               </div>
-            <% } %>
-            <div>
-              <label for="content" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Pen your critique / insights</label>
-              <textarea id="content" name="content" rows="3.5" required class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-brand-brown dark:focus:border-brand-pink text-sm transition-all" placeholder="Share your literary critique, theme analysis, or historic thoughts..."></textarea>
+
+              <% if (!user) { %>
+                <div>
+                  <label for="guestName" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-1.5">Your Name</label>
+                  <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="block w-full px-4 py-2.5 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white focus:outline-none text-sm">
+                </div>
+              <% } %>
             </div>
-            <div class="flex justify-end">
-              <button type="submit" class="px-5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow text-xs flex items-center gap-1.5">
-                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+
+            <div>
+              <label for="content" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-1.5">Pen your critique / insights</label>
+              <textarea id="content" name="content" rows="3" class="block w-full px-4 py-3 border border-brand-brown/20 dark:border-brand-brown/30 rounded-xl bg-brand-cream/10 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none text-sm" placeholder="Share your thoughts on characters, themes, and pacing..."></textarea>
+            </div>
+
+            <!-- Attached Media Display -->
+            <div id="media-attach-preview" class="hidden flex items-center gap-3 p-2 bg-brand-brown/5 rounded-xl border border-brand-brown/10"></div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleStickerPanel('comment-sticker-panel')" class="px-3 py-1.5 border border-brand-brown/15 rounded-lg text-xs font-semibold hover:bg-brand-pink/10 flex items-center gap-1 dark:text-white">
+                  🎭 Sticker
+                </button>
+                <button type="button" onclick="toggleGifPanel('comment-gif-panel')" class="px-3 py-1.5 border border-brand-brown/15 rounded-lg text-xs font-semibold hover:bg-brand-pink/10 flex items-center gap-1 dark:text-white">
+                  🎬 Search GIF
+                </button>
+              </div>
+
+              <button type="submit" class="px-5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-bold rounded-xl shadow text-xs">
                 Submit Critique
               </button>
+            </div>
+
+            <!-- Sticker tray -->
+            <div id="comment-sticker-panel" class="hidden mt-3 p-4 border bg-brand-cream/20 dark:bg-white/5 rounded-xl grid grid-cols-8 gap-2.5">
+              <% const stickers = ['✍️', '🔥', '❤️', '👏', '🌟', '🎭', '👑', '📜', '💡', '🏆', '🙌', '😍', '😭', '🤯', '🌹', '☕']; %>
+              <% stickers.forEach(function(emoji) { %>
+                <button type="button" onclick="selectSticker('<%= emoji %>')" class="text-2xl hover:scale-115 transition-transform"><%= emoji %></button>
+              <% }) %>
+            </div>
+
+            <!-- GIF panel -->
+            <div id="comment-gif-panel" class="hidden mt-3 p-4 border bg-brand-cream/20 dark:bg-white/5 rounded-xl space-y-3">
+              <div class="flex gap-2">
+                <input type="text" id="gifQueryInput" placeholder="Search Tenor GIFs..." class="flex-grow rounded-lg border border-brand-brown/15 bg-white dark:bg-brand-dark/25 px-3 py-1.5 text-xs dark:text-white">
+                <button type="button" onclick="searchGifs('gifQueryInput', 'gifResultsGrid')" class="px-4 py-1.5 bg-brand-brown text-white text-xs font-semibold rounded-lg">Search</button>
+              </div>
+              <div id="gifResultsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto"></div>
             </div>
           </form>
 
@@ -201,24 +287,52 @@
             <% if (comments.length > 0) { %>
               <% comments.forEach(function(comment) { %>
                 <div class="flex items-start gap-4 p-4 rounded-xl border border-brand-brown/5 dark:border-brand-brown/10 hover:bg-brand-cream/5 dark:hover:bg-brand-brown/5 transition-colors">
-                  <img src="<%= comment.userAvatar %>" alt="" class="w-10 h-10 rounded-full object-cover border border-brand-pink/30 flex-shrink-0">
+                  <div class="w-10 h-10 rounded-full bg-brand-cream overflow-hidden border border-brand-pink/30 flex-shrink-0 flex items-center justify-center font-bold text-sm text-brand-brown">
+                    <% if (comment.userAvatar) { %>
+                      <img src="<%= comment.userAvatar %>" alt="" class="w-full h-full object-cover">
+                    <% } else { %>
+                      <%= comment.username.substring(0,2).toUpperCase() %>
+                    <% } %>
+                  </div>
+                  
                   <div class="flex-grow min-w-0">
                     <div class="flex items-center justify-between gap-4">
                       <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
                       <span class="text-[10px] text-gray-450 font-mono"><%= new Date(comment.createdAt).toLocaleDateString() %></span>
                     </div>
-                    <p class="text-xs sm:text-sm text-gray-650 dark:text-gray-350 mt-1 leading-relaxed">
-                      <%= comment.content %>
-                    </p>
+
+                    <!-- Rating stars display -->
+                    <% if (comment.rating) { %>
+                      <div class="flex text-amber-400 text-xs mt-0.5">
+                        <% for (let r=0; r<5; r++) { %>
+                          <%= r < comment.rating ? '★' : '☆' %>
+                        <% } %>
+                      </div>
+                    <% } %>
+
+                    <!-- Content -->
+                    <% if (comment.content) { %>
+                      <p class="text-xs sm:text-sm text-gray-650 dark:text-gray-350 mt-1 leading-relaxed"><%= comment.content %></p>
+                    <% } %>
+
+                    <!-- Sticker/GIF attachments -->
+                    <% if (comment.stickerUrl) { %>
+                      <div class="mt-2 text-3xl select-none"><%= comment.stickerUrl %></div>
+                    <% } %>
+                    <% if (comment.gifUrl) { %>
+                      <div class="mt-2 rounded-lg overflow-hidden border border-brand-brown/5 max-w-[200px]">
+                        <img src="<%= comment.gifUrl %>" alt="" class="w-full object-cover">
+                      </div>
+                    <% } %>
                     
                     <div class="mt-3 flex items-center justify-between text-[10px] border-t border-brand-brown/5 pt-2">
-                      <button onclick="document.getElementById('novelReplyBox-<%= comment._id %>').classList.toggle('hidden');" class="text-brand-brown dark:text-brand-pink font-bold hover:underline flex items-center gap-1">
+                      <button onclick="toggleReplyBox('<%= comment._id %>')" class="text-brand-brown dark:text-brand-pink font-bold hover:underline flex items-center gap-1">
                         <i data-lucide="corner-up-left" class="w-3 h-3"></i> Reply
                       </button>
 
                       <% if (comment.isReported) { %>
                         <span class="text-red-500 font-semibold flex items-center gap-1">
-                          <i data-lucide="shield-alert" class="w-3 h-3"></i> Flagged for Moderation
+                          <i data-lucide="shield-alert" class="w-3 h-3"></i> Flagged
                         </span>
                       <% } else { %>
                         <form action="/novels/<%= novel._id %>/comments/report/<%= comment._id %>" method="POST" class="inline">
@@ -230,15 +344,43 @@
                     </div>
 
                     <!-- Inline Reply Form -->
-                    <div id="novelReplyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5">
-                      <form action="/novels/<%= novel._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-2">
+                    <div id="novelReplyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5 space-y-3">
+                      <form action="/novels/<%= novel._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-2 relative">
+                        <input type="hidden" name="stickerUrl" id="replySticker-<%= comment._id %>">
+                        <input type="hidden" name="gifUrl" id="replyGif-<%= comment._id %>">
+
                         <% if (!user) { %>
                           <input type="text" name="guestName" placeholder="Your Name" class="w-full px-3 py-1.5 rounded-lg border border-brand-brown/20 bg-brand-cream/20 text-xs text-gray-800 dark:text-white">
                         <% } %>
-                        <textarea name="content" rows="2" required placeholder="Reply to critique..." class="w-full p-2.5 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
-                        <div class="flex justify-end gap-2">
-                          <button type="button" onclick="document.getElementById('novelReplyBox-<%= comment._id %>').classList.add('hidden');" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
-                          <button type="submit" class="px-3.5 py-1 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Post Reply</button>
+                        <textarea name="content" rows="2" placeholder="Reply to critique..." class="w-full p-2.5 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
+                        
+                        <div id="media-attach-reply-<%= comment._id %>" class="hidden flex items-center gap-3 p-2 bg-brand-brown/5 rounded-xl border border-brand-brown/10"></div>
+
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="toggleStickerPanel('reply-sticker-panel-<%= comment._id %>')" class="px-2 py-1 border border-brand-brown/15 rounded-md text-[10px] font-semibold dark:text-white">🎭 Sticker</button>
+                            <button type="button" onclick="toggleGifPanel('reply-gif-panel-<%= comment._id %>')" class="px-2 py-1 border border-brand-brown/15 rounded-md text-[10px] font-semibold dark:text-white">🎬 GIF</button>
+                          </div>
+                          <div class="flex gap-2">
+                            <button type="button" onclick="toggleReplyBox('<%= comment._id %>')" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
+                            <button type="submit" class="px-3.5 py-1 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Post Reply</button>
+                          </div>
+                        </div>
+
+                        <!-- Reply Sticker tray -->
+                        <div id="reply-sticker-panel-<%= comment._id %>" class="hidden mt-2 p-2 border bg-brand-cream/20 dark:bg-white/5 rounded-lg grid grid-cols-6 gap-2">
+                          <% stickers.forEach(function(emoji) { %>
+                            <button type="button" onclick="selectReplySticker('<%= comment._id %>', '<%= emoji %>')" class="text-2xl hover:scale-115 transition-transform"><%= emoji %></button>
+                          <% }) %>
+                        </div>
+
+                        <!-- Reply GIF panel -->
+                        <div id="reply-gif-panel-<%= comment._id %>" class="hidden mt-2 p-2 border bg-brand-cream/20 dark:bg-white/5 rounded-lg space-y-2">
+                          <div class="flex gap-1.5">
+                            <input type="text" id="replyGifQuery-<%= comment._id %>" placeholder="Search GIFs..." class="flex-grow rounded border border-brand-brown/15 bg-white dark:bg-brand-dark/20 px-2 py-1 text-[10px] dark:text-white">
+                            <button type="button" onclick="searchGifs('replyGifQuery-<%= comment._id %>', 'replyGifResults-<%= comment._id %>', '<%= comment._id %>')" class="px-3 py-1 bg-brand-brown text-white text-[10px] font-semibold rounded">Search</button>
+                          </div>
+                          <div id="replyGifResults-<%= comment._id %>" class="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto"></div>
                         </div>
                       </form>
                     </div>
@@ -248,13 +390,31 @@
                       <div class="mt-3 space-y-2 pl-3 border-l-2 border-brand-pink/40 dark:border-brand-brown/20">
                         <% comment.replies.forEach(function(reply) { %>
                           <div class="flex items-start gap-2 text-xs bg-brand-cream/30 dark:bg-brand-brown/10 p-2.5 rounded-xl border border-brand-brown/5">
-                            <img src="<%= reply.userAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-6 h-6 rounded-full object-cover shrink-0">
+                            <div class="w-6 h-6 rounded-full bg-brand-cream overflow-hidden shrink-0 flex items-center justify-center font-bold text-[9px] text-brand-brown">
+                              <% if (reply.userAvatar) { %>
+                                <img src="<%= reply.userAvatar %>" alt="" class="w-full h-full object-cover">
+                              <% } else { %>
+                                <%= reply.username.substring(0, 2).toUpperCase() %>
+                              <% } %>
+                            </div>
                             <div>
                               <div class="flex items-center gap-2">
                                 <span class="font-bold text-gray-800 dark:text-white"><%= reply.username %></span>
                                 <span class="text-[9px] text-gray-400"><%= new Date(reply.createdAt).toLocaleDateString() %></span>
                               </div>
-                              <p class="text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                              
+                              <% if (reply.content) { %>
+                                <p class="text-gray-650 dark:text-gray-350 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                              <% } %>
+
+                              <% if (reply.stickerUrl) { %>
+                                <div class="mt-1 text-2xl"><%= reply.stickerUrl %></div>
+                              <% } %>
+                              <% if (reply.gifUrl) { %>
+                                <div class="mt-1 rounded-lg overflow-hidden border border-brand-brown/5 max-w-[120px]">
+                                  <img src="<%= reply.gifUrl %>" alt="" class="w-full object-cover">
+                                </div>
+                              <% } %>
                             </div>
                           </div>
                         <% }) %>
@@ -268,7 +428,7 @@
             <% } %>
           </div>
 
-        </div>
+        </section>
 
       </div>
 
@@ -349,5 +509,160 @@
   </div>
 
 </div>
+
+<!-- Instagram Sharing Modal Helper -->
+<div id="instagramShareModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#1E150F] rounded-3xl p-6 max-w-sm w-full border border-brand-brown/10 space-y-4">
+    <div class="text-center">
+      <i data-lucide="instagram" class="w-10 h-10 text-brand-pink mx-auto mb-2"></i>
+      <h3 class="font-serif font-bold text-lg text-gray-800 dark:text-white">Share to Instagram</h3>
+    </div>
+    <p class="text-xs text-gray-500 leading-relaxed dark:text-gray-300">
+      Instagram does not support direct links in posts. We recommend:
+    </p>
+    <ul class="text-[11px] text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1 pl-1">
+      <li>Add the book link to your Instagram Bio.</li>
+      <li>Use the Link Sticker in your Instagram Stories!</li>
+    </ul>
+    <div class="flex gap-2">
+      <button onclick="copyLink(event); closeInstagramHelper();" class="flex-grow py-2 bg-brand-brown text-white text-xs font-semibold rounded-lg">Copy Book Link</button>
+      <button onclick="closeInstagramHelper()" class="px-4 py-2 border border-brand-brown/15 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Social Share & Rich Media Comments Logic -->
+<script>
+  function showInstagramHelper(e) {
+    if(e) e.stopPropagation();
+    document.getElementById('instagramShareModal').classList.remove('hidden');
+  }
+
+  function closeInstagramHelper() {
+    document.getElementById('instagramShareModal').classList.add('hidden');
+  }
+
+  function copyLink(e) {
+    if(e) e.stopPropagation();
+    navigator.clipboard.writeText(window.location.href);
+    alert('Novel link copied to clipboard!');
+  }
+
+  // --- Emojis & GIFs Attachment flow ---
+  function toggleStickerPanel(id) {
+    document.getElementById(id).classList.toggle('hidden');
+  }
+
+  function toggleGifPanel(id) {
+    document.getElementById(id).classList.toggle('hidden');
+  }
+
+  function toggleReplyBox(commentId) {
+    document.getElementById('novelReplyBox-' + commentId).classList.toggle('hidden');
+  }
+
+  // Main comment stickers
+  function selectSticker(emoji) {
+    document.getElementById('stickerUrlInput').value = emoji;
+    document.getElementById('gifUrlInput').value = ''; // clear GIF if set
+
+    const preview = document.getElementById('media-attach-preview');
+    preview.innerHTML = `
+      <span class="text-2xl">${emoji}</span>
+      <span class="text-xs text-gray-500 font-semibold">Sticker Attached</span>
+      <button type="button" onclick="clearAttachedMedia('stickerUrlInput')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+    `;
+    preview.classList.remove('hidden');
+    document.getElementById('comment-sticker-panel').classList.add('hidden');
+  }
+
+  // Thread replies stickers
+  function selectReplySticker(commentId, emoji) {
+    document.getElementById('replySticker-' + commentId).value = emoji;
+    document.getElementById('replyGif-' + commentId).value = '';
+
+    const preview = document.getElementById('media-attach-reply-' + commentId);
+    preview.innerHTML = `
+      <span class="text-xl">${emoji}</span>
+      <span class="text-[11px] text-gray-500 font-semibold">Sticker Attached</span>
+      <button type="button" onclick="clearReplyMedia('${commentId}')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+    `;
+    preview.classList.remove('hidden');
+    document.getElementById('reply-sticker-panel-' + commentId).classList.add('hidden');
+  }
+
+  function clearAttachedMedia(inputId) {
+    document.getElementById(inputId).value = '';
+    if (inputId === 'stickerUrlInput') document.getElementById('stickerUrlInput').value = '';
+    else document.getElementById('gifUrlInput').value = '';
+    document.getElementById('media-attach-preview').classList.add('hidden');
+  }
+
+  function clearReplyMedia(commentId) {
+    document.getElementById('replySticker-' + commentId).value = '';
+    document.getElementById('replyGif-' + commentId).value = '';
+    document.getElementById('media-attach-reply-' + commentId).classList.add('hidden');
+  }
+
+  // Tenor API Search client-side integration
+  async function searchGifs(queryInputId, resultsGridId, commentId = null) {
+    const q = document.getElementById(queryInputId).value.trim();
+    if (!q) return;
+
+    const grid = document.getElementById(resultsGridId);
+    grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">Searching GIFs...</span>';
+
+    try {
+      const res = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(q)}&key=LIVDTRZGLBI2&limit=8`);
+      if (res.ok) {
+        const data = await res.json();
+        grid.innerHTML = '';
+        if (data.results && data.results.length > 0) {
+          data.results.forEach(item => {
+            const imgUrl = item.media[0].tinygif.url;
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.className = "w-full aspect-[4/3] rounded-lg object-cover cursor-pointer hover:opacity-85 transition-opacity border border-brand-brown/5";
+            
+            img.addEventListener('click', () => {
+              if (commentId) {
+                document.getElementById('replyGif-' + commentId).value = imgUrl;
+                document.getElementById('replySticker-' + commentId).value = '';
+
+                const preview = document.getElementById('media-attach-reply-' + commentId);
+                preview.innerHTML = `
+                  <img src="${imgUrl}" class="w-8 h-8 rounded object-cover">
+                  <span class="text-[11px] text-gray-500 font-semibold">GIF Attached</span>
+                  <button type="button" onclick="clearReplyMedia('${commentId}')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+                `;
+                preview.classList.remove('hidden');
+                document.getElementById('reply-gif-panel-' + commentId).classList.add('hidden');
+              } else {
+                document.getElementById('gifUrlInput').value = imgUrl;
+                document.getElementById('stickerUrlInput').value = '';
+
+                const preview = document.getElementById('media-attach-preview');
+                preview.innerHTML = `
+                  <img src="${imgUrl}" class="w-10 h-10 rounded object-cover">
+                  <span class="text-xs text-gray-500 font-semibold">GIF Attached</span>
+                  <button type="button" onclick="clearAttachedMedia('gifUrlInput')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+                `;
+                preview.classList.remove('hidden');
+                document.getElementById('comment-gif-panel').classList.add('hidden');
+              }
+            });
+            grid.appendChild(img);
+          });
+        } else {
+          grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">No GIFs found.</span>';
+        }
+      } else {
+        grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">GIF Service unavailable.</span>';
+      }
+    } catch(e) {
+      grid.innerHTML = '<span class="col-span-3 text-xs text-red-400 text-center py-4">Error fetching GIFs.</span>';
+    }
+  }
+</script>
 
 <%- include('partials/footer') %>

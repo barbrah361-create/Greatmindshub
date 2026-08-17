@@ -5,7 +5,8 @@ import { UserModel } from '../models/User.js';
 import { NotificationModel } from '../models/Notification.js';
 import { EmailService } from '../services/emailService.js';
 import { MpesaService } from '../services/mpesaService.js';
-import { sanitizeText } from '../utils/sanitize.js';
+import { sanitizeText, sanitizeRichText } from '../utils/sanitize.js';
+import { POETRY_CATEGORIES } from '../types/common.js';
 
 export const PoemController = {
   getPoems: (req: Request, res: Response) => {
@@ -13,41 +14,64 @@ export const PoemController = {
     const limit = 12;
     const skip = (page - 1) * limit;
     const sort = (req.query.sort as string) || 'latest';
+    const category = (req.query.category as string) || '';
+    const search = (req.query.search as string || '').trim();
 
-    let chain = PoemModel.findPublic();
+    const filter: any = { approvalStatus: 'approved' };
+    if (category) {
+      filter.category = category;
+    }
+
+    let chain = PoemModel.find(filter);
     if (sort === 'popular') chain = chain.sort({ viewCount: -1 });
     else if (sort === 'liked') chain = chain.sort({ likes: -1 });
     else chain = chain.sort({ createdAt: -1 });
 
-    const total = PoemModel.countDocuments({ approvalStatus: 'approved' });
-    const poems = chain.skip(skip).limit(limit).exec();
+    let poems = chain.exec();
+
+    if (search) {
+      const lq = search.toLowerCase();
+      poems = poems.filter(p =>
+        (p.title || '').toLowerCase().includes(lq) ||
+        (p.content || '').toLowerCase().includes(lq) ||
+        (p.authorName || '').toLowerCase().includes(lq) ||
+        (p.genre || '').toLowerCase().includes(lq)
+      );
+    }
+
+    const total = poems.length;
+    const paginatedPoems = poems.slice(skip, skip + limit);
 
     res.render('poems', {
       title: 'Poetry Community',
-      poems,
+      poems: paginatedPoems,
       page,
       totalPages: Math.ceil(total / limit),
-      sort
+      sort,
+      category,
+      search,
+      categories: POETRY_CATEGORIES
     });
   },
 
   getPoemDetails: (req: Request, res: Response) => {
     const poem = PoemModel.findById(req.params.id);
-    if (!poem || (poem.approvalStatus !== 'approved' && !UserModel.isAdmin(res.locals.user))) {
+    const user = res.locals.user;
+    if (!poem || (poem.approvalStatus !== 'approved' && !UserModel.isAdmin(user) && String(poem.submittedBy) !== String(user?._id))) {
       return res.status(404).render('error', { status: 404, message: 'Poem not found.' });
     }
     PoemModel.findByIdAndUpdate(poem._id, { viewCount: (poem.viewCount || 0) + 1 });
-    res.render('poem-details', { title: poem.title, poem, user: res.locals.user });
+    res.render('poem-details', { title: poem.title, poem, user });
   },
 
   getSubmitPoem: (req: Request, res: Response) => {
-    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE });
+    res.render('submit-poem', { title: 'Publish a Poem', fee: MpesaService.SUBMISSION_FEE, categories: POETRY_CATEGORIES });
   },
 
   // Step 1: Create poem pending payment, initiate STK push
   postSubmitPoem: async (req: Request, res: Response) => {
     const user = res.locals.user;
-    const { title, content, genre, tags, phoneNumber } = req.body;
+    const { title, content, genre, tags, phoneNumber, backgroundPosition, backgroundSize, backgroundOverlay } = req.body;
 
     if (!title || !content) {
       req.flash('error', 'Title and content are required.');
@@ -66,15 +90,25 @@ export const PoemController = {
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const backgroundImage = files?.backgroundImage?.[0] ? `/uploads/${files.backgroundImage[0].filename}` : undefined;
+      const backgroundAudio = files?.backgroundAudio?.[0] ? `/uploads/${files.backgroundAudio[0].filename}` : undefined;
+
       // Create poem in pending state first
       const poem = PoemModel.create({
         title: sanitizeText(title, 200),
-        content: sanitizeText(content, 10000),
+        content: content.includes('<') ? sanitizeRichText(content, 15000) : sanitizeText(content, 15000),
         authorId: user._id,
         authorName: user.username,
-        genre: genre || 'Poetry',
+        genre: genre || 'Free Verse',
+        category: genre || 'Free Verse',
         tags: (tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
         submittedBy: user._id,
+        backgroundImage,
+        backgroundAudio,
+        backgroundPosition: backgroundPosition || 'center',
+        backgroundSize: backgroundSize || 'cover',
+        backgroundOverlay: backgroundOverlay ? parseFloat(backgroundOverlay) : 0.4,
         approvalStatus: 'pending'
       });
 
@@ -86,10 +120,9 @@ export const PoemController = {
       );
 
       if (!result.success) {
-        // Delete the pending poem if payment failed to initiate
-        PoemModel.findByIdAndDelete(poem._id);
-        req.flash('error', result.error || 'Payment could not be started. Please try again.');
-        return res.redirect('/poems/submit');
+        // DO NOT delete the pending poem! Save it in pending payment status.
+        req.flash('success', 'Poem saved as "Pending Payment". Complete payment from your dashboard to publish.');
+        return res.redirect('/profile');
       }
 
       // Record the payment linked to this poem
@@ -115,7 +148,138 @@ export const PoemController = {
     }
   },
 
-  // Payment status polling page for poem upload
+  postRetryPayment: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+    const { phoneNumber } = req.body;
+
+    const poem = PoemModel.findById(id);
+    if (!poem) {
+      req.flash('error', 'Poem not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(poem.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    if (!phoneNumber) {
+      req.flash('error', 'M-Pesa phone number is required.');
+      return res.redirect(`/poems/${poem._id}`);
+    }
+
+    const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
+    if (!kenyanPhoneRegex.test(phoneNumber.trim())) {
+      req.flash('error', 'Please provide a valid Kenyan M-Pesa phone number.');
+      return res.redirect(`/poems/${poem._id}`);
+    }
+
+    try {
+      const result = await MpesaService.initiateStkPush(
+        phoneNumber.trim(),
+        `POEM-${poem._id.slice(0, 8)}`,
+        'Poem Upload - KES 100'
+      );
+
+      if (!result.success) {
+        req.flash('error', result.error || 'Payment could not be started. Please try again.');
+        return res.redirect(`/poems/${poem._id}`);
+      }
+
+      PaymentModel.create({
+        userId: user._id,
+        feature: 'upload',
+        contentType: 'poem',
+        contentId: poem._id,
+        contentTitle: poem.title,
+        amount: MpesaService.SUBMISSION_FEE,
+        phoneNumber: phoneNumber.trim(),
+        checkoutRequestId: result.checkoutRequestId,
+        merchantRequestId: result.merchantRequestId,
+        invoiceNumber: `INV-POEM-RETRY-${Date.now()}`
+      });
+
+      return res.redirect(`/poems/payment-status?poemId=${poem._id}&checkoutRequestId=${encodeURIComponent(result.checkoutRequestId!)}`);
+    } catch (error) {
+      console.error('Poem payment retry error:', error);
+      req.flash('error', 'Could not start payment flow.');
+      res.redirect(`/poems/${poem._id}`);
+    }
+  },
+
+  getEditPoem: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const poem = PoemModel.findById(req.params.id);
+    if (!poem) {
+      req.flash('error', 'Poem not found.');
+      return res.redirect('/profile');
+    }
+    if (String(poem.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+    res.render('edit-poem', { title: 'Edit Poem', poem, categories: POETRY_CATEGORIES });
+  },
+
+  postEditPoem: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+    const { title, content, genre, tags, backgroundPosition, backgroundSize, backgroundOverlay } = req.body;
+
+    const poem = PoemModel.findById(id);
+    if (!poem) {
+      req.flash('error', 'Poem not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(poem.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    if (!title || !content) {
+      req.flash('error', 'Title and content are required.');
+      return res.redirect(`/poems/${id}/edit`);
+    }
+
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const updateData: any = {
+        title: sanitizeText(title, 200),
+        content: content.includes('<') ? sanitizeRichText(content, 15000) : sanitizeText(content, 15000),
+        genre: genre || 'Free Verse',
+        category: genre || 'Free Verse',
+        tags: (tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
+        backgroundPosition: backgroundPosition || 'center',
+        backgroundSize: backgroundSize || 'cover',
+        backgroundOverlay: backgroundOverlay ? parseFloat(backgroundOverlay) : 0.4
+      };
+
+      if (files?.backgroundImage?.[0]) {
+        updateData.backgroundImage = `/uploads/${files.backgroundImage[0].filename}`;
+      }
+      if (files?.backgroundAudio?.[0]) {
+        updateData.backgroundAudio = `/uploads/${files.backgroundAudio[0].filename}`;
+      }
+
+      if (req.body.removeBackgroundImage === 'true') {
+        updateData.backgroundImage = '';
+      }
+      if (req.body.removeBackgroundAudio === 'true') {
+        updateData.backgroundAudio = '';
+      }
+
+      PoemModel.findByIdAndUpdate(id, updateData);
+      req.flash('success', 'Poem updated successfully.');
+      res.redirect(`/poems/${id}`);
+    } catch (err) {
+      console.error('Poem edit error:', err);
+      req.flash('error', 'Could not update poem.');
+      res.redirect(`/poems/${id}/edit`);
+    }
+  },
+
   getPaymentStatus: (req: Request, res: Response) => {
     const { poemId, checkoutRequestId } = req.query as { poemId: string; checkoutRequestId: string };
     const poem = poemId ? PoemModel.findById(poemId) : null;
@@ -143,12 +307,12 @@ export const PoemController = {
 
   postComment: (req: Request, res: Response) => {
     const user = res.locals.user;
-    const { content, guestName } = req.body;
+    const { content, guestName, stickerUrl, gifUrl } = req.body;
     const poem = PoemModel.findById(req.params.id);
     if (!poem) return res.redirect('/poems');
 
     const sanitizedContent = sanitizeText(content || '', 2000);
-    if (!sanitizedContent) {
+    if (!sanitizedContent && !stickerUrl && !gifUrl) {
       req.flash('error', 'Comment cannot be empty.');
       return res.redirect(`/poems/${poem._id}`);
     }
@@ -163,6 +327,8 @@ export const PoemController = {
       username,
       userAvatar,
       content: sanitizedContent,
+      stickerUrl,
+      gifUrl,
       replies: [],
       createdAt: new Date().toISOString()
     };
@@ -187,13 +353,13 @@ export const PoemController = {
 
   postCommentReply: (req: Request, res: Response) => {
     const user = res.locals.user;
-    const { content, guestName } = req.body;
+    const { content, guestName, stickerUrl, gifUrl } = req.body;
     const { id, commentId } = req.params;
     const poem = PoemModel.findById(id);
     if (!poem) return res.redirect('/poems');
 
     const sanitizedContent = sanitizeText(content || '', 2000);
-    if (!sanitizedContent) {
+    if (!sanitizedContent && !stickerUrl && !gifUrl) {
       req.flash('error', 'Reply cannot be empty.');
       return res.redirect(`/poems/${poem._id}`);
     }
@@ -208,6 +374,8 @@ export const PoemController = {
       username,
       userAvatar,
       content: sanitizedContent,
+      stickerUrl,
+      gifUrl,
       replies: [],
       createdAt: new Date().toISOString()
     };
@@ -231,5 +399,31 @@ export const PoemController = {
     }
 
     res.redirect(`/poems/${poem._id}`);
+  },
+
+  postDeletePoem: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+
+    const poem = PoemModel.findById(id);
+    if (!poem) {
+      req.flash('error', 'Poem not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(poem.submittedBy) !== String(user._id) && !UserModel.isAdmin(user)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    try {
+      PoemModel.findByIdAndDelete(id);
+      req.flash('success', 'Poem deleted successfully.');
+    } catch (err) {
+      console.error('Poem delete error:', err);
+      req.flash('error', 'Could not delete poem.');
+    }
+
+    res.redirect('/profile');
   }
 };

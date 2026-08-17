@@ -5,6 +5,7 @@ import { NovelModel } from '../models/Novel.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { EmailService } from '../services/emailService.js';
 import { UserModel } from '../models/User.js';
+import { checkAndAwardAchievements } from '../utils/streak.js';
 
 const ACCESS_FEE_KES = 100;
 const ACCESS_PHONE = '0726625144';
@@ -61,9 +62,11 @@ export const PaymentController = {
     // Auto-approve the linked poem or novel on payment success
     if (payment.contentId && payment.contentType === 'poem') {
       PoemModel.findByIdAndUpdate(payment.contentId, { approvalStatus: 'approved' });
+      checkAndAwardAchievements(payment.userId);
       console.log(`[Payment] Poem ${payment.contentId} approved after payment ${payment._id}`);
     } else if (payment.contentId && payment.contentType === 'book') {
       NovelModel.findByIdAndUpdate(payment.contentId, { approvalStatus: 'approved' });
+      checkAndAwardAchievements(payment.userId);
       console.log(`[Payment] Novel ${payment.contentId} approved after payment ${payment._id}`);
     }
 

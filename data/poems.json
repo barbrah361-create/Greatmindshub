@@ -199,7 +199,7 @@
     "reactions": [],
     "comments": [],
     "bookmarks": [],
-    "viewCount": 1,
+    "viewCount": 3,
     "approvalStatus": "approved",
     "tags": [
       "hope"
@@ -210,7 +210,7 @@
     "authorName": "albert",
     "genre": "Free Verse",
     "submittedBy": "8mw94d9al73qmmimhru3f",
-    "updatedAt": "2026-08-14T07:59:37.937Z"
+    "updatedAt": "2026-08-17T06:44:52.949Z"
   },
   {
     "_id": "u7wqq6h35hp6j4urp0x99",
@@ -251,5 +251,77 @@
     "authorName": "Shar",
     "genre": "Free Verse",
     "submittedBy": "dz2z8mrs428pwerf5jsylb"
+  },
+  {
+    "_id": "4osqd4zp5qi5sde04t7ai",
+    "id": "4osqd4zp5qi5sde04t7ai",
+    "createdAt": "2026-08-17T06:27:15.067Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "pending",
+    "tags": [
+      "Nature"
+    ],
+    "title": "where",
+    "content": "werwdsfcs",
+    "authorId": "83v6pkw84q7s3w0ti0nq1",
+    "authorName": "Barbrah",
+    "genre": "Sonnets",
+    "submittedBy": "83v6pkw84q7s3w0ti0nq1",
+    "updatedAt": "2026-08-17T08:57:32.559Z"
+  },
+  {
+    "_id": "7yungt12s0q8iwvyedhk7b",
+    "id": "7yungt12s0q8iwvyedhk7b",
+    "createdAt": "2026-08-17T08:23:42.505Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 0,
+    "approvalStatus": "pending",
+    "tags": [
+      "test",
+      "poem"
+    ],
+    "title": "My First Test Poem",
+    "content": "<p>Roses are red, violets are blue, this is a test poem, just for you.</p>",
+    "authorId": "9c9azoly9hjo7xj9uadiup",
+    "authorName": "testauthor",
+    "genre": "Free Verse",
+    "category": "Free Verse",
+    "submittedBy": "9c9azoly9hjo7xj9uadiup",
+    "backgroundPosition": "center",
+    "backgroundSize": "cover",
+    "backgroundOverlay": 0.4
+  },
+  {
+    "_id": "3c3of0ykuztohjmyvine5a",
+    "id": "3c3of0ykuztohjmyvine5a",
+    "createdAt": "2026-08-17T08:35:37.715Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 0,
+    "approvalStatus": "approved",
+    "tags": [
+      "test",
+      "poem"
+    ],
+    "title": "My First Test Poem",
+    "content": "<p>Roses are red, violets are blue, this is a test poem, just for you.</p>",
+    "authorId": "9c9azoly9hjo7xj9uadiup",
+    "authorName": "testauthor",
+    "genre": "Free Verse",
+    "category": "Free Verse",
+    "submittedBy": "9c9azoly9hjo7xj9uadiup",
+    "backgroundPosition": "center",
+    "backgroundSize": "cover",
+    "backgroundOverlay": 0.4,
+    "updatedAt": "2026-08-17T08:38:54.948Z"
   }
 ]

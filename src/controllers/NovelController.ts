@@ -6,7 +6,7 @@ import { UserModel } from '../models/User.js';
 import { PaymentModel } from '../models/Payment.js';
 import { generateQRCode } from '../utils/qrcode.js';
 import { CATEGORIES } from '../types/common.js';
-import { sanitizeText } from '../utils/sanitize.js';
+import { sanitizeText, sanitizeRichText } from '../utils/sanitize.js';
 import { featuredArticles } from '../config/articles.js';
 import { getLocalAuthorPhoto, getWikipediaLink } from '../utils/authorPhoto.js';
 import { getLocalNovelCover, getCategoryCover } from '../utils/novelPhoto.js';
@@ -16,6 +16,7 @@ import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.
 import { buildReaderSummary, estimateReadingTime } from '../utils/profile.js';
 import { MpesaService } from '../services/mpesaService.js';
 import { NotificationModel } from '../models/Notification.js';
+import { SignatureModel } from '../models/Signature.js';
 
 export const NovelController = {
   // 1. Landing Page
@@ -125,7 +126,7 @@ export const NovelController = {
     const { id } = req.params;
     try {
       const rawNovel = NovelModel.findById(id);
-      if (!rawNovel || (rawNovel.approvalStatus !== 'approved' && !UserModel.isAdmin(res.locals.user))) {
+      if (!rawNovel || (rawNovel.approvalStatus !== 'approved' && !UserModel.isAdmin(res.locals.user) && String(rawNovel.submittedBy) !== String(res.locals.user?._id))) {
         return res.status(404).render('error', { statusCode: 404, message: 'Novel not found.' });
       }
       const novel = {
@@ -320,10 +321,10 @@ export const NovelController = {
   // 7. Add Comment / Review
   postComment: (req: Request, res: Response) => {
     const { id } = req.params;
-    const { content, rating, guestName } = req.body;
+    const { content, rating, guestName, stickerUrl, gifUrl } = req.body;
     const user = res.locals.user;
 
-    if (!content) {
+    if (!content && !stickerUrl && !gifUrl) {
       req.flash('error', 'Comment content cannot be empty.');
       return res.redirect(`/novels/${id}`);
     }
@@ -339,8 +340,10 @@ export const NovelController = {
         userId,
         username,
         userAvatar,
-        content: sanitizeText(content, 2000),
-        rating: starRating
+        content: sanitizeText(content || '', 2000),
+        rating: starRating,
+        stickerUrl,
+        gifUrl
       });
 
       // Recalculate average rating of the novel
@@ -365,10 +368,10 @@ export const NovelController = {
 
   postCommentReply: (req: Request, res: Response) => {
     const { id, commentId } = req.params;
-    const { content, guestName } = req.body;
+    const { content, guestName, stickerUrl, gifUrl } = req.body;
     const user = res.locals.user;
 
-    if (!content) {
+    if (!content && !stickerUrl && !gifUrl) {
       req.flash('error', 'Reply content cannot be empty.');
       return res.redirect(`/novels/${id}`);
     }
@@ -389,7 +392,9 @@ export const NovelController = {
         userId,
         username,
         userAvatar,
-        content: sanitizeText(content, 2000),
+        content: sanitizeText(content || '', 2000),
+        stickerUrl,
+        gifUrl,
         replies: [],
         createdAt: new Date().toISOString()
       };
@@ -770,9 +775,9 @@ export const NovelController = {
       );
 
       if (!result.success) {
-        NovelModel.findByIdAndDelete(novel._id);
-        req.flash('error', result.error || 'Payment could not be started. Please try again.');
-        return res.redirect('/novels/submit');
+        // DO NOT delete the pending novel! Just save it as pending payment and notify.
+        req.flash('success', 'Novel saved as "Pending Payment". Complete payment from your dashboard to publish.');
+        return res.redirect('/profile');
       }
 
       PaymentModel.create({
@@ -819,5 +824,233 @@ export const NovelController = {
 
     NovelModel.findByIdAndUpdate(novel._id, { likes });
     res.redirect(`/novels/${novel._id}`);
+  },
+
+  postRetryPayment: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+    const { phoneNumber } = req.body;
+
+    const novel = NovelModel.findById(id);
+    if (!novel) {
+      req.flash('error', 'Novel not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(novel.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    if (!phoneNumber) {
+      req.flash('error', 'M-Pesa phone number is required.');
+      return res.redirect(`/novels/${novel._id}`);
+    }
+
+    const kenyanPhoneRegex = /^(?:\+254|254|0)?([71]\d{8})$/;
+    if (!kenyanPhoneRegex.test(phoneNumber.trim())) {
+      req.flash('error', 'Please provide a valid Kenyan M-Pesa phone number.');
+      return res.redirect(`/novels/${novel._id}`);
+    }
+
+    try {
+      const result = await MpesaService.initiateStkPush(
+        phoneNumber.trim(),
+        `NOVEL-${novel._id.slice(0, 8)}`,
+        'Novel Upload - KES 100'
+      );
+
+      if (!result.success) {
+        req.flash('error', result.error || 'Payment could not be started. Please try again.');
+        return res.redirect(`/novels/${novel._id}`);
+      }
+
+      PaymentModel.create({
+        userId: user._id,
+        feature: 'upload',
+        contentType: 'book',
+        contentId: novel._id,
+        contentTitle: novel.title,
+        amount: MpesaService.SUBMISSION_FEE,
+        phoneNumber: phoneNumber.trim(),
+        checkoutRequestId: result.checkoutRequestId,
+        merchantRequestId: result.merchantRequestId,
+        invoiceNumber: `INV-NOVEL-RETRY-${Date.now()}`
+      });
+
+      return res.redirect(`/novels/payment-status?novelId=${novel._id}&checkoutRequestId=${encodeURIComponent(result.checkoutRequestId!)}`);
+    } catch (error) {
+      console.error('Novel payment retry error:', error);
+      req.flash('error', 'Could not start payment flow.');
+      res.redirect(`/novels/${novel._id}`);
+    }
+  },
+
+  getEditNovel: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const novel = NovelModel.findById(req.params.id);
+    if (!novel) {
+      req.flash('error', 'Novel not found.');
+      return res.redirect('/profile');
+    }
+    if (String(novel.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+    const categories = [...CATEGORIES];
+    const contentText = novel.contentPages.join('\n\n---PAGE---\n\n');
+    res.render('edit-novel', { title: 'Edit Novel', novel, categories, contentText });
+  },
+
+  postEditNovel: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+    const { title, genre, publicationYear, description, synopsis, contentText } = req.body;
+
+    const novel = NovelModel.findById(id);
+    if (!novel) {
+      req.flash('error', 'Novel not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(novel.submittedBy) !== String(user._id)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    if (!title || !genre || !publicationYear || !description || !synopsis || !contentText) {
+      req.flash('error', 'All fields are required.');
+      return res.redirect(`/novels/${id}/edit`);
+    }
+
+    try {
+      const coverImage = req.file ? `/uploads/${req.file.filename}` : novel.coverImage;
+      const contentPages = contentText.split('\n\n---PAGE---\n\n').filter((p: string) => p.trim().length > 0);
+      if (contentPages.length === 0) {
+        contentPages.push(contentText);
+      }
+
+      NovelModel.findByIdAndUpdate(id, {
+        title: sanitizeText(title, 200),
+        genre,
+        publicationYear: parseInt(publicationYear),
+        description: sanitizeText(description, 500),
+        synopsis: sanitizeText(synopsis, 2000),
+        coverImage,
+        contentPages
+      });
+
+      req.flash('success', 'Novel updated successfully.');
+      res.redirect(`/novels/${id}`);
+    } catch (error) {
+      console.error('Novel edit error:', error);
+      req.flash('error', 'Could not update novel.');
+      res.redirect(`/novels/${id}/edit`);
+    }
+  },
+
+  getSignatureWall: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const signatures = SignatureModel.find().sort({ createdAt: -1 }).exec();
+    const userSignature = user ? SignatureModel.findOne({ authorId: user._id }) : null;
+    res.render('signature-wall', { title: 'The Readers Africa Signature Wall', signatures, userSignature, user });
+  },
+
+  postSignature: async (req: Request, res: Response) => {
+    const user = res.locals.user;
+    if (!user) {
+      req.flash('error', 'Please sign in to leave a signature.');
+      return res.redirect('/auth/login');
+    }
+
+    const { signatureType, signatureData, fontStyle, message } = req.body;
+
+    if (!signatureType || !signatureData) {
+      req.flash('error', 'Signature details are required.');
+      return res.redirect('/authors/signature-wall');
+    }
+
+    try {
+      let finalSignatureData = signatureData;
+
+      if (signatureType === 'upload' && req.file) {
+        finalSignatureData = `/uploads/${req.file.filename}`;
+      }
+
+      const existing = SignatureModel.findOne({ authorId: user._id });
+
+      if (existing) {
+        SignatureModel.findByIdAndUpdate(existing._id, {
+          signatureType,
+          signatureData: finalSignatureData,
+          fontStyle: fontStyle || '',
+          message: sanitizeText(message || '', 200)
+        });
+        req.flash('success', 'Your signature has been updated on the Literary Wall!');
+      } else {
+        SignatureModel.create({
+          authorId: user._id,
+          authorName: user.username,
+          authorAvatar: user.avatar || '/uploads/default-avatar.png',
+          signatureType,
+          signatureData: finalSignatureData,
+          fontStyle: fontStyle || '',
+          message: sanitizeText(message || '', 200)
+        });
+        req.flash('success', 'Thank you for leaving your mark on the Literary Wall!');
+      }
+
+      res.redirect('/authors/signature-wall');
+    } catch (error) {
+      console.error('Signature submit error:', error);
+      req.flash('error', 'Could not save signature. Please try again.');
+      res.redirect('/authors/signature-wall');
+    }
+  },
+
+  deleteSignature: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    if (!user) return res.redirect('/auth/login');
+
+    try {
+      const existing = SignatureModel.findOne({ authorId: user._id });
+      if (existing) {
+        SignatureModel.findByIdAndDelete(existing._id);
+        req.flash('success', 'Your signature has been removed.');
+      } else {
+        req.flash('error', 'Signature not found.');
+      }
+      res.redirect('/authors/signature-wall');
+    } catch (error) {
+      console.error('Signature delete error:', error);
+      req.flash('error', 'Could not remove signature.');
+      res.redirect('/authors/signature-wall');
+    }
+  },
+
+  postDeleteNovel: (req: Request, res: Response) => {
+    const user = res.locals.user;
+    const { id } = req.params;
+
+    const novel = NovelModel.findById(id);
+    if (!novel) {
+      req.flash('error', 'Novel not found.');
+      return res.redirect('/profile');
+    }
+
+    if (String(novel.submittedBy) !== String(user._id) && !UserModel.isAdmin(user)) {
+      req.flash('error', 'Unauthorized.');
+      return res.redirect('/profile');
+    }
+
+    try {
+      NovelModel.findByIdAndDelete(id);
+      req.flash('success', 'Novel deleted successfully.');
+    } catch (err) {
+      console.error('Novel delete error:', err);
+      req.flash('error', 'Could not delete novel.');
+    }
+
+    res.redirect('/profile');
   }
 };

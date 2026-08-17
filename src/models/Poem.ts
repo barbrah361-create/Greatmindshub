@@ -13,6 +13,8 @@ export interface PoemComment {
   username: string;
   userAvatar?: string;
   content: string;
+  stickerUrl?: string;
+  gifUrl?: string;
   replies: PoemComment[];
   createdAt: string;
 }
@@ -26,6 +28,14 @@ export interface Poem {
   authorName: string;
   tags?: string[];
   genre?: string;
+  category?: string;
+  backgroundImage?: string;
+  backgroundPosition?: string;
+  backgroundSize?: string;
+  backgroundOverlay?: number;
+  backgroundAudio?: string;
+  backgroundAudioAutoplay?: boolean;
+  paymentStatus?: 'pending' | 'completed' | 'failed';
   likes: string[];
   reactions: PoemReaction[];
   comments: PoemComment[];

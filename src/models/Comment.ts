@@ -4,6 +4,8 @@ export interface CommentReply {
   username: string;
   userAvatar: string;
   content: string;
+  stickerUrl?: string;
+  gifUrl?: string;
   createdAt: string;
 }
 
@@ -15,6 +17,8 @@ export interface Comment {
   username: string;
   userAvatar: string;
   content: string;
+  stickerUrl?: string;
+  gifUrl?: string;
   rating?: number; // Optional review star count (1-5)
   replies: CommentReply[];
   isReported: boolean;

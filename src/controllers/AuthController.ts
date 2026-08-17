@@ -7,6 +7,7 @@ import { sanitizePlainText } from '../utils/sanitize.js';
 
 import { calculateTikTokStyleLikes, formatTikTokMetric } from '../utils/metrics.js';
 import { calculateProfileCompletion, normalizeSocialUrl } from '../utils/profile.js';
+import { SignatureModel } from '../models/Signature.js';
 
 export const AuthController = {
   getRegister: (req: Request, res: Response) => {
@@ -306,6 +307,8 @@ export const AuthController = {
       })
       .filter(Boolean);
 
+    const hasSignature = !!SignatureModel.findOne({ authorId: user._id });
+
     res.render('profile', {
       title: 'My Profile',
       profileUser: user,
@@ -317,7 +320,11 @@ export const AuthController = {
       suggestedUsers,
       userPoems,
       userNovels,
-      userReposts
+      userReposts,
+      authorStreak: user.currentStreak || 0,
+      longestAuthorStreak: user.longestStreak || 0,
+      achievements: user.achievements || [],
+      hasSignature
     });
   },
 

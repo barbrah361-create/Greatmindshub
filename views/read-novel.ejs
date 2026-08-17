@@ -90,9 +90,13 @@
 
       <!-- Real Reading Content with configurable properties -->
       <div class="font-serif text-lg text-gray-800 dark:text-gray-200 leading-relaxed space-y-6 break-words" id="novel-content-pane">
-        <% novel.contentPages[pageIndex].split('\n\n').forEach(function(para) { %>
-          <p><%= para %></p>
-        <% }) %>
+        <% if (novel.contentPages[pageIndex].includes('<')) { %>
+          <%- novel.contentPages[pageIndex] %>
+        <% } else { %>
+          <% novel.contentPages[pageIndex].split('\n\n').forEach(function(para) { %>
+            <p><%= para %></p>
+          <% }) %>
+        <% } %>
       </div>
 
     </article>

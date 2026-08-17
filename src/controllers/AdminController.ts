@@ -8,6 +8,7 @@ import { PaymentModel } from '../models/Payment.js';
 import { EmailService } from '../services/emailService.js';
 import { getLocalAuthorPhoto } from '../utils/authorPhoto.js';
 import { getLocalNovelCover } from '../utils/novelPhoto.js';
+import { checkAndAwardAchievements } from '../utils/streak.js';
 
 export const AdminController = {
   // 1. Admin Index / Dashboard with Analytics
@@ -492,6 +493,9 @@ export const AdminController = {
     const novel = NovelModel.findById(req.params.id);
     if (!novel) return res.redirect('/admin/approvals');
     NovelModel.findByIdAndUpdate(novel._id, { approvalStatus: 'approved' });
+    if (novel.submittedBy) {
+      checkAndAwardAchievements(novel.submittedBy);
+    }
     const submitter = novel.submittedBy ? UserModel.findById(novel.submittedBy) : null;
     if (submitter) {
       await EmailService.sendUploadApproved(submitter.email, submitter.username, 'novel', novel.title, `/novels/${novel._id}`);
@@ -533,6 +537,9 @@ export const AdminController = {
     const poem = PoemModel.findById(req.params.id);
     if (!poem) return res.redirect('/admin/approvals');
     PoemModel.findByIdAndUpdate(poem._id, { approvalStatus: 'approved' });
+    if (poem.submittedBy) {
+      checkAndAwardAchievements(poem.submittedBy);
+    }
     const submitter = UserModel.findById(poem.submittedBy);
     if (submitter) {
       await EmailService.sendUploadApproved(submitter.email, submitter.username, 'poem', poem.title, `/poems/${poem._id}`);

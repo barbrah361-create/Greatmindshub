@@ -4,67 +4,141 @@
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-grow">
   
-  <!-- Back Button -->
-  <div class="mb-8">
+  <!-- Back Button & Author Tools -->
+  <div class="mb-8 flex items-center justify-between">
     <a href="/poems" class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink transition-colors font-medium">
       <i data-lucide="chevron-left" class="w-4 h-4"></i>
       Back to Poem Collective
     </a>
+    
+    <% if (user && String(poem.submittedBy) === String(user._id)) { %>
+      <a href="/poems/<%= poem._id %>/edit" class="inline-flex items-center gap-1.5 px-4.5 py-2 bg-brand-pink/20 border border-brand-pink text-brand-brown dark:text-brand-pink text-xs font-bold rounded-xl hover:bg-brand-pink/40 transition-all">
+        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        Edit Poem Settings
+      </a>
+    <% } %>
   </div>
 
+  <!-- Pending Payment Status Banner -->
+  <% if (poem.approvalStatus !== 'approved') { %>
+    <div class="mb-8 p-6 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h3 class="font-serif font-bold text-yellow-800 dark:text-yellow-400 text-sm flex items-center gap-2">
+          <i data-lucide="alert-triangle" class="w-4.5 h-4.5"></i>
+          This poem is pending payment
+        </h3>
+        <p class="text-xs text-yellow-700 dark:text-yellow-300">
+          Only you can see this preview. Complete the payment of KES 100 to publish it to the community.
+        </p>
+      </div>
+
+      <% if (user && String(poem.submittedBy) === String(user._id)) { %>
+        <form action="/poems/<%= poem._id %>/complete-payment" method="POST" class="flex flex-col sm:flex-row gap-2 max-w-sm shrink-0">
+          <input type="text" name="phoneNumber" required value="<%= user.phoneNumber || '' %>" placeholder="M-Pesa Number (e.g. 0712345678)" class="px-3.5 py-2 rounded-xl border border-yellow-300 dark:border-yellow-900 bg-white dark:bg-brand-dark/20 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500">
+          <button type="submit" class="px-5 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-xl text-xs shadow-sm transition-colors">
+            Pay & Publish
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+
   <!-- Poem Presentation Card -->
-  <article class="book-card p-8 sm:p-16 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-md relative overflow-hidden mb-12">
-    <!-- Style accents like a luxury printed page -->
-    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-brown via-brand-pink to-brand-accent"></div>
+  <% const hasBg = !!poem.backgroundImage; %>
+  <article class="book-card p-8 sm:p-16 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-md relative overflow-hidden mb-12 bg-cover bg-center transition-all duration-300"
+    style="background-image: <%= hasBg ? `url('${poem.backgroundImage}')` : 'none' %>; background-position: <%= poem.backgroundPosition || 'center' %>; background-size: <%= poem.backgroundSize || 'cover' %>;">
     
-    <div class="text-center mb-10">
-      <span class="text-[10px] uppercase tracking-[0.25em] bg-brand-pink/20 text-brand-brown dark:text-brand-pink font-bold px-3 py-1 rounded-full border border-brand-pink/30 inline-block mb-4">
-        <%= poem.genre || 'Poetry' %>
+    <!-- Readability Overlay -->
+    <% if (hasBg) { %>
+      <div class="absolute inset-0 transition-colors duration-300" style="background-color: rgba(0, 0, 0, <%= poem.backgroundOverlay !== undefined ? poem.backgroundOverlay : 0.4 %>);"></div>
+    <% } else { %>
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-brown via-brand-pink to-brand-accent"></div>
+    <% } %>
+    
+    <div class="relative z-10 text-center mb-10 <%= hasBg ? 'text-white' : '' %>">
+      <!-- Category Badge -->
+      <span class="text-[10px] uppercase tracking-[0.25em] font-bold px-3.5 py-1.5 rounded-full border inline-block mb-5
+        <%= hasBg ? 'bg-white/20 border-white/30 text-white' : 'bg-brand-pink/20 border-brand-pink/30 text-brand-brown dark:text-brand-pink' %>">
+        <%= poem.category || poem.genre || 'Poetry' %>
       </span>
-      <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight mb-3">
+
+      <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4 drop-shadow-md">
         <%= poem.title %>
       </h1>
-      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-3">
+
+      <p class="text-xs sm:text-sm flex items-center justify-center gap-3 <%= hasBg ? 'text-gray-200' : 'text-gray-500 dark:text-gray-400' %>">
         <span>Composed by 
           <% if (poem.authorId) { %>
-            <a href="/authors/<%= poem.authorId %>" class="font-bold text-brand-brown dark:text-brand-pink text-sm hover:underline"><%= poem.authorName %></a>
+            <a href="/authors/<%= poem.authorId %>" class="font-bold text-sm hover:underline <%= hasBg ? 'text-white' : 'text-brand-brown dark:text-brand-pink' %>"><%= poem.authorName %></a>
           <% } else { %>
-            <span class="font-bold text-brand-brown dark:text-brand-pink text-sm"><%= poem.authorName %></span>
+            <span class="font-bold text-sm <%= hasBg ? 'text-white' : 'text-brand-brown dark:text-brand-pink' %>"><%= poem.authorName %></span>
           <% } %>
         </span>
         <% if (poem.authorId) { %>
           <form action="/authors/<%= poem.authorId %>/follow" method="POST" class="inline">
-            <button type="submit" class="px-3 py-1 rounded-full bg-brand-pink/20 hover:bg-brand-pink/40 text-brand-brown dark:text-brand-pink text-[11px] font-bold border border-brand-pink/30 flex items-center gap-1">
+            <button type="submit" class="px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1 transition-colors
+              <%= hasBg ? 'bg-white/20 hover:bg-white/30 border-white/25 text-white' : 'bg-brand-pink/20 hover:bg-brand-pink/40 border-brand-pink/30 text-brand-brown dark:text-brand-pink' %>">
               <i data-lucide="user-plus" class="w-3 h-3"></i>
-              Follow Author
+              Follow
             </button>
           </form>
         <% } %>
       </p>
-      <div class="w-16 h-px bg-brand-brown/20 dark:bg-brand-pink/20 mx-auto mt-6"></div>
+      
+      <div class="w-16 h-px mx-auto mt-6 <%= hasBg ? 'bg-white/30' : 'bg-brand-brown/20 dark:bg-brand-pink/20' %>"></div>
     </div>
 
-    <!-- Poem Content -->
-    <div class="font-serif text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-loose italic max-w-lg mx-auto whitespace-pre-line text-center md:text-left md:pl-12 my-12 tracking-wide">
-      <%= poem.content %>
+    <!-- Background Music Audio Player widget -->
+    <% if (poem.backgroundAudio) { %>
+      <div class="relative z-10 max-w-sm mx-auto mb-10 p-3.5 rounded-2xl border flex items-center gap-3 shadow-md
+        <%= hasBg ? 'bg-black/55 border-white/10 text-white backdrop-blur' : 'bg-brand-cream/40 dark:bg-brand-brown/25 border-brand-brown/10 text-gray-800 dark:text-white' %>">
+        
+        <!-- Audio Node -->
+        <audio id="backgroundTuneNode" src="<%= poem.backgroundAudio %>" loop></audio>
+
+        <button type="button" id="audioPlayPauseBtn" onclick="toggleBackgroundAudio()" class="w-9 h-9 rounded-full bg-brand-brown dark:bg-brand-pink flex items-center justify-center text-white shrink-0 hover:scale-105 transition-transform">
+          <i data-lucide="play" class="w-4 h-4 fill-white" id="playerPlayIcon"></i>
+          <i data-lucide="pause" class="w-4 h-4 fill-white hidden" id="playerPauseIcon"></i>
+        </button>
+
+        <div class="flex-grow min-w-0">
+          <span class="block text-[10px] uppercase font-bold tracking-wider opacity-60">Background Track</span>
+          <span class="block text-xs font-serif font-bold truncate">Atmospheric Reading Music</span>
+        </div>
+
+        <!-- Mute/Volume slider -->
+        <div class="flex items-center gap-1 shrink-0">
+          <button type="button" onclick="toggleMuteAudio()" class="opacity-80 hover:opacity-100 p-1">
+            <i data-lucide="volume-2" class="w-4 h-4" id="volumeActiveIcon"></i>
+            <i data-lucide="volume-x" class="w-4 h-4 hidden" id="volumeMutedIcon"></i>
+          </button>
+          <input type="range" id="audioVolumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="adjustAudioVolume(this.value)" class="w-14 accent-brand-brown dark:accent-brand-pink">
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Poem Content Canvas -->
+    <div class="relative z-10 font-serif text-lg sm:text-xl leading-loose italic max-w-lg mx-auto text-center md:pl-12 my-12 tracking-wide drop-shadow-sm
+      <%= hasBg ? 'text-gray-100 font-medium' : 'text-gray-700 dark:text-gray-200' %>">
+      <%- poem.content %>
     </div>
 
-    <div class="w-full h-px bg-brand-brown/10 dark:bg-brand-pink/10 my-8"></div>
+    <div class="relative z-10 w-full h-px my-8 <%= hasBg ? 'bg-white/20' : 'bg-brand-brown/10 dark:bg-brand-pink/10' %>"></div>
 
-    <!-- Stats & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex items-center gap-5 text-xs text-gray-500 dark:text-gray-400">
+    <!-- Stats & Actions Bar -->
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-5 text-xs <%= hasBg ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400' %>">
         <span class="flex items-center gap-1.5">
           <i data-lucide="eye" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
           <strong><%= poem.viewCount || 0 %></strong> Views
         </span>
         <span class="flex items-center gap-1.5">
           <i data-lucide="calendar" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-          Published <%= new Date(poem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) %>
+          <%= new Date(poem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) %>
         </span>
       </div>
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <!-- Like Action Form -->
         <form action="/poems/<%= poem._id %>/like" method="POST" class="inline">
           <% const hasLiked = user && poem.likes && poem.likes.includes(user._id); %>
@@ -74,9 +148,33 @@
             <span class="font-bold pl-1 border-l border-current/25"><%= poem.likes ? poem.likes.length : 0 %></span>
           </button>
         </form>
-        <button onclick="navigator.clipboard.writeText(window.location.href); alert('Poem link copied to clipboard!');" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30">
+
+        <!-- Social Share Widget -->
+        <button onclick="toggleShareDropdown()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30 relative">
           <i data-lucide="share-2" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
-          Share
+          Share Poem
+          
+          <!-- Dropdown container -->
+          <div id="shareDropdown" class="hidden absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-[#1E150F] rounded-2xl shadow-xl border border-brand-brown/10 p-2 z-30 space-y-1 text-left text-xs text-gray-700 dark:text-gray-250">
+            <a href="https://api.whatsapp.com/send?text=Read%20<%= encodeURIComponent(poem.title) %>%20on%20Readers%20Africa:%20<%= encodeURIComponent('http://localhost:3000/poems/' + poem._id) %>" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors">
+              💬 WhatsApp
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent('http://localhost:3000/poems/' + poem._id) %>" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors">
+              📘 Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent('http://localhost:3000/poems/' + poem._id) %>&text=Check%20out%20this%20poem!" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors">
+              🐦 Twitter/X
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=<%= encodeURIComponent('http://localhost:3000/poems/' + poem._id) %>" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors">
+              🔗 LinkedIn
+            </a>
+            <button type="button" onclick="showInstagramHelper(event)" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors text-left">
+              📸 Instagram
+            </button>
+            <button type="button" onclick="copyLink(event)" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-pink/15 transition-colors text-left border-t border-brand-brown/5 mt-1 pt-1.5 font-bold">
+              📎 Copy Link
+            </button>
+          </div>
         </button>
 
         <!-- Repost Action Form -->
@@ -88,17 +186,12 @@
               <%= alreadyReposted ? 'Reposted' : 'Repost' %>
             </button>
           </form>
-        <% } else { %>
-          <a href="/auth/login" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm border border-brand-brown/15 bg-brand-cream dark:bg-brand-brown/10 text-gray-750 dark:text-gray-200 hover:bg-brand-pink/30">
-            <i data-lucide="repeat-2" class="w-4 h-4 text-gray-400"></i>
-            Repost
-          </a>
         <% } %>
       </div>
     </div>
   </article>
 
-  <!-- Comments / Discussion Section -->
+  <!-- Comments Section -->
   <section class="book-card p-6 sm:p-10 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] shadow-sm rounded-2xl">
     <h3 class="font-serif text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2.5">
       <i data-lucide="message-square" class="w-5.5 h-5.5 text-brand-brown dark:text-brand-pink"></i>
@@ -109,25 +202,66 @@
     </h3>
 
     <!-- Write a Comment Form -->
-    <form action="/poems/<%= poem._id %>/comment" method="POST" class="space-y-4 mb-8">
+    <form action="/poems/<%= poem._id %>/comment" method="POST" class="space-y-4 mb-8 relative">
       <% if (!user) { %>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label for="guestName" class="block text-xs uppercase tracking-wider font-bold text-gray-550 dark:text-gray-350 mb-1.5">Your Name (Optional)</label>
-            <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed">
+            <input type="text" id="guestName" name="guestName" placeholder="e.g. Anonymous Guest" class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 px-4 py-2.5 text-sm focus:outline-none dark:text-white">
           </div>
           <div class="flex items-end pb-1.5">
-            <span class="text-xs text-gray-400">You are posting as a guest. Or <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Log in</a> to use your account.</span>
+            <span class="text-xs text-gray-400">Posting as guest. <a href="/auth/login" class="font-bold text-brand-brown dark:text-brand-pink hover:underline">Log in</a> for profiles.</span>
           </div>
         </div>
       <% } %>
+      
       <div>
-        <textarea id="comment-textarea" name="content" rows="3" required placeholder="Write a thoughtful critique or response to this poem..." class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 p-4 text-sm focus:ring-2 focus:ring-brand-brown dark:focus:ring-brand-pink focus:outline-none dark:text-white leading-relaxed"></textarea>
+        <textarea id="comment-textarea" name="content" rows="3" placeholder="Write a thoughtful critique or response..." class="w-full rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/30 dark:bg-brand-dark/20 p-4 text-sm focus:ring-1 focus:ring-brand-brown focus:outline-none dark:text-white leading-relaxed"></textarea>
       </div>
-      <div class="flex justify-end">
-        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl text-xs transition-colors shadow-sm">
+
+      <!-- Stickers & GIF Selection display -->
+      <div id="media-attach-preview" class="hidden flex items-center gap-3 p-2 bg-brand-brown/5 rounded-xl border border-brand-brown/10">
+        <!-- Injected Media preview -->
+      </div>
+
+      <!-- Hidden inputs to submit attachment URLs -->
+      <input type="hidden" name="stickerUrl" id="stickerUrlInput">
+      <input type="hidden" name="gifUrl" id="gifUrlInput">
+
+      <div class="flex items-center justify-between">
+        <!-- Rich media Attachment triggers -->
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleStickerPanel('comment-sticker-panel')" class="px-3 py-1.5 border border-brand-brown/15 rounded-lg text-xs font-semibold hover:bg-brand-pink/10 flex items-center gap-1 dark:text-white">
+            🎭 Sticker
+          </button>
+          <button type="button" onclick="toggleGifPanel('comment-gif-panel')" class="px-3 py-1.5 border border-brand-brown/15 rounded-lg text-xs font-semibold hover:bg-brand-pink/10 flex items-center gap-1 dark:text-white">
+            🎬 Search GIF
+          </button>
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl text-xs shadow-sm">
           Post Comment
         </button>
+      </div>
+
+      <!-- Sticker Tray Panel (Hidden by default) -->
+      <div id="comment-sticker-panel" class="hidden mt-3 p-4 border border-brand-brown/10 bg-brand-cream/20 dark:bg-white/5 rounded-xl grid grid-cols-6 sm:grid-cols-8 gap-3 max-h-40 overflow-y-auto">
+        <!-- Emojis & expressive stickers -->
+        <% const stickers = ['✍️', '🔥', '❤️', '👏', '🌟', '🎭', '👑', '📜', '💡', '🏆', '🙌', '😍', '😭', '🤯', '🌹', '☕']; %>
+        <% stickers.forEach(function(emoji) { %>
+          <button type="button" onclick="selectSticker('<%= emoji %>')" class="text-3xl hover:scale-115 transition-transform text-center p-1.5"><%= emoji %></button>
+        <% }) %>
+      </div>
+
+      <!-- GIF search tray -->
+      <div id="comment-gif-panel" class="hidden mt-3 p-4 border border-brand-brown/10 bg-brand-cream/20 dark:bg-white/5 rounded-xl space-y-3">
+        <div class="flex gap-2">
+          <input type="text" id="gifQueryInput" placeholder="Search Tenor GIFs..." class="flex-grow rounded-lg border border-brand-brown/15 bg-white dark:bg-brand-dark/25 px-3 py-1.5 text-xs dark:text-white">
+          <button type="button" onclick="searchGifs('gifQueryInput', 'gifResultsGrid')" class="px-4 py-1.5 bg-brand-brown text-white text-xs font-semibold rounded-lg">Search</button>
+        </div>
+        <div id="gifResultsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+          <!-- Dynamically populated GIFs -->
+        </div>
       </div>
     </form>
 
@@ -137,9 +271,9 @@
         <% poem.comments.forEach(function(comment) { %>
           <div class="border-b border-brand-brown/10 dark:border-brand-brown/15 pb-6 last:border-b-0 last:pb-0 space-y-3">
             <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-full bg-brand-cream border border-brand-brown/10 shadow-sm shrink-0 overflow-hidden flex items-center justify-center font-bold text-sm text-brand-brown dark:text-brand-pink">
+              <div class="w-10 h-10 rounded-full bg-brand-cream border border-brand-brown/10 shadow-sm shrink-0 overflow-hidden flex items-center justify-center font-bold text-sm text-brand-brown">
                 <% if (comment.userAvatar) { %>
-                  <img src="<%= comment.userAvatar %>" alt="<%= comment.username %>" class="w-full h-full object-cover">
+                  <img src="<%= comment.userAvatar %>" alt="" class="w-full h-full object-cover">
                 <% } else { %>
                   <%= comment.username.substring(0, 2).toUpperCase() %>
                 <% } %>
@@ -149,32 +283,72 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2.5">
                     <span class="font-bold text-sm text-gray-800 dark:text-white"><%= comment.username %></span>
-                    <span class="text-[10px] text-gray-400 font-medium"><%= new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                    <span class="text-[10px] text-gray-400"><%= new Date(comment.createdAt).toLocaleDateString() %></span>
                   </div>
                   
-                  <button onclick="document.getElementById('replyBox-<%= comment._id %>').classList.toggle('hidden');" class="text-xs text-brand-brown dark:text-brand-pink font-semibold hover:underline flex items-center gap-1">
+                  <button onclick="toggleReplyBox('<%= comment._id %>')" class="text-xs text-brand-brown dark:text-brand-pink font-semibold hover:underline flex items-center gap-1">
                     <i data-lucide="corner-up-left" class="w-3.5 h-3.5"></i> Reply
                   </button>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
-                  <%= comment.content %>
-                </p>
 
-                <!-- Inline Reply Box -->
-                <div id="replyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5">
-                  <form action="/poems/<%= poem._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-3">
+                <!-- Text comment content -->
+                <% if (comment.content) { %>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed"><%= comment.content %></p>
+                <% } %>
+
+                <!-- Sticker/GIF display -->
+                <% if (comment.stickerUrl) { %>
+                  <div class="mt-2 text-4xl select-none"><%= comment.stickerUrl %></div>
+                <% } %>
+                <% if (comment.gifUrl) { %>
+                  <div class="mt-2 rounded-lg overflow-hidden border border-brand-brown/5 max-w-[200px]">
+                    <img src="<%= comment.gifUrl %>" alt="GIF comment" class="w-full object-cover">
+                  </div>
+                <% } %>
+
+                <!-- Reply form inside thread -->
+                <div id="replyBox-<%= comment._id %>" class="hidden mt-3 pt-3 border-t border-brand-brown/5 space-y-3">
+                  <form action="/poems/<%= poem._id %>/comment/<%= comment._id %>/reply" method="POST" class="space-y-3 relative">
+                    <input type="hidden" name="stickerUrl" id="replySticker-<%= comment._id %>">
+                    <input type="hidden" name="gifUrl" id="replyGif-<%= comment._id %>">
+
                     <% if (!user) { %>
-                      <input type="text" name="guestName" placeholder="Your Name" class="w-full px-3 py-1.5 rounded-lg border border-brand-brown/20 bg-brand-cream/20 text-xs text-gray-800 dark:text-white">
+                      <input type="text" name="guestName" placeholder="Your Name" class="w-full px-3 py-1.5 rounded-lg border border-brand-brown/20 bg-brand-cream/20 text-xs text-gray-805">
                     <% } %>
-                    <textarea name="content" rows="2" required placeholder="Reply to <%= comment.username %>..." class="w-full p-3 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
-                    <div class="flex justify-end gap-2">
-                      <button type="button" onclick="document.getElementById('replyBox-<%= comment._id %>').classList.add('hidden');" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
-                      <button type="submit" class="px-4 py-1.5 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Submit Reply</button>
+                    <textarea name="content" rows="2" placeholder="Reply to <%= comment.username %>..." class="w-full p-3 rounded-xl border border-brand-brown/20 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/20 text-xs text-gray-800 dark:text-white focus:outline-none"></textarea>
+                    
+                    <div id="media-attach-reply-<%= comment._id %>" class="hidden flex items-center gap-3 p-2 bg-brand-brown/5 rounded-xl border border-brand-brown/10"></div>
+
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="toggleStickerPanel('reply-sticker-panel-<%= comment._id %>')" class="px-2 py-1 border border-brand-brown/15 rounded-md text-[10px] font-semibold dark:text-white">🎭 Sticker</button>
+                        <button type="button" onclick="toggleGifPanel('reply-gif-panel-<%= comment._id %>')" class="px-2 py-1 border border-brand-brown/15 rounded-md text-[10px] font-semibold dark:text-white">🎬 GIF</button>
+                      </div>
+                      <div class="flex gap-2">
+                        <button type="button" onclick="toggleReplyBox('<%= comment._id %>')" class="px-3 py-1 text-xs text-gray-400 hover:underline">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-brand-brown text-white font-bold rounded-lg text-xs shadow">Submit</button>
+                      </div>
+                    </div>
+
+                    <!-- Reply Sticker Panel -->
+                    <div id="reply-sticker-panel-<%= comment._id %>" class="hidden mt-2 p-3 border bg-brand-cream/20 dark:bg-white/5 rounded-lg grid grid-cols-6 gap-2">
+                      <% stickers.forEach(function(emoji) { %>
+                        <button type="button" onclick="selectReplySticker('<%= comment._id %>', '<%= emoji %>')" class="text-2xl hover:scale-115 transition-transform"><%= emoji %></button>
+                      <% }) %>
+                    </div>
+
+                    <!-- Reply GIF Panel -->
+                    <div id="reply-gif-panel-<%= comment._id %>" class="hidden mt-2 p-3 border bg-brand-cream/20 dark:bg-white/5 rounded-lg space-y-2">
+                      <div class="flex gap-1.5">
+                        <input type="text" id="replyGifQuery-<%= comment._id %>" placeholder="Search GIFs..." class="flex-grow rounded border border-brand-brown/15 bg-white dark:bg-brand-dark/20 px-2 py-1 text-[10px] dark:text-white">
+                        <button type="button" onclick="searchGifs('replyGifQuery-<%= comment._id %>', 'replyGifResults-<%= comment._id %>', '<%= comment._id %>')" class="px-3 py-1 bg-brand-brown text-white text-[10px] font-semibold rounded">Search</button>
+                      </div>
+                      <div id="replyGifResults-<%= comment._id %>" class="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto"></div>
                     </div>
                   </form>
                 </div>
 
-                <!-- Nested Replies Threads -->
+                <!-- Nested Replies -->
                 <% if (comment.replies && comment.replies.length > 0) { %>
                   <div class="mt-4 space-y-3 pl-4 border-l-2 border-brand-pink/40 dark:border-brand-brown/20">
                     <% comment.replies.forEach(function(reply) { %>
@@ -191,23 +365,258 @@
                             <span class="font-bold text-gray-800 dark:text-white"><%= reply.username %></span>
                             <span class="text-[9px] text-gray-400"><%= new Date(reply.createdAt).toLocaleDateString() %></span>
                           </div>
-                          <p class="text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                          
+                          <% if (reply.content) { %>
+                            <p class="text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed"><%= reply.content %></p>
+                          <% } %>
+
+                          <% if (reply.stickerUrl) { %>
+                            <div class="mt-1 text-2xl"><%= reply.stickerUrl %></div>
+                          <% } %>
+                          <% if (reply.gifUrl) { %>
+                            <div class="mt-1 rounded-lg overflow-hidden border border-brand-brown/5 max-w-[120px]">
+                              <img src="<%= reply.gifUrl %>" alt="GIF reply" class="w-full object-cover">
+                            </div>
+                          <% } %>
                         </div>
                       </div>
                     <% }) %>
                   </div>
                 <% } %>
+
               </div>
             </div>
           </div>
         <% }) %>
       <% } else { %>
         <div class="text-center py-8 text-gray-400 text-xs">
-          <p>No comments on this poem yet. Be the first to start the conversation!</p>
+          <p>No comments yet. Start the conversation!</p>
         </div>
       <% } %>
     </div>
   </section>
+
 </div>
+
+<!-- Instagram Sharing Modal Helper -->
+<div id="instagramShareModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#1E150F] rounded-3xl p-6 max-w-sm w-full border border-brand-brown/10 space-y-4">
+    <div class="text-center">
+      <i data-lucide="instagram" class="w-10 h-10 text-brand-pink mx-auto mb-2"></i>
+      <h3 class="font-serif font-bold text-lg text-gray-800 dark:text-white">Share to Instagram</h3>
+    </div>
+    <p class="text-xs text-gray-500 leading-relaxed dark:text-gray-300">
+      Instagram does not support direct links in posts. We recommend:
+    </p>
+    <ul class="text-[11px] text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1 pl-1">
+      <li>Add the poem link to your Instagram Bio.</li>
+      <li>Use the Link Sticker in your Instagram Stories!</li>
+    </ul>
+    <div class="flex gap-2">
+      <button onclick="copyLink(event); closeInstagramHelper();" class="flex-grow py-2 bg-brand-brown text-white text-xs font-semibold rounded-lg">Copy Poem Link</button>
+      <button onclick="closeInstagramHelper()" class="px-4 py-2 border border-brand-brown/15 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Background Audio Controls & Media Attachments JavaScript -->
+<script>
+  // --- Social share drop-down ---
+  function toggleShareDropdown() {
+    const dropdown = document.getElementById('shareDropdown');
+    dropdown.classList.toggle('hidden');
+  }
+  // Close share dropdown on click away
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn || !btn.textContent.includes('Share')) {
+      const dropdown = document.getElementById('shareDropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+  });
+
+  function showInstagramHelper(e) {
+    e.stopPropagation();
+    document.getElementById('instagramShareModal').classList.remove('hidden');
+  }
+
+  function closeInstagramHelper() {
+    document.getElementById('instagramShareModal').classList.add('hidden');
+  }
+
+  function copyLink(e) {
+    if(e) e.stopPropagation();
+    navigator.clipboard.writeText(window.location.href);
+    alert('Poem link copied to clipboard!');
+  }
+
+  // --- Background Tune functions ---
+  let isAudioPlaying = false;
+  let isAudioMuted = false;
+
+  function toggleBackgroundAudio() {
+    const audio = document.getElementById('backgroundTuneNode');
+    const playIcon = document.getElementById('playerPlayIcon');
+    const pauseIcon = document.getElementById('playerPauseIcon');
+
+    if (!audio) return;
+
+    if (isAudioPlaying) {
+      audio.pause();
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+    } else {
+      audio.play().catch(() => {
+        alert("Autoplay prevented by browser. Click Play to start the music!");
+      });
+      playIcon.classList.add('hidden');
+      pauseIcon.classList.remove('hidden');
+    }
+    isAudioPlaying = !isAudioPlaying;
+  }
+
+  function toggleMuteAudio() {
+    const audio = document.getElementById('backgroundTuneNode');
+    const activeIcon = document.getElementById('volumeActiveIcon');
+    const mutedIcon = document.getElementById('volumeMutedIcon');
+
+    if (!audio) return;
+
+    isAudioMuted = !isAudioMuted;
+    audio.muted = isAudioMuted;
+
+    if (isAudioMuted) {
+      activeIcon.classList.add('hidden');
+      mutedIcon.classList.remove('hidden');
+    } else {
+      activeIcon.classList.remove('hidden');
+      mutedIcon.classList.add('hidden');
+    }
+  }
+
+  function adjustAudioVolume(val) {
+    const audio = document.getElementById('backgroundTuneNode');
+    if (audio) audio.volume = parseFloat(val);
+  }
+
+  // --- Emojis & GIFs Attachment flow ---
+  function toggleStickerPanel(id) {
+    document.getElementById(id).classList.toggle('hidden');
+  }
+
+  function toggleGifPanel(id) {
+    document.getElementById(id).classList.toggle('hidden');
+  }
+
+  function toggleReplyBox(commentId) {
+    document.getElementById('replyBox-' + commentId).classList.toggle('hidden');
+  }
+
+  // Main comments stickers
+  function selectSticker(emoji) {
+    document.getElementById('stickerUrlInput').value = emoji;
+    document.getElementById('gifUrlInput').value = ''; // clear GIF if set
+
+    const preview = document.getElementById('media-attach-preview');
+    preview.innerHTML = `
+      <span class="text-2xl">${emoji}</span>
+      <span class="text-xs text-gray-500 font-semibold">Sticker Attached</span>
+      <button type="button" onclick="clearAttachedMedia('stickerUrlInput')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+    `;
+    preview.classList.remove('hidden');
+    document.getElementById('comment-sticker-panel').classList.add('hidden');
+  }
+
+  // Thread replies stickers
+  function selectReplySticker(commentId, emoji) {
+    document.getElementById('replySticker-' + commentId).value = emoji;
+    document.getElementById('replyGif-' + commentId).value = '';
+
+    const preview = document.getElementById('media-attach-reply-' + commentId);
+    preview.innerHTML = `
+      <span class="text-xl">${emoji}</span>
+      <span class="text-[11px] text-gray-500 font-semibold">Sticker Attached</span>
+      <button type="button" onclick="clearReplyMedia('${commentId}')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+    `;
+    preview.classList.remove('hidden');
+    document.getElementById('reply-sticker-panel-' + commentId).classList.add('hidden');
+  }
+
+  function clearAttachedMedia(inputId) {
+    document.getElementById(inputId).value = '';
+    if (inputId === 'stickerUrlInput') document.getElementById('stickerUrlInput').value = '';
+    else document.getElementById('gifUrlInput').value = '';
+    document.getElementById('media-attach-preview').classList.add('hidden');
+  }
+
+  function clearReplyMedia(commentId) {
+    document.getElementById('replySticker-' + commentId).value = '';
+    document.getElementById('replyGif-' + commentId).value = '';
+    document.getElementById('media-attach-reply-' + commentId).classList.add('hidden');
+  }
+
+  // Tenor API Search client-side integration
+  async function searchGifs(queryInputId, resultsGridId, commentId = null) {
+    const q = document.getElementById(queryInputId).value.trim();
+    if (!q) return;
+
+    const grid = document.getElementById(resultsGridId);
+    grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">Searching GIFs...</span>';
+
+    try {
+      // Use Tenor's public search API key or simple search route
+      const res = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(q)}&key=LIVDTRZGLBI2&limit=8`);
+      if (res.ok) {
+        const data = await res.json();
+        grid.innerHTML = '';
+        if (data.results && data.results.length > 0) {
+          data.results.forEach(item => {
+            const imgUrl = item.media[0].tinygif.url;
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.className = "w-full aspect-[4/3] rounded-lg object-cover cursor-pointer hover:opacity-85 transition-opacity border border-brand-brown/5";
+            
+            img.addEventListener('click', () => {
+              if (commentId) {
+                // Thread reply gif
+                document.getElementById('replyGif-' + commentId).value = imgUrl;
+                document.getElementById('replySticker-' + commentId).value = '';
+
+                const preview = document.getElementById('media-attach-reply-' + commentId);
+                preview.innerHTML = `
+                  <img src="${imgUrl}" class="w-8 h-8 rounded object-cover">
+                  <span class="text-[11px] text-gray-500 font-semibold">GIF Attached</span>
+                  <button type="button" onclick="clearReplyMedia('${commentId}')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+                `;
+                preview.classList.remove('hidden');
+                document.getElementById('reply-gif-panel-' + commentId).classList.add('hidden');
+              } else {
+                // Main comment gif
+                document.getElementById('gifUrlInput').value = imgUrl;
+                document.getElementById('stickerUrlInput').value = '';
+
+                const preview = document.getElementById('media-attach-preview');
+                preview.innerHTML = `
+                  <img src="${imgUrl}" class="w-10 h-10 rounded object-cover">
+                  <span class="text-xs text-gray-500 font-semibold">GIF Attached</span>
+                  <button type="button" onclick="clearAttachedMedia('gifUrlInput')" class="text-xs text-red-500 font-bold ml-auto">Remove</button>
+                `;
+                preview.classList.remove('hidden');
+                document.getElementById('comment-gif-panel').classList.add('hidden');
+              }
+            });
+            grid.appendChild(img);
+          });
+        } else {
+          grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">No GIFs found.</span>';
+        }
+      } else {
+        grid.innerHTML = '<span class="col-span-3 text-xs text-gray-400 text-center py-4">GIF Service unavailable.</span>';
+      }
+    } catch(e) {
+      grid.innerHTML = '<span class="col-span-3 text-xs text-red-400 text-center py-4">Error fetching GIFs.</span>';
+    }
+  }
+</script>
 
 <%- include('partials/footer') %>

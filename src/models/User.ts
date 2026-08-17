@@ -52,6 +52,9 @@ export interface User {
   reposts: { poemId: string; repostedAt: string }[];
   awards?: string[];
   achievements?: string[];
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActiveDate?: string;
   createdAt: string;
 }
 
@@ -112,7 +115,10 @@ export const UserModel = {
       readingHistory: [],
       reposts: [],
       awards: [],
-      achievements: []
+      achievements: [],
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActiveDate: ''
     });
   },
 

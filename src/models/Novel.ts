@@ -25,6 +25,7 @@ export interface Novel {
   approvalStatus: ApprovalStatus;
   submittedBy?: string;
   rejectionReason?: string;
+  paymentStatus?: 'pending' | 'completed' | 'failed';
   createdAt: string;
 }
 

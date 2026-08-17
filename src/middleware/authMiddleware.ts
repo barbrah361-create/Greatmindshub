@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserModel } from '../models/User.js';
 import { PaymentModel } from '../models/Payment.js';
 import type { UserRole } from '../types/common.js';
+import { updateAuthorStreak } from '../utils/streak.js';
 
 const ACCESS_FEE_KES = 100;
 const ACCESS_PHONE = '0726625144';
@@ -55,7 +56,12 @@ export function setupLocals(req: Request, res: Response, next: NextFunction) {
         res.locals.user = null;
         return next();
       }
-      res.locals.user = user;
+      try {
+        updateAuthorStreak(user._id);
+      } catch (err) {
+        console.error('Streak update error:', err);
+      }
+      res.locals.user = UserModel.findById(user._id); // Refresh user local ref
       return next();
     }
   }

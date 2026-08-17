@@ -49,10 +49,13 @@ export const SearchController = {
 
     if (type === 'all' || type === 'poems') {
       const allPoems = PoemModel.findPublic().sort({ createdAt: -1 }).limit(100).exec();
+      const lq = q.toLowerCase();
       results.poems = allPoems.filter(p =>
-        p.title.toLowerCase().includes(q.toLowerCase()) ||
-        p.content.toLowerCase().includes(q.toLowerCase()) ||
-        p.authorName.toLowerCase().includes(q.toLowerCase())
+        (p.title || '').toLowerCase().includes(lq) ||
+        (p.content || '').toLowerCase().includes(lq) ||
+        (p.authorName || '').toLowerCase().includes(lq) ||
+        (p.genre || '').toLowerCase().includes(lq) ||
+        (p.category || '').toLowerCase().includes(lq)
       ).slice(0, 20);
     }
 

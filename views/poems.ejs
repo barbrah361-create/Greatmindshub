@@ -19,24 +19,72 @@
   </div>
 
   <!-- Filters / Sorter -->
-  <div class="flex flex-col sm:flex-row items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/20 pb-5 mb-10 gap-4">
+  <div class="flex flex-col sm:flex-row items-center justify-between border-b border-brand-brown/10 dark:border-brand-brown/20 pb-5 mb-8 gap-4">
     <div class="text-sm text-gray-500 dark:text-gray-400">
       Showing page <span class="font-semibold text-brand-brown dark:text-brand-pink"><%= page %></span> of <span class="font-semibold"><%= totalPages || 1 %></span>
+      <% if (category) { %>
+        in <span class="font-bold text-brand-brown dark:text-brand-pink">"<%= category %>"</span>
+      <% } %>
     </div>
     
     <div class="flex items-center gap-2">
       <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Sort by:</span>
       <div class="inline-flex rounded-full p-1 bg-brand-cream/80 dark:bg-[#1E150F] border border-brand-brown/10">
-        <a href="/poems?sort=latest" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'latest' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
+        <a href="/poems?category=<%= category %>&sort=latest&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'latest' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
           Latest
         </a>
-        <a href="/poems?sort=popular" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'popular' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
+        <a href="/poems?category=<%= category %>&sort=popular&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'popular' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
           Views
         </a>
-        <a href="/poems?sort=liked" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'liked' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
+        <a href="/poems?category=<%= category %>&sort=liked&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors <%= sort === 'liked' ? 'bg-brand-brown text-white shadow-sm' : 'text-gray-500 hover:text-brand-brown dark:hover:text-brand-pink' %>">
           Most Liked
         </a>
       </div>
+    </div>
+  </div>
+
+  <!-- Poetry Category Search Bar & Pills Grid -->
+  <div class="mb-8 space-y-4">
+    <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+      <!-- Search Input for Poems (Server-side) -->
+      <form action="/poems" method="GET" class="relative w-full max-w-md">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+        </span>
+        <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="Search poems by title, content, or author..." class="w-full rounded-xl border border-brand-brown/15 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/25 pl-9 pr-4 py-2.5 text-xs focus:outline-none dark:text-white leading-relaxed">
+        <% if (category) { %>
+          <input type="hidden" name="category" value="<%= category %>">
+        <% } %>
+        <% if (sort) { %>
+          <input type="hidden" name="sort" value="<%= sort %>">
+        <% } %>
+      </form>
+
+      <!-- Category Filter Pill Search (Client-side) -->
+      <div class="relative w-full max-w-xs">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i data-lucide="filter" class="w-4 h-4 text-gray-400"></i>
+        </span>
+        <input type="text" id="categorySearchInput" oninput="filterCategoryPills(this.value)" placeholder="Filter categories..." class="w-full rounded-xl border border-brand-brown/15 dark:border-brand-brown/30 bg-brand-cream/20 dark:bg-brand-dark/25 pl-9 pr-4 py-2 text-xs focus:outline-none dark:text-white leading-relaxed">
+      </div>
+
+      <% if (category || (typeof search !== 'undefined' && search)) { %>
+        <a href="/poems?sort=<%= sort %>" class="text-xs text-brand-brown dark:text-brand-pink hover:underline font-semibold flex items-center gap-1 shrink-0">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i> Clear all filters
+        </a>
+      <% } %>
+    </div>
+
+    <!-- Scrollable Pills -->
+    <div id="categoryPillsGrid" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-thin">
+      <a href="/poems?sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all border <%= !category ? 'bg-brand-brown text-white border-brand-brown shadow-sm' : 'bg-white dark:bg-[#1E150F] border-brand-brown/10 text-gray-600 dark:text-gray-300 hover:bg-brand-pink/5' %>" data-category="all">
+        📖 All Poetry
+      </a>
+      <% categories.forEach(function(cat) { %>
+        <a href="/poems?category=<%= encodeURIComponent(cat) %>&sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all border <%= category === cat ? 'bg-brand-brown text-white border-brand-brown shadow-sm' : 'bg-white dark:bg-[#1E150F] border-brand-brown/10 text-gray-600 dark:text-gray-300 hover:bg-brand-pink/5' %>" data-category="<%= cat.toLowerCase() %>">
+          <%= cat %>
+        </a>
+      <% }) %>
     </div>
   </div>
 
@@ -44,9 +92,9 @@
     <!-- Poem Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <% poems.forEach(function(poem) { %>
-        <div class="book-card p-6 flex flex-col hover:shadow-lg transition-all duration-300 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] relative group">
+        <div class="book-card p-6 flex flex-col hover:shadow-lg transition-all duration-300 border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] relative group rounded-2xl">
           <div class="absolute top-4 right-4 text-[10px] uppercase tracking-wider font-semibold bg-brand-pink/20 text-brand-brown dark:text-brand-pink px-2.5 py-1 rounded-full border border-brand-pink/30">
-            <%= poem.genre || 'Poetry' %>
+            <%= poem.category || poem.genre || 'Poetry' %>
           </div>
 
           <div class="flex-grow mt-2">
@@ -54,7 +102,7 @@
               <a href="/poems/<%= poem._id %>"><%= poem.title %></a>
             </h2>
             <div class="flex items-center justify-between gap-2 mb-4">
-              <p class="text-xs text-gray-400 dark:text-gray-500">
+              <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">
                 By 
                 <% if (poem.authorId || poem.submittedBy) { %>
                   <a href="/authors/<%= poem.authorId || poem.submittedBy %>" class="font-semibold text-brand-brown dark:text-brand-pink hover:underline"><%= poem.authorName %></a>
@@ -72,13 +120,14 @@
               <% } %>
             </div>
 
+            <!-- Pre-content styling rendering strip -->
             <div class="text-sm italic text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-serif line-clamp-4 whitespace-pre-line">
-              <%= poem.content %>
+              <%- poem.content.replace(/<[^>]+>/g, '').substring(0, 250) %>...
             </div>
           </div>
 
           <div class="flex items-center justify-between border-t border-brand-brown/10 dark:border-brand-brown/15 pt-4 mt-auto">
-            <div class="flex items-center gap-3.5 text-xs text-gray-400 dark:text-gray-500">
+            <div class="flex items-center gap-3.5 text-xs text-gray-400 dark:text-gray-500 font-mono">
               <span class="flex items-center gap-1">
                 <i data-lucide="eye" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i>
                 <%= poem.viewCount || 0 %>
@@ -102,7 +151,7 @@
     <% if (totalPages > 1) { %>
       <div class="flex items-center justify-center gap-2 mt-12 pt-8 border-t border-brand-brown/10 dark:border-brand-brown/20">
         <% if (page > 1) { %>
-          <a href="/poems?page=<%= page - 1 %>&sort=<%= sort %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors">
+          <a href="/poems?page=<%= page - 1 %>&category=<%= category %>&sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </a>
         <% } %>
@@ -113,14 +162,14 @@
               <%= i %>
             </span>
           <% } else { %>
-            <a href="/poems?page=<%= i %>&sort=<%= sort %>" class="px-3.5 py-1.5 border border-brand-brown/20 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 text-xs transition-colors">
+            <a href="/poems?page=<%= i %>&category=<%= category %>&sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="px-3.5 py-1.5 border border-brand-brown/20 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 text-xs transition-colors">
               <%= i %>
             </a>
           <% } %>
         <% } %>
 
         <% if (page < totalPages) { %>
-          <a href="/poems?page=<%= page + 1 %>&sort=<%= sort %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors">
+          <a href="/poems?page=<%= page + 1 %>&category=<%= category %>&sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="p-2 border border-brand-brown/20 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-brand-cream/10 transition-colors">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </a>
         <% } %>
@@ -129,20 +178,44 @@
 
   <% } else { %>
     <!-- Empty State -->
-    <div class="book-card p-16 text-center border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] max-w-2xl mx-auto space-y-5">
+    <div class="book-card p-16 text-center border border-brand-brown/10 dark:border-brand-brown/20 bg-white dark:bg-[#1E150F] max-w-2xl mx-auto space-y-5 rounded-3xl">
       <div class="w-16 h-16 rounded-full bg-brand-cream dark:bg-brand-brown/10 text-brand-brown dark:text-brand-pink flex items-center justify-center mx-auto shadow-sm">
         <i data-lucide="feather" class="w-8 h-8"></i>
       </div>
-      <h3 class="font-serif text-2xl font-bold text-gray-800 dark:text-white">No Verses Yet</h3>
+      <h3 class="font-serif text-2xl font-bold text-gray-800 dark:text-white">No Verses Found</h3>
       <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm mx-auto">
-        Be the first of your generation to submit a masterpiece. Write and publish a poem today to share with readers worldwide!
+        No poems match the selected filter. Try searching for other categories, clearing the filters, or publish a new poem today!
       </p>
-      <a href="/poems/submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-lg text-xs shadow-md transition-all">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        Publish a Poem
-      </a>
+      <div class="flex gap-2 justify-center">
+        <a href="/poems" class="inline-flex items-center px-5 py-2.5 border border-brand-brown/15 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold">
+          Reset Filter
+        </a>
+        <a href="/poems/submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-lg text-xs shadow-md transition-all">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          Publish a Poem
+        </a>
+      </div>
     </div>
   <% } %>
 </div>
+
+<!-- Client-side Category Search Script -->
+<script>
+  function filterCategoryPills(query) {
+    const q = query.toLowerCase().trim();
+    const pills = document.querySelectorAll('.category-pill');
+    
+    pills.forEach(pill => {
+      const catName = pill.getAttribute('data-category');
+      if (catName === 'all') return; // Always display "All Poetry" pill
+      
+      if (catName.includes(q)) {
+        pill.classList.remove('hidden');
+      } else {
+        pill.classList.add('hidden');
+      }
+    });
+  }
+</script>
 
 <%- include('partials/footer') %>

@@ -1,0 +1,371 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<!-- Load Handwriting Fonts for Signature Styling -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&family=Great+Vibes&family=Playball&family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+  
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <span class="text-brand-brown dark:text-brand-pink text-xs font-bold uppercase tracking-widest bg-brand-pink/15 px-3 py-1 rounded-full">Literary Guestbook</span>
+    <h1 class="font-serif text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white mt-3">The Signature Wall</h1>
+    <p class="font-serif italic text-brand-brown dark:text-brand-pink text-base sm:text-lg mt-2">
+      "Those who wrote here, left a mark."
+    </p>
+    <p class="text-xs text-gray-400 dark:text-gray-550 max-w-lg mx-auto mt-2">
+      A digital wall of marks, handwritings, and custom greetings left by the writers and creators of Readers Africa.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- LEFT PANEL: Signature Creation Box (Col span 5) -->
+    <div class="lg:col-span-5">
+      <div class="bg-white dark:bg-[#1E150F] p-6 rounded-3xl border border-brand-brown/10 dark:border-brand-brown/20 shadow-sm space-y-6">
+        <h2 class="font-serif text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="feather" class="w-5 h-5 text-brand-brown dark:text-brand-pink"></i>
+          <%= userSignature ? 'Update Your Mark' : 'Leave Your Mark' %>
+        </h2>
+
+        <% if (user) { %>
+          <form id="signatureForm" action="/authors/signature-wall" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="signatureData" id="signatureDataHidden">
+            
+            <!-- Type Selector -->
+            <div>
+              <label class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-2">Signature Type</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" onclick="setSignType('draw')" id="btn-type-draw" class="py-2.5 rounded-xl border text-xs font-bold transition-all text-center">
+                  ✏️ Draw
+                </button>
+                <button type="button" onclick="setSignType('type')" id="btn-type-type" class="py-2.5 rounded-xl border text-xs font-bold transition-all text-center">
+                  🖮 Type
+                </button>
+                <button type="button" onclick="setSignType('upload')" id="btn-type-upload" class="py-2.5 rounded-xl border text-xs font-bold transition-all text-center">
+                  📁 Upload
+                </button>
+              </div>
+              <input type="hidden" name="signatureType" id="signatureTypeInput" value="draw">
+            </div>
+
+            <!-- Signature Inputs Panel -->
+            <div class="p-3.5 bg-brand-cream/20 dark:bg-brand-brown/5 rounded-2xl border border-brand-brown/10 relative">
+              
+              <!-- Draw Pad (Canvas) -->
+              <div id="sign-pane-draw" class="space-y-2">
+                <span class="block text-[10px] uppercase font-bold text-gray-400">Canvas Draw Pad</span>
+                <div class="relative bg-white dark:bg-brand-dark/20 border border-brand-brown/15 rounded-xl overflow-hidden aspect-[8/3]">
+                  <canvas id="signatureCanvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-gray-400">Draw using mouse/touch</span>
+                  <button type="button" onclick="clearCanvas()" class="text-brand-brown hover:underline font-bold">Clear Canvas</button>
+                </div>
+              </div>
+
+              <!-- Type Pad (Handwriting Font) -->
+              <div id="sign-pane-type" class="hidden space-y-3">
+                <span class="block text-[10px] uppercase font-bold text-gray-400">Choose Cursive Style</span>
+                <input type="text" id="typeSignatureText" value="<%= user.username %>" placeholder="Type your signature..." class="w-full rounded-lg border border-brand-brown/20 bg-white dark:bg-brand-dark/20 px-3 py-2 text-sm dark:text-white focus:outline-none">
+                
+                <div class="grid grid-cols-2 gap-2">
+                  <select id="fontStyle" name="fontStyle" onchange="previewTypedSignature()" class="col-span-2 w-full rounded-lg border border-brand-brown/20 bg-white dark:bg-brand-dark/20 px-3 py-2 text-xs dark:text-white">
+                    <option value="'Dancing Script', cursive">Dancing Script</option>
+                    <option value="'Pacifico', cursive">Pacifico</option>
+                    <option value="'Great Vibes', cursive">Great Vibes</option>
+                    <option value="'Playball', cursive">Playball</option>
+                    <option value="'Caveat', cursive">Caveat</option>
+                  </select>
+                </div>
+
+                <!-- Text Cursive Preview Box -->
+                <div id="typedPreviewBox" class="border border-brand-brown/10 rounded-xl bg-white dark:bg-brand-dark/20 p-4 text-center text-3xl select-none min-h-[70px] flex items-center justify-center italic text-brand-brown dark:text-brand-pink leading-none">
+                  <%= user.username %>
+                </div>
+              </div>
+
+              <!-- Upload Pad -->
+              <div id="sign-pane-upload" class="hidden space-y-2">
+                <span class="block text-[10px] uppercase font-bold text-gray-400 font-mono">Upload Signature Image</span>
+                <input type="file" id="signatureImage" name="signatureImage" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-brown file:text-white hover:file:bg-brand-accent">
+                <p class="text-[10px] text-gray-400 mt-1">Recommended: Transparent PNG image containing your signature.</p>
+              </div>
+
+            </div>
+
+            <!-- Optional message -->
+            <div>
+              <label for="message" class="block text-xs uppercase tracking-wider font-bold text-gray-400 mb-1.5">Custom Greeting Message</label>
+              <textarea id="message" name="message" rows="2" maxlength="200" placeholder="e.g. Keep writing and inspiring the world! ✨" class="w-full rounded-xl border border-brand-brown/20 bg-brand-cream/10 dark:bg-brand-dark/15 px-3.5 py-2.5 text-xs focus:outline-none dark:text-white"><%= userSignature ? userSignature.message : '' %></textarea>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" id="submitSignBtn" class="w-full py-3 bg-brand-brown hover:bg-brand-accent text-white font-semibold rounded-xl text-xs shadow-md transition-colors flex items-center justify-center gap-1.5">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <%= userSignature ? 'Update My Signature' : 'Publish to Wall' %>
+            </button>
+          </form>
+
+          <% if (userSignature) { %>
+            <form action="/authors/signature-wall/delete" method="POST" onsubmit="return confirm('Remove your signature from the wall?');" class="pt-2">
+              <button type="submit" class="w-full py-2.5 border border-red-200 hover:bg-red-50 text-red-500 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                Remove Signature
+              </button>
+            </form>
+          <% } %>
+
+        <% } else { %>
+          <div class="text-center py-6 border-2 border-dashed border-brand-brown/10 rounded-2xl">
+            <i data-lucide="lock" class="w-8 h-8 text-brand-brown/30 mx-auto mb-2"></i>
+            <p class="text-xs text-gray-500 mb-4">Please log in to sign the Literary Guestbook.</p>
+            <a href="/auth/login?redirect=/authors/signature-wall" class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-brown text-white text-xs font-semibold rounded-lg hover:bg-brand-accent">
+              Sign In to Leave Mark
+            </a>
+          </div>
+        <% } %>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: The Guestbook Wall (Col span 7) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Signatures Feed</span>
+        <span class="text-xs text-gray-500"><%= signatures.length %> mark(s) registered</span>
+      </div>
+
+      <% if (signatures.length > 0) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <% signatures.forEach(function(sig) { %>
+            <div class="bg-white dark:bg-[#1E150F] p-5 rounded-2xl border border-brand-brown/10 hover:border-brand-pink/30 hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative group">
+              
+              <!-- Author metadata & date -->
+              <div class="flex items-center gap-3">
+                <img src="<%= sig.authorAvatar || '/uploads/default-avatar.png' %>" alt="" class="w-10 h-10 rounded-full object-cover border border-brand-brown/15 shadow-sm">
+                <div>
+                  <h4 class="font-bold text-xs text-gray-800 dark:text-white"><%= sig.authorName %></h4>
+                  <p class="text-[9px] text-gray-400 font-mono"><%= new Date(sig.createdAt).toLocaleDateString() %></p>
+                </div>
+              </div>
+
+              <!-- Message -->
+              <% if (sig.message) { %>
+                <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed italic bg-brand-cream/10 p-2.5 rounded-xl border border-brand-brown/5">
+                  "<%= sig.message %>"
+                </p>
+              <% } %>
+
+              <!-- Signature visual mark representation -->
+              <div class="h-20 bg-brand-cream/5 dark:bg-white/5 rounded-xl flex items-center justify-center p-3 border border-brand-brown/5 overflow-hidden">
+                <% if (sig.signatureType === 'draw') { %>
+                  <img src="<%= sig.signatureData %>" alt="" class="max-h-full max-w-full object-contain filter dark:invert">
+                <% } else if (sig.signatureType === 'type') { %>
+                  <span style="font-family: <%= sig.fontStyle || 'cursive' %>;" class="text-2xl italic text-brand-brown dark:text-brand-pink leading-none select-none select-all">
+                    <%= sig.signatureData %>
+                  </span>
+                <% } else if (sig.signatureType === 'upload') { %>
+                  <img src="<%= sig.signatureData %>" alt="" class="max-h-full max-w-full object-contain">
+                <% } %>
+              </div>
+
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="bg-white dark:bg-[#1E150F] text-center py-20 rounded-3xl border border-brand-brown/10">
+          <i data-lucide="pen-tool" class="w-12 h-12 text-brand-brown/20 dark:text-brand-pink/20 mx-auto mb-4"></i>
+          <p class="text-gray-500 dark:text-gray-400">The wall is currently empty. Be the first to leave a signature!</p>
+        </div>
+      <% } %>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Canvas Drawing Pad Javascript -->
+<script>
+  let signatureType = 'draw';
+
+  function setSignType(type) {
+    signatureType = type;
+    document.getElementById('signatureTypeInput').value = type;
+
+    // Toggle button styles
+    ['draw', 'type', 'upload'].forEach(t => {
+      const btn = document.getElementById('btn-type-' + t);
+      const pane = document.getElementById('sign-pane-' + t);
+      if (t === type) {
+        btn.className = "py-2.5 rounded-xl border-brand-brown dark:border-brand-pink text-brand-brown dark:text-brand-pink bg-brand-pink/5 text-xs font-bold transition-all text-center border-2 shadow-sm";
+        pane.classList.remove('hidden');
+      } else {
+        btn.className = "py-2.5 rounded-xl border-brand-brown/10 text-gray-500 dark:text-gray-400 hover:bg-brand-cream/10 text-xs font-bold transition-all text-center border";
+        pane.classList.add('hidden');
+      }
+    });
+
+    if (type === 'draw') {
+      resizeCanvas();
+    }
+  }
+
+  // Set initial state
+  document.addEventListener('DOMContentLoaded', () => {
+    setSignType('draw');
+    initCanvas();
+    previewTypedSignature();
+
+    // Type signature input hook
+    const typeInput = document.getElementById('typeSignatureText');
+    if (typeInput) {
+      typeInput.addEventListener('input', previewTypedSignature);
+    }
+  });
+
+  // Cursive Text Preview
+  function previewTypedSignature() {
+    const text = document.getElementById('typeSignatureText').value.trim() || 'Signature';
+    const font = document.getElementById('fontStyle').value;
+    const preview = document.getElementById('typedPreviewBox');
+    if (preview) {
+      preview.textContent = text;
+      preview.style.fontFamily = font;
+    }
+  }
+
+  // HTML5 Canvas Drawing Board
+  let canvas, ctx, drawing = false;
+
+  function initCanvas() {
+    canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    // Handle Resize
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Mouse events
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+
+    // Touch events
+    canvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      startDraw({ clientX: touch.clientX, clientY: touch.clientY });
+      e.preventDefault();
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      draw({ clientX: touch.clientX, clientY: touch.clientY });
+      e.preventDefault();
+    });
+    canvas.addEventListener('touchend', endDraw);
+  }
+
+  function resizeCanvas() {
+    if (!canvas) return;
+    // Keep canvas drawing when width changes
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Save image content first
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(canvas, 0, 0);
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    // Restore content
+    ctx.drawImage(tempCanvas, 0, 0, rect.width, rect.height);
+
+    ctx.strokeStyle = '#3E2713'; // Cursive Cocoa Brush
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    const pos = getMousePos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    const pos = getMousePos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function endDraw() {
+    drawing = false;
+  }
+
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function clearCanvas() {
+    if (!canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Handle Form Submit Conversion
+  const signForm = document.getElementById('signatureForm');
+  if (signForm) {
+    signForm.addEventListener('submit', (e) => {
+      const hiddenInput = document.getElementById('signatureDataHidden');
+
+      if (signatureType === 'draw') {
+        // Verify canvas isn't empty
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        if (canvas.toDataURL() === blank.toDataURL()) {
+          alert('Please write something on the draw pad first.');
+          e.preventDefault();
+          return;
+        }
+        hiddenInput.value = canvas.toDataURL('image/png');
+      } else if (signatureType === 'type') {
+        const text = document.getElementById('typeSignatureText').value.trim();
+        if (!text) {
+          alert('Please enter signature text.');
+          e.preventDefault();
+          return;
+        }
+        hiddenInput.value = text; // text is submitted, fontStyle select goes through natively
+      } else if (signatureType === 'upload') {
+        const fileInput = document.getElementById('signatureImage');
+        // If updating, file isn't strictly required
+        <% if (!userSignature) { %>
+          if (!fileInput || fileInput.files.length === 0) {
+            alert('Please select a signature image file to upload.');
+            e.preventDefault();
+            return;
+          }
+        <% } %>
+        hiddenInput.value = 'file_upload'; // Multer handles files
+      }
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

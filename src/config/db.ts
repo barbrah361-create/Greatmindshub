@@ -205,6 +205,7 @@ export const UserDB = new DBModel<any>('users');
 export const NovelDB = new DBModel<any>('novels');
 export const AuthorDB = new DBModel<any>('authors');
 export const CommentDB = new DBModel<any>('comments');
+export const SignatureDB = new DBModel<any>('signatures');
 
 // Ensure admin account exists for platform management
 export function ensureAdmin() {
