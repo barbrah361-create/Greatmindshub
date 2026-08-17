@@ -47,4 +47,8 @@ router.post('/authors/reject/:id', AdminController.postRejectAuthor);
 router.post('/poems/approve/:id', AdminController.postApprovePoem);
 router.post('/poems/reject/:id', AdminController.postRejectPoem);
 
+// Manage All Poems (admin view + delete)
+router.get('/poems', AdminController.getManagePoems);
+router.post('/poems/delete/:id', AdminController.postAdminDeletePoem);
+
 export default router;

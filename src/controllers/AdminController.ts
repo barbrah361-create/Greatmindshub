@@ -572,5 +572,44 @@ export const AdminController = {
       req.flash('error', 'Could not delete comment.');
       res.redirect('/admin');
     }
+  },
+
+  // ── Admin: Manage All Poems ──────────────────────────────────────────────
+  getManagePoems: (req: Request, res: Response) => {
+    try {
+      const filter = (req.query.status as string) || 'all';
+      let allPoems = PoemModel.find().exec();
+      if (filter === 'pending') allPoems = allPoems.filter((p: any) => p.approvalStatus === 'pending');
+      else if (filter === 'approved') allPoems = allPoems.filter((p: any) => p.approvalStatus === 'approved');
+      else if (filter === 'rejected') allPoems = allPoems.filter((p: any) => p.approvalStatus === 'rejected');
+      // Sort newest first
+      allPoems = allPoems.sort((a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      res.render('manage-poems', { title: 'Manage Poems', poems: allPoems, filter });
+    } catch (error) {
+      console.error('Manage poems error:', error);
+      res.status(500).render('error', { statusCode: 500, message: 'Could not load poems manager.' });
+    }
+  },
+
+  // Admin-only hard-delete of any poem (regardless of author)
+  postAdminDeletePoem: (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+      const poem = PoemModel.findById(id);
+      if (!poem) {
+        req.flash('error', 'Poem not found.');
+        return res.redirect('/admin/poems');
+      }
+      PoemModel.findByIdAndDelete(id);
+      console.log(`[Admin] Poem deleted by admin: "${poem.title}" (ID: ${id})`);
+      req.flash('success', `Poem "${poem.title}" has been permanently deleted.`);
+      res.redirect('/admin/poems');
+    } catch (error) {
+      console.error('Admin delete poem error:', error);
+      req.flash('error', 'Could not delete poem.');
+      res.redirect('/admin/poems');
+    }
   }
 };
