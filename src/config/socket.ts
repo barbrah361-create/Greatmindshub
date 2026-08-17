@@ -107,7 +107,32 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       });
     });
 
-    // ── Co-host request ──
+    // ── WebRTC Signaling for Live Video & Audio Streaming ──
+    socket.on('webrtc-offer', (data: { roomId: string; sdp: any; senderId: string; targetId?: string; role: string }) => {
+      if (data.targetId) {
+        io.to(data.targetId).emit('webrtc-offer', data);
+      } else {
+        socket.to(data.roomId).emit('webrtc-offer', data);
+      }
+    });
+
+    socket.on('webrtc-answer', (data: { roomId: string; sdp: any; senderId: string; targetId?: string; role: string }) => {
+      if (data.targetId) {
+        io.to(data.targetId).emit('webrtc-answer', data);
+      } else {
+        socket.to(data.roomId).emit('webrtc-answer', data);
+      }
+    });
+
+    socket.on('webrtc-ice', (data: { roomId: string; candidate: any; senderId: string; targetId?: string }) => {
+      if (data.targetId) {
+        io.to(data.targetId).emit('webrtc-ice', data);
+      } else {
+        socket.to(data.roomId).emit('webrtc-ice', data);
+      }
+    });
+
+    // ── Co-host request by viewer ──
     socket.on('co-host-request', (data: { roomId: string; userId: string; username: string; avatar: string }) => {
       const session = LiveSessionModel.findById(data.roomId);
       if (!session) return;
@@ -118,12 +143,17 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
         LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
       }
 
-      // Send request notification to host only
+      // Send request notification to host
       io.to(data.roomId).emit('co-host-request', {
         userId: data.userId,
         username: data.username,
         avatar: data.avatar
       });
+    });
+
+    // ── Host invites viewer directly ──
+    socket.on('co-host-invite', (data: { roomId: string; targetUserId: string; hostName: string }) => {
+      io.to(data.roomId).emit('co-host-invite', data);
     });
 
     // ── Host accepts co-host ──
@@ -154,6 +184,26 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
 
       io.to(data.roomId).emit('co-host-rejected', { userId: data.userId });
+    });
+
+    // ── Host drops / kicks co-host ──
+    socket.on('co-host-drop', (data: { roomId: string; guestId: string; guestName?: string }) => {
+      const session = LiveSessionModel.findById(data.roomId);
+      if (session) {
+        const coHosts = (session.coHosts || []).filter((id: string) => id !== data.guestId);
+        LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
+      }
+      io.to(data.roomId).emit('co-host-dropped', { guestId: data.guestId, guestName: data.guestName });
+    });
+
+    // ── Guest leaves stage voluntarily ──
+    socket.on('co-host-leave', (data: { roomId: string; guestId: string; guestName?: string }) => {
+      const session = LiveSessionModel.findById(data.roomId);
+      if (session) {
+        const coHosts = (session.coHosts || []).filter((id: string) => id !== data.guestId);
+        LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
+      }
+      io.to(data.roomId).emit('co-host-left', { guestId: data.guestId, guestName: data.guestName });
     });
 
     // ── End stream ──

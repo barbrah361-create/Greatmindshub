@@ -4,13 +4,15 @@
 <!-- Socket.io Client -->
 <script src="/socket.io/socket.io.js"></script>
 
-<!-- TikTok Live Room - Full Immersive Layout -->
+<!-- TikTok Live Room - Full Immersive Dual Stage Layout -->
 <div id="live-room-wrapper" class="bg-black min-h-screen relative overflow-hidden flex flex-col justify-between text-white select-none">
 
-  <!-- 1. TOP BAR (Host Profile, Stats & Live Tools) -->
-  <div class="relative z-40 flex items-center justify-between px-3 sm:px-6 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+  <!-- ==========================================
+       1. TOP BAR (Host Info, Live Stats & Stream Tools)
+       ========================================== -->
+  <div class="relative z-40 flex items-center justify-between px-3 sm:px-6 py-3 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
     
-    <!-- Left: Host Info Badge -->
+    <!-- Left: Host Badge -->
     <div class="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 max-w-[55%] sm:max-w-none">
       <img src="<%= session.hostAvatar || '/uploads/default-avatar.png' %>" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-2 ring-red-500 shrink-0" alt="<%= session.hostName %>">
       <div class="leading-tight truncate">
@@ -27,21 +29,21 @@
       <% } %>
     </div>
 
-    <!-- Right: Viewer Count, Likes Count, Filter Selector & Close -->
+    <!-- Right: Stats, Audio, Cam & Close -->
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
       
-      <!-- Live Indicator -->
+      <!-- Live Beacon -->
       <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
         <span class="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
       </span>
 
-      <!-- Viewers Count Badge -->
+      <!-- Viewers Count -->
       <div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-full border border-white/15 text-xs">
         <i data-lucide="eye" class="w-3.5 h-3.5 text-blue-400"></i>
         <span id="viewerCount" class="font-bold font-mono"><%= session.viewersCount || 1 %></span>
       </div>
 
-      <!-- Likes Counter Badge -->
+      <!-- Likes Counter -->
       <div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-full border border-red-500/30 text-xs text-red-400">
         <svg class="w-3.5 h-3.5 fill-red-500 text-red-500 animate-pulse" viewBox="0 0 24 24">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -49,34 +51,16 @@
         <span id="likesCount" class="font-bold font-mono text-white"><%= session.likesCount || 0 %></span>
       </div>
 
-      <!-- Real-Time Beauty Face Filter Switcher -->
-      <div class="relative">
-        <button onclick="toggleFilterMenu()" title="Live Beauty Filters" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-amber-400 hover:bg-white/20 transition-all">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-        </button>
-        <!-- Filter Dropdown -->
-        <div id="filterDropdown" class="hidden absolute right-0 mt-2 w-48 bg-black/95 backdrop-blur-xl border border-white/20 rounded-2xl p-2 shadow-2xl z-50 space-y-1">
-          <p class="text-[10px] uppercase font-bold text-gray-400 px-2 py-1 tracking-wider">Beauty Filters</p>
-          <button onclick="applyFilter('glam')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>✨</span> Glam Glow
-          </button>
-          <button onclick="applyFilter('natural')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>🌟</span> Natural HD
-          </button>
-          <button onclick="applyFilter('golden')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>🌅</span> Golden Hour
-          </button>
-          <button onclick="applyFilter('vibrant')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>🎨</span> Vibrant Pop
-          </button>
-          <button onclick="applyFilter('romance')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>💖</span> Warm Romance
-          </button>
-          <button onclick="applyFilter('noir')" class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-white/15 flex items-center gap-2">
-            <span>🎬</span> Vintage Noir
-          </button>
-        </div>
-      </div>
+      <!-- Microphone Mute / Unmute Toggle (Broadcasters only) -->
+      <button id="micToggleBtn" onclick="toggleMicrophone()" title="Mute/Unmute Mic" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-green-400 hover:bg-white/20 transition-all">
+        <i data-lucide="mic" id="micIcon" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Camera Switcher -->
+      <button onclick="switchCamera()" id="switchCamBtn" title="Switch Camera Source" class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-xs text-amber-400 hover:bg-white/20 transition-all flex items-center gap-1">
+        <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline text-[11px] font-bold">Switch Cam</span>
+      </button>
 
       <!-- Camera Flip / Mirror -->
       <button onclick="toggleMirror()" title="Flip Camera" class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-white hover:bg-white/20 transition-all">
@@ -100,6 +84,12 @@
     </div>
   </div>
 
+  <!-- Unmute Stream Audio Banner (For Audience if autoplay muted) -->
+  <div id="unmuteAudioBanner" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-2 cursor-pointer animate-bounce" onclick="enableViewerAudio()">
+    <i data-lucide="volume-2" class="w-4 h-4"></i>
+    <span class="text-xs font-bold">Tap to Unmute Host Audio 🔊</span>
+  </div>
+
   <!-- Top Gifters Ribbon -->
   <div class="relative z-30 px-4 flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
     <% if (topGifters && topGifters.length > 0) { %>
@@ -114,14 +104,51 @@
     <% } %>
   </div>
 
-  <!-- 2. FULL-SCREEN VIDEO STREAM FEED & OVERLAYS -->
-  <div id="videoContainer" class="absolute inset-0 z-0 bg-black flex items-center justify-center" ondblclick="handleDoubleTapLike(event)">
+  <!-- ==========================================
+       2. DYNAMIC LIVE STAGE (Single or Dual Split-Screen)
+       ========================================== -->
+  <div id="videoStageContainer" class="absolute inset-0 z-0 bg-black flex flex-col md:flex-row items-center justify-center transition-all duration-500" ondblclick="handleDoubleTapLike(event)">
     
-    <!-- Live Video Element with Filters -->
-    <video id="liveVideoFeed" class="w-full h-full object-cover transform -scale-x-100 filter-glam transition-all duration-300" autoplay playsinline muted></video>
-    
-    <!-- Ambient dark gradient overlays for readability -->
-    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none"></div>
+    <!-- HOST VIDEO WINDOW -->
+    <div id="hostVideoWrapper" class="relative w-full h-full flex-1 flex items-center justify-center bg-black overflow-hidden transition-all duration-300">
+      <video id="liveVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300 filter-glam" autoplay playsinline></video>
+      
+      <!-- Speaking Audio Equalizer Waveform Indicator -->
+      <div id="hostSpeakingIndicator" class="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
+        <span class="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></span>
+        <span class="w-1.5 h-4 bg-green-400 rounded-full animate-bounce delay-100"></span>
+        <span class="w-1.5 h-2 bg-green-400 rounded-full animate-bounce delay-200"></span>
+        <span class="text-[10px] font-bold text-green-400 ml-1">Speaking</span>
+      </div>
+
+      <div class="absolute top-4 left-4 z-20 bg-red-600/80 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-md">
+        HOST
+      </div>
+    </div>
+
+    <!-- CO-HOST GUEST VIDEO WINDOW (Visible when guest is active) -->
+    <div id="guestVideoWrapper" class="hidden relative w-full h-full flex-1 flex items-center justify-center bg-gray-950 border-t-2 md:border-t-0 md:border-l-2 border-brand-brown/40 overflow-hidden transition-all duration-300">
+      <video id="guestVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300" autoplay playsinline></video>
+      
+      <!-- Guest Speaking Indicator -->
+      <div id="guestSpeakingIndicator" class="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
+        <span class="w-1.5 h-3 bg-blue-400 rounded-full animate-bounce"></span>
+        <span class="w-1.5 h-4 bg-blue-400 rounded-full animate-bounce delay-100"></span>
+        <span class="text-[10px] font-bold text-blue-400 ml-1" id="guestStageName">Co-Host</span>
+      </div>
+
+      <!-- Host Action: Drop Guest Button -->
+      <% if (isHost) { %>
+        <button onclick="dropCurrentGuest()" title="Remove guest from stage" class="absolute top-4 right-4 z-30 px-3 py-1 bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-bold rounded-full border border-red-400/30 flex items-center gap-1 transition-all shadow-lg">
+          <i data-lucide="user-x" class="w-3 h-3"></i> Drop Guest
+        </button>
+      <% } %>
+
+      <!-- Guest Action: Leave Stage Button -->
+      <button id="leaveStageBtn" onclick="leaveCoHostStage()" class="hidden absolute top-4 right-4 z-30 px-3 py-1 bg-gray-800/90 hover:bg-gray-700 text-white text-[10px] font-bold rounded-full border border-white/20 flex items-center gap-1 transition-all shadow-lg">
+        <i data-lucide="log-out" class="w-3 h-3"></i> Leave Stage
+      </button>
+    </div>
 
     <!-- Double Tap Ripple Effect Container -->
     <div id="doubleTapHeartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
@@ -142,20 +169,20 @@
     </div>
     <div class="max-w-sm">
       <h3 class="font-serif text-2xl font-bold text-white">Start Your Live Recital</h3>
-      <p class="text-xs text-gray-300 mt-1">Tap below to turn on your camera and microphone. Your followers have been alerted!</p>
+      <p class="text-xs text-gray-300 mt-1">Turn on your camera and microphone. Your followers will be able to see and hear you live!</p>
     </div>
     <button onclick="startLiveCamera()" class="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-sm flex items-center gap-2 shadow-xl hover:scale-105 transition-all">
-      <i data-lucide="camera" class="w-5 h-5"></i> Enable Camera & Start Broadcasting
+      <i data-lucide="camera" class="w-5 h-5"></i> Enable Camera & Microphone
     </button>
   </div>
   <% } %>
 
-  <!-- Co-Host Request Modal (Host Only) -->
+  <!-- Co-Host Request Modal (Host Receives) -->
   <% if (isHost) { %>
-  <div id="coHostRequestModal" class="hidden absolute top-20 right-4 z-50 bg-black/95 backdrop-blur-xl border border-amber-500/30 rounded-3xl p-4 w-80 space-y-3 shadow-2xl animate-bounce">
+  <div id="coHostRequestModal" class="hidden absolute top-20 right-4 z-50 bg-black/95 backdrop-blur-xl border border-amber-500/40 rounded-3xl p-4 w-80 space-y-3 shadow-2xl animate-bounce">
     <div class="flex items-center justify-between">
       <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-        <i data-lucide="users" class="w-4 h-4"></i> Co-Host Request
+        <i data-lucide="users" class="w-4 h-4"></i> Guest Join Request
       </span>
       <button onclick="dismissCoHostModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
@@ -163,21 +190,44 @@
       <img id="coHostAvatarImg" src="/uploads/default-avatar.png" class="w-10 h-10 rounded-full object-cover ring-2 ring-amber-500" alt="">
       <div>
         <p id="coHostRequesterName" class="text-sm font-bold text-white"></p>
-        <p class="text-[10px] text-gray-300">Wants to join your live stage</p>
+        <p class="text-[10px] text-gray-300">Requested to join you on live stage</p>
       </div>
     </div>
     <div class="flex gap-2">
-      <button onclick="acceptCoHost()" class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-all">
-        Accept
+      <button onclick="acceptCoHost()" class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-all shadow">
+        Accept Guest
       </button>
-      <button onclick="rejectCoHost()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all">
+      <button onclick="rejectCoHost()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow">
         Decline
       </button>
     </div>
   </div>
   <% } %>
 
-  <!-- 3. BOTTOM OVERLAYS (Floating Chat, Action Controls & Gifts) -->
+  <!-- Guest Join Stage Invitation Modal (Viewer Receives) -->
+  <div id="guestJoinStageModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-black/95 border border-amber-500/40 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto ring-4 ring-amber-500/30 animate-pulse">
+        <i data-lucide="video" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h3 class="font-serif text-xl font-bold text-white">Join Live Stage</h3>
+        <p class="text-xs text-gray-300 mt-1">You are invited to co-host with <%= session.hostName %>! Enable your camera and microphone to step on stage.</p>
+      </div>
+      <div class="flex gap-2.5">
+        <button onclick="confirmJoinAsGuest()" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-lg transition-all">
+          Enable Cam & Join
+        </button>
+        <button onclick="declineGuestInvitation()" class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all">
+          Decline
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       3. BOTTOM OVERLAYS (Floating Chat, Action Controls & Gifts)
+       ========================================== -->
   <div class="relative z-30 p-3 sm:p-5 space-y-3">
     
     <!-- Floating Live Chat Feed -->
@@ -205,9 +255,14 @@
         <span class="hidden sm:inline">Read Along</span>
       </button>
 
+      <!-- TikTok Live Beauty Filters Studio Button -->
+      <button onclick="toggleBeautyPanel()" id="beautyBtn" title="Beauty Filters & Skin Glow" class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-600 via-rose-500 to-amber-400 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all shrink-0">
+        <i data-lucide="sparkles" class="w-5 h-5"></i>
+      </button>
+
       <!-- Multi-Guest / Co-Host Request (Audience Only) -->
       <% if (user && String(user._id) !== String(session.hostId)) { %>
-        <button id="coHostRequestBtn" onclick="requestToJoinLive()" title="Request to join live" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all shrink-0">
+        <button id="coHostRequestBtn" onclick="requestToJoinLive()" title="Request to join live as guest" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all shrink-0">
           <i data-lucide="hand" class="w-5 h-5 text-amber-400"></i>
         </button>
       <% } %>
@@ -284,6 +339,104 @@
       </div>
     </div>
 
+    <!-- 4b. TIKTOK LIVE BEAUTY STUDIO & FACE FILTERS PANEL -->
+    <div id="beautyPanelModal" class="hidden bg-black/95 backdrop-blur-2xl border border-white/20 rounded-3xl p-4 sm:p-6 shadow-2xl transition-all space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 rounded-xl bg-pink-500/20 text-pink-400">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </span>
+          <div>
+            <h4 class="text-sm font-bold text-white">Live Beauty & Face Filters</h4>
+            <p class="text-[10px] text-gray-400">Choose a TikTok beauty look or customize your skin glow</p>
+          </div>
+        </div>
+        <button onclick="toggleBeautyPanel()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- Filter Presets Grid -->
+      <div class="grid grid-cols-3 sm:grid-cols-7 gap-2">
+        <button type="button" onclick="selectBeautyPreset('glam', 'Glam Glow')" class="beauty-preset-btn active flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-pink-500/20 border border-white/10 hover:border-pink-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌟</span>
+          <span class="text-[11px] font-bold text-white">Glam Glow</span>
+          <span class="text-[9px] text-pink-400">Smooth Skin</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('golden', 'Golden Hour')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌅</span>
+          <span class="text-[11px] font-bold text-white">Golden Hour</span>
+          <span class="text-[9px] text-amber-400">Sun Warmth</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('romance', 'Rosy Blush')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌸</span>
+          <span class="text-[11px] font-bold text-white">Rosy Blush</span>
+          <span class="text-[9px] text-rose-400">Soft Pink</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('studio', 'Studio Light')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">💡</span>
+          <span class="text-[11px] font-bold text-white">Ringlight</span>
+          <span class="text-[9px] text-blue-400">High Bright</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('vibrant', 'Vibrant Pop')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-purple-500/20 border border-white/10 hover:border-purple-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🎨</span>
+          <span class="text-[11px] font-bold text-white">Vibrant</span>
+          <span class="text-[9px] text-purple-400">HD Pop</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('noir', 'Vintage Noir')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-gray-500/20 border border-white/10 hover:border-gray-400 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🎬</span>
+          <span class="text-[11px] font-bold text-white">Noir</span>
+          <span class="text-[9px] text-gray-400">B&W Film</span>
+        </button>
+
+        <button type="button" onclick="selectBeautyPreset('natural', 'Natural HD')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-green-500/20 border border-white/10 hover:border-green-500 transition-all text-center group">
+          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">✨</span>
+          <span class="text-[11px] font-bold text-white">Natural</span>
+          <span class="text-[9px] text-green-400">Authentic</span>
+        </button>
+      </div>
+
+      <!-- Fine-Tuning Sliders -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
+        <div>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
+            <span class="flex items-center gap-1"><span>✨</span> Skin Smooth:</span>
+            <span id="smoothValLabel" class="text-pink-400 font-mono">65%</span>
+          </div>
+          <input type="range" id="smoothSlider" min="0" max="100" value="65" oninput="updateCustomBeautyFilters()" class="w-full accent-pink-500 h-1.5 bg-white/20 rounded-lg cursor-pointer">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
+            <span class="flex items-center gap-1"><span>💡</span> Brightness:</span>
+            <span id="brightValLabel" class="text-amber-400 font-mono">115%</span>
+          </div>
+          <input type="range" id="brightSlider" min="80" max="160" value="115" oninput="updateCustomBeautyFilters()" class="w-full accent-amber-400 h-1.5 bg-white/20 rounded-lg cursor-pointer">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
+            <span class="flex items-center gap-1"><span>🎨</span> Warmth / Saturation:</span>
+            <span id="satValLabel" class="text-purple-400 font-mono">125%</span>
+          </div>
+          <input type="range" id="satSlider" min="80" max="180" value="125" oninput="updateCustomBeautyFilters()" class="w-full accent-purple-400 h-1.5 bg-white/20 rounded-lg cursor-pointer">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs pt-1">
+        <span id="currentActiveFilterStatus" class="text-pink-400 font-semibold flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span> Active Look: Glam Glow
+        </span>
+        <button type="button" onclick="resetBeautyFilters()" class="text-gray-400 hover:text-white underline text-[11px]">
+          Reset to Natural
+        </button>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- 5. SLIDE-UP TELEPROMPTER / READ ALONG SHEET -->
@@ -310,9 +463,8 @@
 
 </div>
 
-<!-- Face Filter Styles -->
+<!-- Styles -->
 <style>
-  /* Hide standard headers in live room */
   #main-navbar, footer { display: none !important; }
   body { background: black !important; overflow: hidden; }
 
@@ -323,7 +475,6 @@
   .filter-romance { filter: sepia(0.12) contrast(1.06) brightness(1.12) saturate(1.22) hue-rotate(325deg) !important; }
   .filter-noir { filter: grayscale(1) contrast(1.28) brightness(1.05) !important; }
 
-  /* Floating heart upwards keyframes */
   .flying-heart-particle {
     position: absolute;
     bottom: 0;
@@ -337,7 +488,6 @@
     100% { opacity: 0; transform: translateY(-300px) scale(0.7) rotate(-5deg); }
   }
 
-  /* Double tap ripple heart */
   .tap-ripple-heart {
     position: absolute;
     pointer-events: none;
@@ -349,7 +499,6 @@
     100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
   }
 
-  /* Big Gift entrance */
   .gift-popup-banner {
     animation: giftCelebrate 2.5s ease-out forwards;
   }
@@ -371,7 +520,21 @@ const CURRENT_USER = {
   avatar: '<%= user ? (user.avatar || "/uploads/default-avatar.png") : "/uploads/default-avatar.png" %>'
 };
 
-// Socket.io Connection
+let isCoHostActive = false;
+let myGuestStream = null;
+let currentMediaStream = null;
+let isMicMuted = false;
+let peerConnections = {}; // WebRTC peer connections map
+
+// ── WebRTC Configuration ──
+const RTC_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+  ]
+};
+
+// ── Socket.io Connection ──
 const socket = io();
 socket.emit('join-room', {
   roomId: ROOM_ID,
@@ -380,20 +543,20 @@ socket.emit('join-room', {
   avatar: CURRENT_USER.avatar
 });
 
-// Viewers count update
+// Viewers count
 socket.on('viewer-count', (data) => {
   const el = document.getElementById('viewerCount');
   if (el) el.textContent = data.count;
 });
 
-// Likes count update
+// Likes count
 socket.on('heart-received', (data) => {
   const el = document.getElementById('likesCount');
   if (el && data.likesCount) el.textContent = data.likesCount;
   spawnStreamHeart();
 });
 
-// User joined toast
+// User joined
 socket.on('user-joined', (data) => {
   const feed = document.getElementById('liveChatFeed');
   if (!feed) return;
@@ -404,6 +567,11 @@ socket.on('user-joined', (data) => {
   feed.appendChild(msg);
   feed.scrollTop = feed.scrollHeight;
   setTimeout(() => msg.remove(), 4000);
+
+  // If host, initiate WebRTC connection with new viewer
+  if (IS_HOST && currentMediaStream) {
+    createPeerOffer(socket.id);
+  }
 });
 
 // Chat message
@@ -418,7 +586,6 @@ socket.on('chat-message', (data) => {
   feed.scrollTop = feed.scrollHeight;
 });
 
-// Send Chat Comment
 function sendLiveComment(e) {
   e.preventDefault();
   const input = document.getElementById('liveChatInput');
@@ -433,10 +600,252 @@ function sendLiveComment(e) {
   input.value = '';
 }
 
-// Likes & Hearts System (SVG-based, 100% Emoji-corruption proof)
-const HEART_COLORS = [
-  '#EF4444', '#EC4899', '#F43F5E', '#D946EF', '#F59E0B', '#FB7185'
-];
+// ── WebRTC Media Stream Handlers (Broadcasting to Viewers) ──
+async function createPeerOffer(targetSocketId) {
+  try {
+    const pc = new RTCPeerConnection(RTC_CONFIG);
+    peerConnections[targetSocketId] = pc;
+
+    if (currentMediaStream) {
+      currentMediaStream.getTracks().forEach(track => pc.addTrack(track, currentMediaStream));
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: targetSocketId });
+      }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('webrtc-offer', { roomId: ROOM_ID, sdp: offer, senderId: socket.id, targetId: targetSocketId, role: IS_HOST ? 'host' : 'guest' });
+  } catch (err) {
+    console.warn('WebRTC offer error:', err);
+  }
+}
+
+socket.on('webrtc-offer', async (data) => {
+  if (IS_HOST) return; // Viewers handle offers from host/guest
+  try {
+    const pc = new RTCPeerConnection(RTC_CONFIG);
+    peerConnections[data.senderId] = pc;
+
+    pc.ontrack = (event) => {
+      const video = document.getElementById('liveVideoFeed');
+      if (video && event.streams[0]) {
+        video.srcObject = event.streams[0];
+        video.muted = false;
+        video.play().catch(() => {
+          // Autoplay muted fallback - show unmute banner
+          video.muted = true;
+          video.play();
+          document.getElementById('unmuteAudioBanner').classList.remove('hidden');
+        });
+      }
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: data.senderId });
+      }
+    };
+
+    await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socket.emit('webrtc-answer', { roomId: ROOM_ID, sdp: answer, senderId: socket.id, targetId: data.senderId, role: 'viewer' });
+  } catch (err) {
+    console.warn('WebRTC receive offer error:', err);
+  }
+});
+
+socket.on('webrtc-answer', async (data) => {
+  const pc = peerConnections[data.senderId];
+  if (pc) {
+    await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+  }
+});
+
+socket.on('webrtc-ice', async (data) => {
+  const pc = peerConnections[data.senderId];
+  if (pc && data.candidate) {
+    await pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {});
+  }
+});
+
+// Enable audio when viewer taps unmute banner
+function enableViewerAudio() {
+  const video = document.getElementById('liveVideoFeed');
+  if (video) {
+    video.muted = false;
+    document.getElementById('unmuteAudioBanner').classList.add('hidden');
+  }
+}
+
+// ── Microphone Toggle (Host & Guest) ──
+function toggleMicrophone() {
+  const stream = currentMediaStream || myGuestStream;
+  if (!stream) return;
+
+  const audioTrack = stream.getAudioTracks()[0];
+  if (audioTrack) {
+    isMicMuted = !isMicMuted;
+    audioTrack.enabled = !isMicMuted;
+    const btn = document.getElementById('micToggleBtn');
+    if (isMicMuted) {
+      btn.className = 'w-8 h-8 rounded-full bg-red-600/80 backdrop-blur-md border border-red-400 flex items-center justify-center text-white transition-all';
+      showCameraToast('🔇 Microphone Muted');
+    } else {
+      btn.className = 'w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-green-400 hover:bg-white/20 transition-all';
+      showCameraToast('🎤 Microphone Active');
+    }
+  }
+}
+
+// ── Co-Host / Multi-Guest Stage Management ──
+let pendingCoHostUserId = '';
+
+// Viewer sends request
+function requestToJoinLive() {
+  if (!CURRENT_USER.id) { alert('Please sign in to request join!'); return; }
+  socket.emit('co-host-request', {
+    roomId: ROOM_ID,
+    userId: CURRENT_USER.id,
+    username: CURRENT_USER.username,
+    avatar: CURRENT_USER.avatar
+  });
+  const btn = document.getElementById('coHostRequestBtn');
+  if (btn) {
+    btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-green-400"></i>';
+    btn.disabled = true;
+    showCameraToast('✋ Join request sent to host!');
+  }
+}
+
+// Host receives request
+socket.on('co-host-request', (data) => {
+  if (!IS_HOST) return;
+  pendingCoHostUserId = data.userId;
+  const modal = document.getElementById('coHostRequestModal');
+  document.getElementById('coHostAvatarImg').src = data.avatar;
+  document.getElementById('coHostRequesterName').textContent = data.username;
+  modal.classList.remove('hidden');
+});
+
+// Host accepts request
+function acceptCoHost() {
+  socket.emit('co-host-accept', {
+    roomId: ROOM_ID,
+    userId: pendingCoHostUserId,
+    username: document.getElementById('coHostRequesterName').textContent
+  });
+  document.getElementById('coHostRequestModal').classList.add('hidden');
+}
+
+// Host rejects request
+function rejectCoHost() {
+  socket.emit('co-host-reject', { roomId: ROOM_ID, userId: pendingCoHostUserId });
+  document.getElementById('coHostRequestModal').classList.add('hidden');
+}
+
+function dismissCoHostModal() {
+  document.getElementById('coHostRequestModal').classList.add('hidden');
+}
+
+// Viewer is notified they were accepted as co-host
+socket.on('co-host-accepted', (data) => {
+  if (data.userId === CURRENT_USER.id) {
+    document.getElementById('guestJoinStageModal').classList.remove('hidden');
+  } else {
+    // Show split-screen guest container for all users
+    setupDualSplitScreen(data.username);
+  }
+});
+
+socket.on('co-host-rejected', (data) => {
+  if (data.userId === CURRENT_USER.id) {
+    showCameraToast('Your join request was declined by host.');
+    const btn = document.getElementById('coHostRequestBtn');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="hand" class="w-5 h-5 text-amber-400"></i>'; }
+  }
+});
+
+// Viewer confirms joining stage as Co-Host
+async function confirmJoinAsGuest() {
+  try {
+    const guestStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+      audio: true
+    });
+    myGuestStream = guestStream;
+    isCoHostActive = true;
+
+    // Show local guest feed
+    const guestVideo = document.getElementById('guestVideoFeed');
+    guestVideo.srcObject = guestStream;
+    await guestVideo.play();
+
+    document.getElementById('guestJoinStageModal').classList.add('hidden');
+    document.getElementById('leaveStageBtn').classList.remove('hidden');
+
+    setupDualSplitScreen(CURRENT_USER.username);
+    showCameraToast('🎉 You are now LIVE on stage with host!');
+  } catch (err) {
+    alert('Please allow camera & mic permissions to step on stage.');
+  }
+}
+
+function declineGuestInvitation() {
+  document.getElementById('guestJoinStageModal').classList.add('hidden');
+}
+
+function setupDualSplitScreen(guestName) {
+  const guestWrapper = document.getElementById('guestVideoWrapper');
+  const stage = document.getElementById('videoStageContainer');
+  if (guestWrapper) {
+    guestWrapper.classList.remove('hidden');
+    document.getElementById('guestStageName').textContent = guestName || 'Co-Host';
+  }
+}
+
+// Host drops guest
+function dropCurrentGuest() {
+  if (!confirm('Drop the current guest from the live stage?')) return;
+  socket.emit('co-host-drop', { roomId: ROOM_ID, guestId: pendingCoHostUserId });
+  removeDualSplitScreen();
+}
+
+// Guest leaves stage
+function leaveCoHostStage() {
+  if (myGuestStream) {
+    myGuestStream.getTracks().forEach(t => t.stop());
+  }
+  socket.emit('co-host-leave', { roomId: ROOM_ID, guestId: CURRENT_USER.id });
+  removeDualSplitScreen();
+}
+
+socket.on('co-host-dropped', (data) => {
+  if (data.guestId === CURRENT_USER.id) {
+    if (myGuestStream) myGuestStream.getTracks().forEach(t => t.stop());
+    showCameraToast('You stepped down from the live stage.');
+  }
+  removeDualSplitScreen();
+});
+
+socket.on('co-host-left', (data) => {
+  removeDualSplitScreen();
+  showCameraToast(data.guestName ? data.guestName + ' left the live stage' : 'Guest left the live stage');
+});
+
+function removeDualSplitScreen() {
+  const guestWrapper = document.getElementById('guestVideoWrapper');
+  if (guestWrapper) guestWrapper.classList.add('hidden');
+  const leaveBtn = document.getElementById('leaveStageBtn');
+  if (leaveBtn) leaveBtn.classList.add('hidden');
+}
+
+// ── Likes, Hearts, Gifts & Beauty Engine ──
+const HEART_COLORS = ['#EF4444', '#EC4899', '#F43F5E', '#D946EF', '#F59E0B', '#FB7185'];
 
 function triggerLiveLike() {
   socket.emit('send-heart', { roomId: ROOM_ID });
@@ -474,16 +883,12 @@ function spawnStreamHeart() {
   setTimeout(() => heart.remove(), 2200);
 }
 
-// Gifts System
 function toggleGiftTray() {
   document.getElementById('giftTrayModal').classList.toggle('hidden');
 }
 
 function sendLiveGift(type, label, emoji, points) {
-  if (!CURRENT_USER.id) {
-    alert('Please sign in to send gifts!');
-    return;
-  }
+  if (!CURRENT_USER.id) { alert('Please sign in to send gifts!'); return; }
   socket.emit('send-gift', {
     roomId: ROOM_ID,
     userId: CURRENT_USER.id,
@@ -495,7 +900,6 @@ function sendLiveGift(type, label, emoji, points) {
 }
 
 socket.on('gift-received', (data) => {
-  // Center celebration banner
   const center = document.getElementById('bigGiftCelebration');
   if (center) {
     const banner = document.createElement('div');
@@ -509,7 +913,6 @@ socket.on('gift-received', (data) => {
     setTimeout(() => banner.remove(), 2500);
   }
 
-  // Chat message
   const feed = document.getElementById('liveChatFeed');
   if (feed) {
     const msg = document.createElement('div');
@@ -521,33 +924,154 @@ socket.on('gift-received', (data) => {
   }
 });
 
-// Beauty Filters Switcher
-function toggleFilterMenu() {
-  document.getElementById('filterDropdown').classList.toggle('hidden');
+// ── Beauty Studio Engine ──
+let activeBeautyPreset = 'glam';
+const BEAUTY_PRESETS = {
+  glam:    { smooth: 65, brightness: 115, saturation: 125, contrast: 108, sepia: 5, hue: 0, label: 'Glam Glow' },
+  golden:  { smooth: 50, brightness: 110, saturation: 135, contrast: 112, sepia: 22, hue: -8, label: 'Golden Hour' },
+  romance: { smooth: 60, brightness: 112, saturation: 125, contrast: 106, sepia: 12, hue: 325, label: 'Rosy Blush' },
+  studio:  { smooth: 45, brightness: 135, saturation: 105, contrast: 115, sepia: 0, hue: 0, label: 'Studio Light' },
+  vibrant: { smooth: 30, brightness: 108, saturation: 155, contrast: 120, sepia: 0, hue: 0, label: 'Vibrant Pop' },
+  noir:    { smooth: 40, brightness: 105, saturation: 0, contrast: 130, sepia: 0, hue: 0, grayscale: 100, label: 'Vintage Noir' },
+  natural: { smooth: 0, brightness: 100, saturation: 100, contrast: 100, sepia: 0, hue: 0, label: 'Natural HD' }
+};
+
+function toggleBeautyPanel() {
+  const modal = document.getElementById('beautyPanelModal');
+  if (modal) modal.classList.toggle('hidden');
 }
 
-function applyFilter(filterName) {
+function selectBeautyPreset(presetKey, label) {
+  activeBeautyPreset = presetKey;
+  const cfg = BEAUTY_PRESETS[presetKey] || BEAUTY_PRESETS.natural;
+  document.getElementById('smoothSlider').value = cfg.smooth;
+  document.getElementById('brightSlider').value = cfg.brightness;
+  document.getElementById('satSlider').value = cfg.saturation;
+  document.getElementById('smoothValLabel').textContent = cfg.smooth + '%';
+  document.getElementById('brightValLabel').textContent = cfg.brightness + '%';
+  document.getElementById('satValLabel').textContent = cfg.saturation + '%';
+  const statusEl = document.getElementById('currentActiveFilterStatus');
+  if (statusEl) statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span> Active Look: ' + (label || cfg.label);
+  applyCustomFilterStyle(cfg);
+}
+
+function updateCustomBeautyFilters() {
+  const smooth = parseInt(document.getElementById('smoothSlider').value) || 0;
+  const bright = parseInt(document.getElementById('brightSlider').value) || 100;
+  const sat = parseInt(document.getElementById('satSlider').value) || 100;
+  document.getElementById('smoothValLabel').textContent = smooth + '%';
+  document.getElementById('brightValLabel').textContent = bright + '%';
+  document.getElementById('satValLabel').textContent = sat + '%';
+  const baseCfg = BEAUTY_PRESETS[activeBeautyPreset] || BEAUTY_PRESETS.glam;
+  applyCustomFilterStyle({ ...baseCfg, smooth, brightness: bright, saturation: sat });
+}
+
+function applyCustomFilterStyle(cfg) {
   const video = document.getElementById('liveVideoFeed');
   if (!video) return;
-  video.className = video.className.replace(/filter-\w+/g, '').trim();
-  video.classList.add('filter-' + filterName);
-  document.getElementById('filterDropdown').classList.add('hidden');
+  const blurAmount = (cfg.smooth / 100) * 0.4;
+  const brightness = cfg.brightness / 100;
+  const contrast = (cfg.contrast || 100) / 100;
+  const saturation = (cfg.saturation || 100) / 100;
+  const sepia = (cfg.sepia || 0) / 100;
+  const hue = cfg.hue || 0;
+  const grayscale = cfg.grayscale ? 'grayscale(' + cfg.grayscale + '%)' : '';
+  let filterStr = 'brightness(' + brightness + ') contrast(' + contrast + ') saturate(' + saturation + ')';
+  if (blurAmount > 0) filterStr += ' blur(' + blurAmount.toFixed(2) + 'px)';
+  if (sepia > 0) filterStr += ' sepia(' + sepia.toFixed(2) + ')';
+  if (hue !== 0) filterStr += ' hue-rotate(' + hue + 'deg)';
+  if (grayscale) filterStr += ' ' + grayscale;
+  video.style.filter = filterStr;
 }
 
-// Camera Flip / Mirror
+function resetBeautyFilters() {
+  selectBeautyPreset('natural', 'Natural HD');
+}
+
+// ── Multi-Camera Support & Camera Switcher ──
+let availableCameras = [];
+let currentCameraIndex = 0;
+
+async function loadCameraDevices() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    availableCameras = devices.filter(d => d.kind === 'videoinput');
+    const builtInIndex = availableCameras.findIndex(d => 
+      d.label.toLowerCase().includes('integrated') || 
+      d.label.toLowerCase().includes('built-in') || 
+      d.label.toLowerCase().includes('hd') ||
+      (d.label.toLowerCase().includes('webcam') && !d.label.toLowerCase().includes('iriun'))
+    );
+    if (builtInIndex > 0) currentCameraIndex = builtInIndex;
+  } catch (err) {
+    console.warn('Could not enumerate camera devices:', err);
+  }
+}
+
+async function startLiveCamera(deviceId = null) {
+  try {
+    const video = document.getElementById('liveVideoFeed');
+    const modal = document.getElementById('cameraStartModal');
+    if (currentMediaStream) currentMediaStream.getTracks().forEach(t => t.stop());
+
+    const videoConstraints = { width: { ideal: 1280 }, height: { ideal: 720 } };
+    if (deviceId) videoConstraints.deviceId = { exact: deviceId };
+    else if (availableCameras.length > 0 && availableCameras[currentCameraIndex]) {
+      videoConstraints.deviceId = { exact: availableCameras[currentCameraIndex].deviceId };
+    } else {
+      videoConstraints.facingMode = "user";
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+    currentMediaStream = stream;
+    video.srcObject = stream;
+    video.muted = true; // Local host is muted locally to prevent echo feedback
+    await video.play();
+
+    if (modal) modal.classList.add('hidden');
+    await loadCameraDevices();
+
+    const currentDevice = availableCameras[currentCameraIndex];
+    if (currentDevice && currentDevice.label) {
+      showCameraToast('📹 Camera: ' + currentDevice.label);
+    }
+  } catch (err) {
+    console.error('Camera access error:', err);
+    try {
+      const video = document.getElementById('liveVideoFeed');
+      const fallback = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      currentMediaStream = fallback;
+      video.srcObject = fallback;
+      video.muted = true;
+      await video.play();
+      const modal = document.getElementById('cameraStartModal');
+      if (modal) modal.classList.add('hidden');
+    } catch (e) {
+      alert('Please allow camera & microphone permissions in your browser.');
+    }
+  }
+}
+
+async function switchCamera() {
+  await loadCameraDevices();
+  if (availableCameras.length <= 1) {
+    showCameraToast('Re-checking camera devices...');
+    await startLiveCamera();
+    return;
+  }
+  currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+  await startLiveCamera(availableCameras[currentCameraIndex].deviceId);
+}
+
 let isMirrored = true;
 function toggleMirror() {
   const video = document.getElementById('liveVideoFeed');
   if (!video) return;
   isMirrored = !isMirrored;
-  if (isMirrored) {
-    video.classList.add('-scale-x-100');
-  } else {
-    video.classList.remove('-scale-x-100');
-  }
+  if (isMirrored) video.classList.add('-scale-x-100');
+  else video.classList.remove('-scale-x-100');
 }
 
-// Teleprompter Toggle
 let teleprompterOpen = false;
 function toggleTeleprompter() {
   const drawer = document.getElementById('teleprompterDrawer');
@@ -556,65 +1080,15 @@ function toggleTeleprompter() {
   drawer.style.transform = teleprompterOpen ? 'translateY(0)' : 'translateY(100%)';
 }
 
-// Co-Host Requests
-let pendingCoHostUserId = '';
-function requestToJoinLive() {
-  if (!CURRENT_USER.id) { alert('Please sign in to request join!'); return; }
-  socket.emit('co-host-request', {
-    roomId: ROOM_ID,
-    userId: CURRENT_USER.id,
-    username: CURRENT_USER.username,
-    avatar: CURRENT_USER.avatar
-  });
-  const btn = document.getElementById('coHostRequestBtn');
-  if (btn) {
-    btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-green-400"></i>';
-    btn.disabled = true;
-  }
-}
-
-socket.on('co-host-request', (data) => {
-  if (!IS_HOST) return;
-  pendingCoHostUserId = data.userId;
-  const modal = document.getElementById('coHostRequestModal');
-  document.getElementById('coHostAvatarImg').src = data.avatar;
-  document.getElementById('coHostRequesterName').textContent = data.username;
-  modal.classList.remove('hidden');
-});
-
-function acceptCoHost() {
-  socket.emit('co-host-accept', {
-    roomId: ROOM_ID,
-    userId: pendingCoHostUserId,
-    username: document.getElementById('coHostRequesterName').textContent
-  });
-  document.getElementById('coHostRequestModal').classList.add('hidden');
-}
-
-function rejectCoHost() {
-  socket.emit('co-host-reject', { roomId: ROOM_ID, userId: pendingCoHostUserId });
-  document.getElementById('coHostRequestModal').classList.add('hidden');
-}
-
-function dismissCoHostModal() {
-  document.getElementById('coHostRequestModal').classList.add('hidden');
-}
-
-// Camera Start (Host)
-async function startLiveCamera() {
-  try {
-    const video = document.getElementById('liveVideoFeed');
-    const modal = document.getElementById('cameraStartModal');
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
-      audio: true
-    });
-    video.srcObject = stream;
-    await video.play();
-    if (modal) modal.classList.add('hidden');
-  } catch (err) {
-    alert('Camera note: Please allow camera permissions in your browser bar.');
-  }
+function showCameraToast(text) {
+  const feed = document.getElementById('liveChatFeed');
+  if (!feed) return;
+  const msg = document.createElement('div');
+  msg.className = 'inline-flex items-center gap-1.5 bg-amber-500/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-amber-500/30 text-amber-300 text-xs font-bold';
+  msg.textContent = text;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+  setTimeout(() => msg.remove(), 4000);
 }
 
 function followHost() {
@@ -624,8 +1098,9 @@ function followHost() {
 }
 
 // Auto attempt camera if host
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  await loadCameraDevices();
   if (IS_HOST) {
     startLiveCamera();
   }
