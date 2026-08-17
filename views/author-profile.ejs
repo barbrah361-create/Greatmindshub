@@ -23,8 +23,12 @@
             <p class="text-sm text-gray-400 mt-1">Origin: <span class="font-bold text-gray-650 dark:text-gray-300"><%= author.nationality %></span></p>
           </div>
 
-          <!-- TikTok Style Follow Button -->
-          <div class="flex items-center gap-3">
+          <!-- Follow & Direct Message Action Buttons -->
+          <div class="flex items-center gap-2.5">
+            <a href="/messages/<%= author._id %>" class="px-5 py-2.5 rounded-full font-bold text-xs bg-brand-cream/60 dark:bg-brand-brown/30 hover:bg-brand-cream text-brand-brown dark:text-brand-pink border border-brand-brown/20 transition-all shadow-sm flex items-center gap-2">
+              <i data-lucide="message-square" class="w-4 h-4"></i>
+              <span>Message</span>
+            </a>
             <button id="followBtn" onclick="toggleFollowAuthor('<%= author._id %>')" class="px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-sm flex items-center gap-2 <%= isFollowing ? 'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300' : 'bg-brand-brown hover:bg-brand-accent text-white' %>">
               <i data-lucide="<%= isFollowing ? 'user-check' : 'user-plus' %>" class="w-4 h-4"></i>
               <span id="followBtnText"><%= isFollowing ? 'Following' : 'Follow Author' %></span>

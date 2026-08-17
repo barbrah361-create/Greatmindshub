@@ -508,21 +508,27 @@
   </div>
 
   <!-- User Profile Card Popover (When clicking chat users) -->
-  <div id="userProfilePopover" class="hidden fixed z-50 bg-black/95 border border-white/20 rounded-2xl p-4 w-64 shadow-2xl space-y-3 backdrop-blur-xl">
-    <div class="flex items-center gap-3">
-      <img id="popoverAvatar" src="/uploads/default-avatar.png" class="w-11 h-11 rounded-full object-cover ring-2 ring-brand-pink" alt="">
-      <div class="truncate">
-        <p id="popoverUsername" class="font-bold text-white text-sm truncate"></p>
-        <p class="text-[10px] text-gray-400">Live Participant</p>
+  <div id="userProfilePopover" class="hidden fixed z-50 bg-black/95 border border-white/20 rounded-2xl p-4 w-72 shadow-2xl space-y-3 backdrop-blur-xl">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3 truncate">
+        <img id="popoverAvatar" src="/uploads/default-avatar.png" class="w-11 h-11 rounded-full object-cover ring-2 ring-brand-pink shrink-0" alt="">
+        <div class="truncate">
+          <p id="popoverUsername" class="font-bold text-white text-sm truncate"></p>
+          <p class="text-[10px] text-gray-400">Live Participant</p>
+        </div>
       </div>
+      <button onclick="document.getElementById('userProfilePopover').classList.add('hidden')" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
-    <div class="flex gap-2 pt-1">
-      <button id="popoverFollowBtn" onclick="handlePopoverFollow()" class="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
+    <div class="grid grid-cols-2 gap-2 pt-1">
+      <button id="popoverFollowBtn" onclick="handlePopoverFollow()" class="py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
         <i data-lucide="user-plus" class="w-3 h-3"></i> <span id="popoverFollowText">+ Follow</span>
       </button>
+      <a id="popoverDmLink" href="/messages" class="py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
+        <i data-lucide="message-square" class="w-3 h-3 text-brand-pink"></i> <span>Message</span>
+      </a>
       <% if (isHost) { %>
-        <button id="popoverInviteBtn" onclick="handlePopoverInvite()" class="flex-1 py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/40 text-amber-400 text-xs font-bold rounded-xl transition-all">
-          Invite
+        <button id="popoverInviteBtn" onclick="handlePopoverInvite()" class="col-span-2 py-2 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/40 text-amber-400 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i> Invite to Co-Host
         </button>
       <% } %>
     </div>
@@ -664,16 +670,44 @@ socket.on('user-joined', (data) => {
 });
 
 // Chat message
+let selectedChatUser = { id: '', username: '', avatar: '' };
+
 socket.on('chat-message', (data) => {
   const feed = document.getElementById('liveChatFeed');
   if (!feed) return;
   const msg = document.createElement('div');
-  msg.className = 'inline-flex items-start gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 max-w-[90%]';
-  msg.innerHTML = '<span class="text-amber-400 text-xs font-bold shrink-0">' + data.username + ':</span>' +
+  msg.className = 'inline-flex items-start gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 max-w-[90%] cursor-pointer hover:border-brand-pink/50 transition-colors';
+  msg.onclick = () => openChatUserPopover(data.userId, data.username, data.avatar);
+  msg.innerHTML = '<span class="text-amber-400 text-xs font-bold shrink-0 hover:underline">' + data.username + ':</span>' +
     '<span class="text-white text-xs leading-relaxed">' + data.message + '</span>';
   feed.appendChild(msg);
   feed.scrollTop = feed.scrollHeight;
 });
+
+function openChatUserPopover(userId, username, avatar) {
+  if (!userId || userId === CURRENT_USER.id) return;
+  selectedChatUser = { id: userId, username, avatar };
+  document.getElementById('popoverAvatar').src = avatar || '/uploads/default-avatar.png';
+  document.getElementById('popoverUsername').textContent = username;
+  document.getElementById('popoverDmLink').href = '/messages/' + userId;
+  const popover = document.getElementById('userProfilePopover');
+  popover.style.left = '20px';
+  popover.style.bottom = '110px';
+  popover.classList.remove('hidden');
+}
+
+function handlePopoverFollow() {
+  if (selectedChatUser.id) {
+    toggleFollowUser(selectedChatUser.id, 'popoverFollowBtn');
+  }
+}
+
+function handlePopoverInvite() {
+  if (selectedChatUser.id) {
+    inviteViewerToCoHost(selectedChatUser.id, selectedChatUser.username);
+    document.getElementById('userProfilePopover').classList.add('hidden');
+  }
+}
 
 function sendLiveComment(e) {
   e.preventDefault();
@@ -682,6 +716,7 @@ function sendLiveComment(e) {
   if (!text) return;
   socket.emit('chat-message', {
     roomId: ROOM_ID,
+    userId: CURRENT_USER.id,
     username: CURRENT_USER.username,
     avatar: CURRENT_USER.avatar,
     message: text

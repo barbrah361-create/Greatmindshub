@@ -28,6 +28,7 @@ import dashboardRoutes from './src/routes/dashboardRoutes.js';
 import articleRoutes from './src/routes/articleRoutes.js';
 import poemRoutes from './src/routes/poemRoutes.js';
 import liveRoutes from './src/routes/liveRoutes.js';
+import messageRoutes from './src/routes/messageRoutes.js';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -101,6 +102,7 @@ async function bootstrap() {
   app.use('/admin', adminRoutes);
   app.use('/authors', authorRoutes);
   app.use('/live', liveRoutes);
+  app.use('/messages', messageRoutes);
   app.use('/', dashboardRoutes);
 
   app.post('/api/mpesa/callback', PaymentController.mpesaCallback);

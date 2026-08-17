@@ -92,6 +92,9 @@
                 <a href="/notifications" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
                   <i data-lucide="bell" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Notifications
                 </a>
+                <a href="/messages" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
+                  <i data-lucide="message-square" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Direct Messages
+                </a>
                 <a href="/poems/submit" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/25">
                   <i data-lucide="pen-line" class="w-4 h-4 text-brand-brown dark:text-brand-pink"></i> Publish Poem
                 </a>
@@ -170,6 +173,7 @@
             </div>
           </div>
           <a href="/dashboard" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Dashboard</a>
+          <a href="/messages" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Direct Messages</a>
           <a href="/poems/submit" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Publish Poem</a>
           <a href="/novels/submit" class="block px-4 py-2.5 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-brand-cream/40 dark:hover:bg-brand-brown/20">Publish Novel</a>
           <% if (user.role === 'admin') { %>

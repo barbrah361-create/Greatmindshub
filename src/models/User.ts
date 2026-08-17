@@ -58,6 +58,8 @@ export interface User {
   currentStreak?: number;
   longestStreak?: number;
   lastActiveDate?: string;
+  blockedUsers?: string[];
+  messagePrivacy?: 'everyone' | 'followers' | 'none';
   createdAt: string;
 }
 

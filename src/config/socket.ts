@@ -43,8 +43,9 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     });
 
     // ── Chat message ──
-    socket.on('chat-message', (data: { roomId: string; username: string; avatar: string; message: string }) => {
+    socket.on('chat-message', (data: { roomId: string; userId?: string; username: string; avatar: string; message: string }) => {
       io.to(data.roomId).emit('chat-message', {
+        userId: data.userId || '',
         username: data.username,
         avatar: data.avatar,
         message: data.message,
