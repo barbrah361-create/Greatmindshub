@@ -128,21 +128,20 @@
     <div id="hostVideoWrapper" class="relative w-full h-full flex-1 flex items-center justify-center bg-black overflow-hidden transition-all duration-300">
       <video id="liveVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300 filter-glam" autoplay playsinline></video>
       
-      <!-- Speaking Audio Indicator & Quick Mute Overlay -->
-      <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-        <div id="hostSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
-          <span class="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></span>
-          <span class="w-1.5 h-4 bg-green-400 rounded-full animate-bounce delay-100"></span>
-          <span class="w-1.5 h-2 bg-green-400 rounded-full animate-bounce delay-200"></span>
-          <span class="text-[10px] font-bold text-green-400 ml-1" id="hostMicLabel">Mic Active</span>
+      <!-- Top Host Tag & Speaking Indicator (Cleanly positioned at top, never blocked by bottom chat) -->
+      <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <div class="bg-red-600/90 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow">
+          HOST
         </div>
-        <div id="hostMutedBadge" class="hidden bg-red-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
-          <i data-lucide="mic-off" class="w-3 h-3"></i> Muted
+        <div id="hostSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/15">
+          <span class="w-1 h-2.5 bg-green-400 rounded-full animate-bounce"></span>
+          <span class="w-1 h-3.5 bg-green-400 rounded-full animate-bounce delay-100"></span>
+          <span class="w-1 h-2 bg-green-400 rounded-full animate-bounce delay-200"></span>
+          <span class="text-[9px] font-bold text-green-400 ml-1" id="hostMicLabel">Mic Active</span>
         </div>
-      </div>
-
-      <div class="absolute top-4 left-4 z-20 bg-red-600/80 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-md">
-        HOST
+        <div id="hostMutedBadge" class="hidden bg-red-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
+          <i data-lucide="mic-off" class="w-2.5 h-2.5"></i> Muted
+        </div>
       </div>
     </div>
 
@@ -150,16 +149,22 @@
     <div id="guestVideoWrapper" class="hidden relative w-full h-full flex-1 flex items-center justify-center bg-gray-950 border-t-2 md:border-t-0 md:border-l-2 border-brand-brown/40 overflow-hidden transition-all duration-300">
       <video id="guestVideoFeed" class="w-full h-full object-cover transform -scale-x-100 transition-all duration-300" autoplay playsinline></video>
       
-      <!-- Guest Speaking Indicator & Muted Badge -->
-      <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-        <div id="guestSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
-          <span class="w-1.5 h-3 bg-blue-400 rounded-full animate-bounce"></span>
-          <span class="w-1.5 h-4 bg-blue-400 rounded-full animate-bounce delay-100"></span>
-          <span class="text-[10px] font-bold text-blue-400 ml-1" id="guestStageName">Co-Host</span>
+      <!-- Top Guest Tag & Speaking Indicator -->
+      <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <div class="bg-blue-600/90 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow">
+          GUEST
         </div>
-        <div id="guestMutedBadge" class="hidden bg-red-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
-          <i data-lucide="mic-off" class="w-3 h-3"></i> Guest Muted
+        <div id="guestSpeakingIndicator" class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/15">
+          <span class="w-1 h-2.5 bg-blue-400 rounded-full animate-bounce"></span>
+          <span class="w-1 h-3.5 bg-blue-400 rounded-full animate-bounce delay-100"></span>
+          <span class="text-[9px] font-bold text-blue-400 ml-1" id="guestStageName">Co-Host</span>
         </div>
+        <div id="guestMutedBadge" class="hidden bg-red-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-red-400/30 flex items-center gap-1 shadow-lg">
+          <i data-lucide="mic-off" class="w-2.5 h-2.5"></i> Muted
+        </div>
+        <button id="guestFollowBtn" onclick="toggleFollowGuest()" class="px-2 py-0.5 bg-red-600/90 hover:bg-red-700 text-white text-[9px] font-bold rounded-full border border-white/20 flex items-center gap-1 transition-all shadow">
+          <i data-lucide="user-plus" class="w-2.5 h-2.5"></i> <span id="guestFollowText">+ Follow</span>
+        </button>
       </div>
 
       <!-- Host Action: Drop Guest Button -->
