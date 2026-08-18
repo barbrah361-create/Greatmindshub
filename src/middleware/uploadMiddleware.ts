@@ -1,8 +1,13 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { uploadFileToCloud } from '../services/uploadService.js';
+import { UploadDB } from '../config/db.js';
 
-const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+const isVercel = !!process.env.VERCEL;
+const uploadDir = isVercel
+  ? path.join('/tmp', 'uploads')
+  : path.join(process.cwd(), 'public', 'uploads');
 
 // Ensure upload directory exists
 if (!fs.existsSync(uploadDir)) {
@@ -30,12 +35,6 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
   cb(new Error('Only images (jpeg, jpg, png, gif, webp) are allowed!'));
 };
 
-export const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: fileFilter
-});
-
 const poemFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
   if (file.fieldname === 'backgroundImage') {
     const filetypes = /jpeg|jpg|png|webp|gif/;
@@ -58,8 +57,82 @@ const poemFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
   }
 };
 
-export const uploadPoemFiles = multer({
+const originalUpload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: fileFilter
+});
+
+const originalUploadPoemFiles = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for audio
   fileFilter: poemFileFilter
 });
+
+/**
+ * Express middleware that intercepts multer-uploaded files and uploads them to the cloud.
+ */
+export async function uploadToCloudMiddleware(req: any, res: any, next: any) {
+  if (!req.file && !req.files) {
+    return next();
+  }
+
+  const uploadPromises: Promise<any>[] = [];
+
+  const handleUpload = async (file: Express.Multer.File) => {
+    if (file.path) {
+      const cloudUrl = await uploadFileToCloud(file.path, file.filename);
+      if (cloudUrl) {
+        // Save database mapping
+        UploadDB.create({
+          filename: file.filename,
+          cloudUrl: cloudUrl
+        });
+
+        // Clean up temporary local file on container
+        try {
+          fs.unlinkSync(file.path);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  };
+
+  if (req.file) {
+    uploadPromises.push(handleUpload(req.file));
+  }
+
+  if (req.files) {
+    if (Array.isArray(req.files)) {
+      req.files.forEach((file: any) => uploadPromises.push(handleUpload(file)));
+    } else {
+      Object.keys(req.files).forEach((key) => {
+        const fileArray = req.files[key];
+        if (Array.isArray(fileArray)) {
+          fileArray.forEach((file: any) => uploadPromises.push(handleUpload(file)));
+        }
+      });
+    }
+  }
+
+  if (uploadPromises.length > 0) {
+    try {
+      await Promise.all(uploadPromises);
+    } catch (err) {
+      console.error('[Upload Middleware] Error during cloud uploads:', err);
+    }
+  }
+
+  next();
+}
+
+// Intercept single uploads
+export const upload = {
+  single: (fieldName: string) => [originalUpload.single(fieldName), uploadToCloudMiddleware]
+};
+
+// Intercept fields/multiple uploads
+export const uploadPoemFiles = {
+  fields: (fields: any[]) => [originalUploadPoemFiles.fields(fields), uploadToCloudMiddleware]
+};

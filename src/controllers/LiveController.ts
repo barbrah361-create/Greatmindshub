@@ -114,7 +114,8 @@ export const LiveController = {
       session,
       isHost,
       topGifters,
-      giftCatalog: GIFT_CATALOG
+      giftCatalog: GIFT_CATALOG,
+      socketServerUrl: process.env.SOCKET_SERVER_URL || ''
     });
   },
 

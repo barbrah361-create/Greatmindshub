@@ -1,6 +1,7 @@
-import { initDB } from './src/config/db.js';
+import { initDB, writeContext, UploadDB } from './src/config/db.js';
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import http from 'http';
 import session from 'express-session';
 import dotenv from 'dotenv';
@@ -9,7 +10,6 @@ import { createServer as createViteServer } from 'vite';
 import { initSocketServer } from './src/config/socket.js';
 
 dotenv.config();
-initDB();
 
 import { setupLocals, requireAuth } from './src/middleware/authMiddleware.js';
 import { generalLimiter, authLimiter, securityHeaders } from './src/middleware/securityMiddleware.js';
@@ -35,8 +35,55 @@ const httpServer = http.createServer(app);
 const io = initSocketServer(httpServer);
 
 async function bootstrap() {
+  await initDB();
   app.set('trust proxy', 1);
   const PORT = parseInt(process.env.PORT || '3000', 10);
+
+  // Write-awaiter middleware (intercepts response to ensure async MongoDB writes complete)
+  app.use((req, res, next) => {
+    const pendingWrites: Promise<any>[] = [];
+    res.locals.pendingWrites = pendingWrites;
+
+    const originalSend = res.send;
+    const originalJson = res.json;
+    const originalRedirect = res.redirect;
+    const originalRender = res.render;
+
+    const awaitWrites = async () => {
+      if (res.locals.pendingWrites && res.locals.pendingWrites.length > 0) {
+        try {
+          await Promise.all(res.locals.pendingWrites);
+        } catch (err) {
+          console.error('[DB Request Wait] Error in pending write:', err);
+        }
+        res.locals.pendingWrites = [];
+      }
+    };
+
+    (res as any).send = async function(...args: any[]) {
+      await awaitWrites();
+      return originalSend.apply(this, args);
+    };
+
+    (res as any).json = async function(...args: any[]) {
+      await awaitWrites();
+      return originalJson.apply(this, args);
+    };
+
+    (res as any).redirect = async function(...args: any[]) {
+      await awaitWrites();
+      return originalRedirect.apply(this, args);
+    };
+
+    (res as any).render = async function(...args: any[]) {
+      await awaitWrites();
+      return originalRender.apply(this, args);
+    };
+
+    writeContext.run({ pendingWrites }, () => {
+      next();
+    });
+  });
 
   app.set('view engine', 'ejs');
   app.set('views', path.join(process.cwd(), 'views'));
@@ -46,6 +93,32 @@ async function bootstrap() {
   app.use(generalLimiter);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Cloud uploads redirect route
+  app.get('/uploads/:filename', async (req, res, next) => {
+    const filename = req.params.filename;
+    try {
+      const mapping = UploadDB.findOne({ filename });
+      if (mapping && mapping.cloudUrl) {
+        return res.redirect(mapping.cloudUrl);
+      }
+    } catch (err) {
+      console.error('[Upload Redirect] Error finding mapping:', err);
+    }
+
+    // Fallback to local files if it exists
+    let localPath = path.join(process.cwd(), 'public', 'uploads', filename);
+    if (fs.existsSync(localPath)) {
+      return res.sendFile(localPath);
+    }
+
+    let tmpPath = path.join('/tmp', 'uploads', filename);
+    if (fs.existsSync(tmpPath)) {
+      return res.sendFile(tmpPath);
+    }
+
+    next();
+  });
 
   app.use(express.static(path.join(process.cwd(), 'public')));
   app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));

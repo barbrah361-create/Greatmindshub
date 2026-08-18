@@ -78,7 +78,7 @@
     <!-- Scrollable Pills -->
     <div id="categoryPillsGrid" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-thin">
       <a href="/poems?sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all border <%= !category ? 'bg-brand-brown text-white border-brand-brown shadow-sm' : 'bg-white dark:bg-[#1E150F] border-brand-brown/10 text-gray-600 dark:text-gray-300 hover:bg-brand-pink/5' %>" data-category="all">
-        📖 All Poetry
+        All Poetry
       </a>
       <% categories.forEach(function(cat) { %>
         <a href="/poems?category=<%= encodeURIComponent(cat) %>&sort=<%= sort %>&search=<%= typeof search !== 'undefined' ? encodeURIComponent(search) : '' %>" class="category-pill px-4 py-2 rounded-full text-xs font-bold transition-all border <%= category === cat ? 'bg-brand-brown text-white border-brand-brown shadow-sm' : 'bg-white dark:bg-[#1E150F] border-brand-brown/10 text-gray-600 dark:text-gray-300 hover:bg-brand-pink/5' %>" data-category="<%= cat.toLowerCase() %>">

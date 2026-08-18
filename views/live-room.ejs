@@ -2,7 +2,7 @@
 <%- include('partials/navbar') %>
 
 <!-- Socket.io Client -->
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <!-- TikTok Live Room - Full Immersive Dual Stage Layout -->
 <div id="live-room-wrapper" class="bg-black min-h-screen relative overflow-hidden flex flex-col justify-between text-white select-none">
@@ -397,43 +397,43 @@
       <!-- Filter Presets Grid -->
       <div class="grid grid-cols-3 sm:grid-cols-7 gap-2">
         <button type="button" onclick="selectBeautyPreset('glam', 'Glam Glow')" class="beauty-preset-btn active flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-pink-500/20 border border-white/10 hover:border-pink-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌟</span>
+          <i data-lucide="sparkles" class="w-6 h-6 mb-1 text-pink-400 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Glam Glow</span>
           <span class="text-[9px] text-pink-400">Smooth Skin</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('golden', 'Golden Hour')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌅</span>
+          <i data-lucide="sun" class="w-6 h-6 mb-1 text-amber-500 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Golden Hour</span>
           <span class="text-[9px] text-amber-400">Sun Warmth</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('romance', 'Rosy Blush')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌸</span>
+          <i data-lucide="flower2" class="w-6 h-6 mb-1 text-rose-400 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Rosy Blush</span>
           <span class="text-[9px] text-rose-400">Soft Pink</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('studio', 'Studio Light')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">💡</span>
+          <i data-lucide="lightbulb" class="w-6 h-6 mb-1 text-yellow-300 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Ringlight</span>
           <span class="text-[9px] text-blue-400">High Bright</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('vibrant', 'Vibrant Pop')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-purple-500/20 border border-white/10 hover:border-purple-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🎨</span>
+          <i data-lucide="palette" class="w-6 h-6 mb-1 text-purple-400 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Vibrant</span>
           <span class="text-[9px] text-purple-400">HD Pop</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('noir', 'Vintage Noir')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-gray-500/20 border border-white/10 hover:border-gray-400 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🎬</span>
+          <i data-lucide="film" class="w-6 h-6 mb-1 text-gray-400 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Noir</span>
           <span class="text-[9px] text-gray-400">B&W Film</span>
         </button>
 
         <button type="button" onclick="selectBeautyPreset('natural', 'Natural HD')" class="beauty-preset-btn flex flex-col items-center p-2.5 rounded-2xl bg-white/5 hover:bg-green-500/20 border border-white/10 hover:border-green-500 transition-all text-center group">
-          <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">✨</span>
+          <i data-lucide="smile" class="w-6 h-6 mb-1 text-green-400 group-hover:scale-110 transition-transform"></i>
           <span class="text-[11px] font-bold text-white">Natural</span>
           <span class="text-[9px] text-green-400">Authentic</span>
         </button>
@@ -443,7 +443,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
         <div>
           <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
-            <span class="flex items-center gap-1"><span>✨</span> Skin Smooth:</span>
+            <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-pink-400"></i> Skin Smooth:</span>
             <span id="smoothValLabel" class="text-pink-400 font-mono">65%</span>
           </div>
           <input type="range" id="smoothSlider" min="0" max="100" value="65" oninput="updateCustomBeautyFilters()" class="w-full accent-pink-500 h-1.5 bg-white/20 rounded-lg cursor-pointer">
@@ -451,7 +451,7 @@
 
         <div>
           <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
-            <span class="flex items-center gap-1"><span>💡</span> Brightness:</span>
+            <span class="flex items-center gap-1"><i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> Brightness:</span>
             <span id="brightValLabel" class="text-amber-400 font-mono">115%</span>
           </div>
           <input type="range" id="brightSlider" min="80" max="160" value="115" oninput="updateCustomBeautyFilters()" class="w-full accent-amber-400 h-1.5 bg-white/20 rounded-lg cursor-pointer">
@@ -459,7 +459,7 @@
 
         <div>
           <div class="flex items-center justify-between text-[11px] font-semibold text-gray-300 mb-1">
-            <span class="flex items-center gap-1"><span>🎨</span> Warmth / Saturation:</span>
+            <span class="flex items-center gap-1"><i data-lucide="palette" class="w-3.5 h-3.5 text-purple-400"></i> Warmth / Saturation:</span>
             <span id="satValLabel" class="text-purple-400 font-mono">125%</span>
           </div>
           <input type="range" id="satSlider" min="80" max="180" value="125" oninput="updateCustomBeautyFilters()" class="w-full accent-purple-400 h-1.5 bg-white/20 rounded-lg cursor-pointer">
@@ -665,7 +665,7 @@ const RTC_CONFIG = {
 };
 
 // ── Socket.io Connection ──
-const socket = io();
+const socket = io('<%= typeof socketServerUrl !== "undefined" ? socketServerUrl : "" %>');
 socket.emit('join-room', {
   roomId: ROOM_ID,
   userId: CURRENT_USER.id,

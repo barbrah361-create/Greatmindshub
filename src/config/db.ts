@@ -1,12 +1,40 @@
 import fs from 'fs';
 import path from 'path';
 import bcryptjs from 'bcryptjs';
+import mongoose from 'mongoose';
+import { AsyncLocalStorage } from 'async_hooks';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+// AsyncLocalStorage to track request-scoped write promises
+export const writeContext = new AsyncLocalStorage<{ pendingWrites: Promise<any>[] }>();
+
+const isVercel = !!process.env.VERCEL;
+const DATA_DIR = isVercel
+  ? path.join('/tmp', 'data')
+  : path.join(process.cwd(), 'data');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Copy seed JSON files to /tmp/data on Vercel
+if (isVercel) {
+  const sourceDir = path.join(process.cwd(), 'data');
+  if (fs.existsSync(sourceDir)) {
+    const files = fs.readdirSync(sourceDir);
+    files.forEach(file => {
+      if (file.endsWith('.json')) {
+        const srcPath = path.join(sourceDir, file);
+        const destPath = path.join(DATA_DIR, file);
+        try {
+          fs.copyFileSync(srcPath, destPath);
+        } catch (e) {
+          console.error(`[DB] Failed to copy seed file ${file}:`, e);
+        }
+      }
+    });
+    console.log('[DB] Copied seed JSON files to /tmp/data');
+  }
 }
 
 // Utility to read JSON file safely
@@ -122,6 +150,54 @@ export class QueryChain<T> {
   }
 }
 
+// MongoDB Integration Helpers
+const useMongoDB = !!process.env.MONGODB_URI;
+const genericSchema = new mongoose.Schema({}, { strict: false, timestamps: true });
+
+export function getMongoModel(collectionName: string): any {
+  if (mongoose.models[collectionName]) {
+    return mongoose.models[collectionName];
+  }
+  return mongoose.model(collectionName, genericSchema, collectionName);
+}
+
+const COLLECTIONS = [
+  'users',
+  'novels',
+  'authors',
+  'comments',
+  'signatures',
+  'messages',
+  'notifications',
+  'payments',
+  'poems',
+  'live_sessions',
+  'uploads'
+];
+
+async function syncMongoToLocal() {
+  console.log('[DB] Synchronizing MongoDB to local JSON files...');
+  for (const collection of COLLECTIONS) {
+    try {
+      const model = getMongoModel(collection);
+      const docs = await model.find({}).exec();
+      const filepath = path.join(DATA_DIR, `${collection}.json`);
+      if (docs.length > 0) {
+        const plainObjects = docs.map(d => {
+          const obj = d.toObject ? d.toObject() : d;
+          if (obj._id) obj._id = String(obj._id);
+          if (obj.id) obj.id = String(obj.id);
+          return obj;
+        });
+        fs.writeFileSync(filepath, JSON.stringify(plainObjects, null, 2), 'utf8');
+        console.log(`[DB] Synced ${docs.length} records for ${collection}`);
+      }
+    } catch (err) {
+      console.error(`[DB] Sync failed for ${collection}:`, err);
+    }
+  }
+}
+
 export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }> {
   private filename: string;
   private collectionName: string;
@@ -139,6 +215,23 @@ export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }
     writeJSON(this.filename, data);
   }
 
+  private async saveToMongo(action: 'create' | 'update' | 'delete', docId: string, data?: any) {
+    if (!useMongoDB) return;
+    try {
+      const model = getMongoModel(this.collectionName);
+      if (action === 'create') {
+        const doc = new model(data);
+        await doc.save();
+      } else if (action === 'update') {
+        await model.findOneAndUpdate({ _id: docId }, { $set: data }, { new: true, upsert: true }).exec();
+      } else if (action === 'delete') {
+        await model.findOneAndDelete({ _id: docId }).exec();
+      }
+    } catch (err) {
+      console.error(`[DB Mongo Sync] Error for ${this.collectionName} (${action}):`, err);
+    }
+  }
+
   find(query: any = {}): QueryChain<T> {
     return new QueryChain<T>(this.getAll()).filter(query);
   }
@@ -154,7 +247,7 @@ export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }
 
   create(data: Partial<T>): T {
     const items = this.getAll();
-    const _id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const _id = data._id || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const newItem = {
       _id,
       id: _id,
@@ -164,6 +257,14 @@ export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }
     
     items.push(newItem);
     this.saveAll(items);
+
+    // Sync to MongoDB asynchronously
+    const writePromise = this.saveToMongo('create', _id, newItem);
+    const store = writeContext.getStore();
+    if (store) {
+      store.pendingWrites.push(writePromise);
+    }
+
     return newItem;
   }
 
@@ -181,6 +282,14 @@ export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }
     
     items[index] = updated;
     this.saveAll(items);
+
+    // Sync to MongoDB asynchronously
+    const writePromise = this.saveToMongo('update', String(id), updated);
+    const store = writeContext.getStore();
+    if (store) {
+      store.pendingWrites.push(writePromise);
+    }
+
     return updated;
   }
 
@@ -192,6 +301,14 @@ export class DBModel<T extends { _id?: string; id?: string; [key: string]: any }
     const removed = items[index];
     items.splice(index, 1);
     this.saveAll(items);
+
+    // Sync to MongoDB asynchronously
+    const writePromise = this.saveToMongo('delete', String(id));
+    const store = writeContext.getStore();
+    if (store) {
+      store.pendingWrites.push(writePromise);
+    }
+
     return removed;
   }
 
@@ -207,6 +324,7 @@ export const AuthorDB = new DBModel<any>('authors');
 export const CommentDB = new DBModel<any>('comments');
 export const SignatureDB = new DBModel<any>('signatures');
 export const MessageDB = new DBModel<any>('messages');
+export const UploadDB = new DBModel<any>('uploads');
 
 // Ensure admin account exists for platform management
 export function ensureAdmin() {
@@ -289,7 +407,17 @@ export function migrateData() {
 }
 
 // Initialize database with premium pre-seeded data if empty
-export function initDB() {
+export async function initDB() {
+  if (useMongoDB) {
+    try {
+      await mongoose.connect(process.env.MONGODB_URI!);
+      console.log('[DB] Connected to MongoDB via Mongoose');
+      await syncMongoToLocal();
+    } catch (err) {
+      console.error('[DB] MongoDB connection/sync failed, falling back to local files:', err);
+    }
+  }
+
   migrateData();
   ensureAdmin();
   // 1. Seed Authors if empty
