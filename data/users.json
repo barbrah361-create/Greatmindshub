@@ -18,18 +18,33 @@
     "followers": [
       "z1ck9a5pcaszgpazw581l"
     ],
-    "updatedAt": "2026-08-17T17:35:28.108Z",
+    "updatedAt": "2026-08-18T06:58:27.241Z",
     "passwordResetToken": "9d456d498be21e8a65cb4d7e3acde7d0594f8ca248d980c8bde29816d1b76e2f",
     "passwordResetExpires": "2026-07-21T10:45:39.822Z",
-    "currentStreak": 1,
-    "longestStreak": 1,
-    "lastActiveDate": "2026-08-17T08:52:59.058Z",
+    "currentStreak": 2,
+    "longestStreak": 2,
+    "lastActiveDate": "2026-08-18T06:11:55.693Z",
     "achievements": [
       "✍️ First Published Poem"
     ],
     "giftPoints": 250,
     "streakPoints": 75,
-    "viralScore": 325
+    "viralScore": 325,
+    "reposts": [],
+    "location": "Eldoret",
+    "nationality": "Kenya",
+    "occupation": "",
+    "writingStyle": "English",
+    "website": "",
+    "twitter": "",
+    "instagram": "",
+    "linkedin": "",
+    "facebook": "",
+    "tiktok": "",
+    "youtube": "",
+    "genres": [],
+    "awards": [],
+    "coverPhoto": ""
   },
   {
     "_id": "929v0bqkos6he1jgpe9i",

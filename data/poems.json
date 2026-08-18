@@ -115,7 +115,7 @@
       }
     ],
     "bookmarks": [],
-    "viewCount": 3,
+    "viewCount": 5,
     "approvalStatus": "approved",
     "tags": [
       "NATURE"
@@ -126,7 +126,7 @@
     "authorName": "guru",
     "genre": "Sonnets",
     "submittedBy": "z1ck9a5pcaszgpazw581l",
-    "updatedAt": "2026-08-02T09:20:37.137Z"
+    "updatedAt": "2026-08-18T06:58:04.532Z"
   },
   {
     "_id": "6flulq4iyjfaa73h8qh6wm",
@@ -213,26 +213,6 @@
     "updatedAt": "2026-08-17T06:44:52.949Z"
   },
   {
-    "_id": "u7wqq6h35hp6j4urp0x99",
-    "id": "u7wqq6h35hp6j4urp0x99",
-    "createdAt": "2026-08-14T11:29:23.202Z",
-    "likes": [],
-    "reactions": [],
-    "comments": [],
-    "bookmarks": [],
-    "viewCount": 0,
-    "approvalStatus": "pending",
-    "tags": [
-      "hhhhhhh"
-    ],
-    "title": "bbbb",
-    "content": "hhhhhhhh",
-    "authorId": "83v6pkw84q7s3w0ti0nq1",
-    "authorName": "Barbrah",
-    "genre": "Free Verse",
-    "submittedBy": "83v6pkw84q7s3w0ti0nq1"
-  },
-  {
     "_id": "vd9m32be37mgvuzr2holyl",
     "id": "vd9m32be37mgvuzr2holyl",
     "createdAt": "2026-08-14T11:50:47.287Z",
@@ -251,27 +231,6 @@
     "authorName": "Shar",
     "genre": "Free Verse",
     "submittedBy": "dz2z8mrs428pwerf5jsylb"
-  },
-  {
-    "_id": "4osqd4zp5qi5sde04t7ai",
-    "id": "4osqd4zp5qi5sde04t7ai",
-    "createdAt": "2026-08-17T06:27:15.067Z",
-    "likes": [],
-    "reactions": [],
-    "comments": [],
-    "bookmarks": [],
-    "viewCount": 6,
-    "approvalStatus": "pending",
-    "tags": [
-      "Nature"
-    ],
-    "title": "where",
-    "content": "werwdsfcs",
-    "authorId": "83v6pkw84q7s3w0ti0nq1",
-    "authorName": "Barbrah",
-    "genre": "Sonnets",
-    "submittedBy": "83v6pkw84q7s3w0ti0nq1",
-    "updatedAt": "2026-08-17T10:17:12.706Z"
   },
   {
     "_id": "7yungt12s0q8iwvyedhk7b",
@@ -306,7 +265,7 @@
     "reactions": [],
     "comments": [],
     "bookmarks": [],
-    "viewCount": 2,
+    "viewCount": 6,
     "approvalStatus": "approved",
     "tags": [
       "test",
@@ -322,6 +281,32 @@
     "backgroundPosition": "center",
     "backgroundSize": "cover",
     "backgroundOverlay": 0.4,
-    "updatedAt": "2026-08-17T16:02:07.924Z"
+    "updatedAt": "2026-08-18T06:40:02.954Z"
+  },
+  {
+    "_id": "dz9dhw2mvahvo7hzeiueht",
+    "id": "dz9dhw2mvahvo7hzeiueht",
+    "createdAt": "2026-08-18T06:37:44.639Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 1,
+    "approvalStatus": "pending",
+    "tags": [
+      "Nature"
+    ],
+    "title": "Morning",
+    "content": "<p><span style=\"color:rgb(230, 0, 0)\">ghgjhfjghfjhg</span></p>",
+    "authorId": "83v6pkw84q7s3w0ti0nq1",
+    "authorName": "Barbrah",
+    "genre": "Free Verse",
+    "category": "Free Verse",
+    "submittedBy": "83v6pkw84q7s3w0ti0nq1",
+    "backgroundImage": "/uploads/backgroundImage-1787035064586-51104168.jpeg",
+    "backgroundPosition": "center",
+    "backgroundSize": "cover",
+    "backgroundOverlay": 0.4,
+    "updatedAt": "2026-08-18T06:38:43.457Z"
   }
 ]
