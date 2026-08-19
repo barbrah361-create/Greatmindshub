@@ -49,5 +49,25 @@
     "type": "poem",
     "workTitle": "MORNING",
     "updatedAt": "2026-08-17T17:35:28.206Z"
+  },
+  {
+    "_id": "7xsz2jyhbfmo82rckc4ytb",
+    "id": "7xsz2jyhbfmo82rckc4ytb",
+    "createdAt": "2026-08-19T06:51:38.843Z",
+    "viewersCount": 1,
+    "likesCount": 1,
+    "isLive": true,
+    "workContent": "heyyyyy",
+    "gifts": [],
+    "totalGiftPoints": 0,
+    "coHosts": [],
+    "coHostRequests": [],
+    "hostId": "83v6pkw84q7s3w0ti0nq1",
+    "hostName": "Barbrah",
+    "hostAvatar": "/uploads/avatar-1784639225679-575970180.jpeg",
+    "title": "Latest verse",
+    "type": "poem",
+    "workTitle": "Live Recitation",
+    "updatedAt": "2026-08-19T07:03:00.651Z"
   }
 ]
