@@ -308,5 +308,30 @@
     "backgroundSize": "cover",
     "backgroundOverlay": 0.4,
     "updatedAt": "2026-08-18T06:38:43.457Z"
+  },
+  {
+    "_id": "5jojf2lv1r5uwlczylflq",
+    "id": "5jojf2lv1r5uwlczylflq",
+    "createdAt": "2026-08-19T20:08:28.600Z",
+    "likes": [],
+    "reactions": [],
+    "comments": [],
+    "bookmarks": [],
+    "viewCount": 0,
+    "approvalStatus": "pending",
+    "tags": [
+      "nature"
+    ],
+    "title": "morning",
+    "content": "<p>heyyebhbdh</p>",
+    "authorId": "qszprpmr4qd82jiy5vrnw",
+    "authorName": "Maven",
+    "genre": "Free Verse",
+    "category": "Free Verse",
+    "submittedBy": "qszprpmr4qd82jiy5vrnw",
+    "backgroundImage": "/uploads/backgroundImage-1787170106988-554765597.png",
+    "backgroundPosition": "center",
+    "backgroundSize": "cover",
+    "backgroundOverlay": 0.4
   }
 ]

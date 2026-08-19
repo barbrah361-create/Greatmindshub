@@ -42,5 +42,104 @@
     "message": "Now reciting: \"Live Recitation\" — Tap to join the live stage!",
     "link": "/live/7xsz2jyhbfmo82rckc4ytb",
     "read": false
+  },
+  {
+    "_id": "f8dcdthvb6p4y6xwgv3l5h",
+    "id": "f8dcdthvb6p4y6xwgv3l5h",
+    "createdAt": "2026-08-19T17:27:37.837Z",
+    "userId": "z1ck9a5pcaszgpazw581l",
+    "type": "live",
+    "title": "🔴 Barbrah is LIVE!",
+    "message": "Now reciting: \"Live Recitation\" — Tap to join the live stage!",
+    "link": "/live/3kabbfujoppecuhibbhya6",
+    "read": false
+  },
+  {
+    "_id": "t06uq6szr35q1fuy7ra96",
+    "id": "t06uq6szr35q1fuy7ra96",
+    "createdAt": "2026-08-19T18:00:29.021Z",
+    "userId": "z1ck9a5pcaszgpazw581l",
+    "type": "live",
+    "title": "🔴 Barbrah is LIVE!",
+    "message": "Now reciting: \"MORNING\" — Tap to join the live stage!",
+    "link": "/live/9il1jr0h8oejop8s7yraap",
+    "read": false
+  },
+  {
+    "_id": "hirpuxolyjotp3wv8bhg8",
+    "id": "hirpuxolyjotp3wv8bhg8",
+    "createdAt": "2026-08-19T18:10:02.751Z",
+    "userId": "z1ck9a5pcaszgpazw581l",
+    "type": "live",
+    "title": "🔴 Barbrah is LIVE!",
+    "message": "Now reciting: \"MORNING\" — Tap to join the live stage!",
+    "link": "/live/fsxeqhpwyrg7iec4ucn7b6",
+    "read": false
+  },
+  {
+    "_id": "l8khzcr5a9ot20w2x62kk",
+    "id": "l8khzcr5a9ot20w2x62kk",
+    "createdAt": "2026-08-19T18:52:21.858Z",
+    "userId": "83v6pkw84q7s3w0ti0nq1",
+    "type": "follow",
+    "title": "New Follower",
+    "message": "Maven started following you!",
+    "link": "/authors/83v6pkw84q7s3w0ti0nq1",
+    "read": false
+  },
+  {
+    "_id": "2e0czavuc2ua256ocple9j",
+    "id": "2e0czavuc2ua256ocple9j",
+    "createdAt": "2026-08-19T18:53:57.541Z",
+    "userId": "qszprpmr4qd82jiy5vrnw",
+    "type": "follow",
+    "title": "New Follower",
+    "message": "Barbrah started following you!",
+    "link": "/authors/qszprpmr4qd82jiy5vrnw",
+    "read": false
+  },
+  {
+    "_id": "zya5h7y2gblgda11u412b",
+    "id": "zya5h7y2gblgda11u412b",
+    "createdAt": "2026-08-19T18:54:22.624Z",
+    "userId": "qszprpmr4qd82jiy5vrnw",
+    "type": "mention",
+    "title": "New Direct Message",
+    "message": "Barbrah: hey...",
+    "link": "/messages/83v6pkw84q7s3w0ti0nq1",
+    "read": false
+  },
+  {
+    "_id": "f261wu08fx5wsuni6jgy89",
+    "id": "f261wu08fx5wsuni6jgy89",
+    "createdAt": "2026-08-19T19:22:54.405Z",
+    "userId": "e3oxbnep0p54fbzfyju9ob",
+    "type": "follow",
+    "title": "New Follower",
+    "message": "Barbrah started following you!",
+    "link": "/authors/e3oxbnep0p54fbzfyju9ob",
+    "read": false
+  },
+  {
+    "_id": "pohw2l6i13l3fjn5oekqj8",
+    "id": "pohw2l6i13l3fjn5oekqj8",
+    "createdAt": "2026-08-19T19:32:53.654Z",
+    "userId": "83v6pkw84q7s3w0ti0nq1",
+    "type": "live",
+    "title": "🔴 Maven is LIVE!",
+    "message": "Now reciting: \"Live Recitation\" — Tap to join the live stage!",
+    "link": "/live/9omgy5uzuzgy7u505n49a",
+    "read": false
+  },
+  {
+    "_id": "um1nh8lj5tq722ws8zon1j",
+    "id": "um1nh8lj5tq722ws8zon1j",
+    "createdAt": "2026-08-19T20:10:47.489Z",
+    "userId": "83v6pkw84q7s3w0ti0nq1",
+    "type": "live",
+    "title": "🔴 Maven is LIVE!",
+    "message": "Now reciting: \"Live Recitation\" — Tap to join the live stage!",
+    "link": "/live/6d36cmk7dvf3vcbddjycx4",
+    "read": false
   }
 ]

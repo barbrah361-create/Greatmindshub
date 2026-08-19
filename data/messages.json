@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "msg_1787165662622_ahgb5nt",
+    "id": "msg_1787165662622_ahgb5nt",
+    "createdAt": "2026-08-19T18:54:22.622Z",
+    "conversationId": "83v6pkw84q7s3w0ti0nq1_qszprpmr4qd82jiy5vrnw",
+    "senderId": "83v6pkw84q7s3w0ti0nq1",
+    "senderName": "Barbrah",
+    "senderAvatar": "/uploads/avatar-1784639225679-575970180.jpeg",
+    "receiverId": "qszprpmr4qd82jiy5vrnw",
+    "receiverName": "Maven",
+    "receiverAvatar": "/uploads/avatar-1787165509319-231414659.jpg",
+    "content": "hey",
+    "status": "accepted",
+    "isRead": false
+  }
+]

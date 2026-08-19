@@ -1,0 +1,171 @@
+<!-- Network Modal (Followers/Following) -->
+<div id="networkModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white dark:bg-[#1E150F] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl border border-brand-brown/10 dark:border-brand-brown/20 overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="networkModalContent">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-5 border-b border-brand-brown/10 dark:border-brand-brown/20 bg-brand-cream/30 dark:bg-brand-brown/5">
+      <h3 class="font-serif text-xl font-bold text-gray-900 dark:text-brand-pink" id="networkModalTitle">Network</h3>
+      <button onclick="closeNetworkModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-brand-brown/10 dark:border-brand-brown/20">
+      <button id="tab-followers" onclick="switchNetworkTab('followers')" class="flex-1 py-3 text-sm font-bold text-brand-brown dark:text-brand-pink border-b-2 border-brand-brown dark:border-brand-pink bg-brand-cream/10 dark:bg-white/5 transition-all">
+        Followers (<span id="followersCountTab">0</span>)
+      </button>
+      <button id="tab-following" onclick="switchNetworkTab('following')" class="flex-1 py-3 text-sm font-bold text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-brand-brown dark:hover:text-brand-pink transition-all">
+        Following (<span id="followingCountTab">0</span>)
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="networkLoading" class="hidden flex-1 flex items-center justify-center py-12">
+      <i data-lucide="loader-2" class="w-8 h-8 text-brand-brown dark:text-brand-pink animate-spin"></i>
+    </div>
+
+    <!-- List Container -->
+    <div id="networkListContainer" class="flex-1 overflow-y-auto p-2">
+      <!-- Users will be injected here -->
+    </div>
+  </div>
+</div>
+
+<script>
+let currentNetworkData = { followers: [], following: [] };
+let currentNetworkTab = 'followers';
+
+async function openNetworkModal(initialTab = 'followers', userId) {
+  const modal = document.getElementById('networkModal');
+  const modalContent = document.getElementById('networkModalContent');
+  modal.classList.remove('hidden');
+  
+  // Animation delay for smooth appearance
+  setTimeout(() => {
+    modalContent.classList.remove('scale-95', 'opacity-0');
+    modalContent.classList.add('scale-100', 'opacity-100');
+  }, 10);
+
+  document.getElementById('networkLoading').classList.remove('hidden');
+  document.getElementById('networkListContainer').innerHTML = '';
+  
+  switchNetworkTab(initialTab, false); // Don't render yet
+
+  try {
+    const res = await fetch(`/authors/${userId}/network`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentNetworkData = data;
+      document.getElementById('followersCountTab').innerText = data.followers.length;
+      document.getElementById('followingCountTab').innerText = data.following.length;
+      renderNetworkList();
+    } else {
+      document.getElementById('networkListContainer').innerHTML = '<div class="p-6 text-center text-sm text-red-500">Failed to load network.</div>';
+    }
+  } catch (err) {
+    console.error(err);
+    document.getElementById('networkListContainer').innerHTML = '<div class="p-6 text-center text-sm text-red-500">Network error.</div>';
+  } finally {
+    document.getElementById('networkLoading').classList.add('hidden');
+  }
+}
+
+function closeNetworkModal() {
+  const modal = document.getElementById('networkModal');
+  const modalContent = document.getElementById('networkModalContent');
+  modalContent.classList.remove('scale-100', 'opacity-100');
+  modalContent.classList.add('scale-95', 'opacity-0');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 300);
+}
+
+function switchNetworkTab(tab, render = true) {
+  currentNetworkTab = tab;
+  const followersTab = document.getElementById('tab-followers');
+  const followingTab = document.getElementById('tab-following');
+  
+  if (tab === 'followers') {
+    followersTab.className = "flex-1 py-3 text-sm font-bold text-brand-brown dark:text-brand-pink border-b-2 border-brand-brown dark:border-brand-pink bg-brand-cream/10 dark:bg-white/5 transition-all";
+    followingTab.className = "flex-1 py-3 text-sm font-bold text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-brand-brown dark:hover:text-brand-pink transition-all";
+  } else {
+    followingTab.className = "flex-1 py-3 text-sm font-bold text-brand-brown dark:text-brand-pink border-b-2 border-brand-brown dark:border-brand-pink bg-brand-cream/10 dark:bg-white/5 transition-all";
+    followersTab.className = "flex-1 py-3 text-sm font-bold text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-brand-brown dark:hover:text-brand-pink transition-all";
+  }
+  
+  if (render) renderNetworkList();
+}
+
+function renderNetworkList() {
+  const container = document.getElementById('networkListContainer');
+  const list = currentNetworkData[currentNetworkTab];
+  
+  if (!list || list.length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+        <i data-lucide="${currentNetworkTab === 'followers' ? 'users' : 'user-plus'}" class="w-10 h-10 mb-3 opacity-50"></i>
+        <p class="text-sm font-medium">No ${currentNetworkTab} yet.</p>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = list.map(u => `
+    <div class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors border-b border-transparent dark:border-white/5 last:border-0">
+      <a href="/authors/${u._id}" class="flex items-center gap-3 flex-1 overflow-hidden">
+        <img src="${u.avatar}" class="w-10 h-10 rounded-full object-cover border border-brand-brown/10 dark:border-brand-pink/20">
+        <div class="flex flex-col overflow-hidden">
+          <span class="font-bold text-sm text-gray-900 dark:text-white truncate">${u.username}</span>
+          <span class="text-xs text-gray-500 capitalize">${u.role || 'Reader'}</span>
+        </div>
+      </a>
+      ${!u.isCurrentUser ? `
+      <button onclick="toggleNetworkFollow('${u._id}', this)" class="shrink-0 ml-3 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${u.isFollowing ? 'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-700' : 'bg-brand-brown hover:bg-brand-accent text-white'}">
+        <span>${u.isFollowing ? 'Following' : 'Follow'}</span>
+      </button>
+      ` : ''}
+    </div>
+  `).join('');
+  
+  lucide.createIcons();
+}
+
+async function toggleNetworkFollow(targetId, btnElement) {
+  btnElement.classList.add('opacity-50', 'cursor-wait');
+  try {
+    const res = await fetch(`/authors/${targetId}/follow`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Update local state so switching tabs preserves the state
+      const updateList = (list) => {
+        const u = list.find(x => String(x._id) === String(targetId));
+        if (u) u.isFollowing = data.isFollowing;
+      };
+      updateList(currentNetworkData.followers);
+      updateList(currentNetworkData.following);
+      
+      // Update UI button directly
+      if (data.isFollowing) {
+        btnElement.className = "shrink-0 ml-3 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-700";
+        btnElement.innerHTML = '<span>Following</span>';
+      } else {
+        btnElement.className = "shrink-0 ml-3 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 bg-brand-brown hover:bg-brand-accent text-white";
+        btnElement.innerHTML = '<span>Follow</span>';
+      }
+    } else {
+      if (data.error === 'Please log in to follow creators.') {
+         window.location.href = '/auth/login';
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btnElement.classList.remove('opacity-50', 'cursor-wait');
+  }
+}
+</script>

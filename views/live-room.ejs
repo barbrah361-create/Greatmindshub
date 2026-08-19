@@ -10,7 +10,7 @@
   <!-- ==========================================
        1. TOP BAR (Host Info, Live Stats & Stream Tools)
        ========================================== -->
-  <div class="relative z-40 flex items-center justify-between px-3 sm:px-6 py-3 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
+  <div class="relative z-40 flex items-start sm:items-center justify-between px-3 sm:px-6 py-3 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
     
     <!-- Left: Host Badge -->
     <div class="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 max-w-[55%] sm:max-w-none">
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Right: Stats, Audio, Cam & Close -->
-    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+    <div class="flex items-center justify-end flex-wrap gap-1.5 sm:gap-2 shrink max-w-[65%] sm:max-w-none">
       
       <!-- Live Beacon -->
       <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
@@ -85,14 +85,15 @@
       <!-- End Stream (Host) or Exit (Viewer) -->
       <% if (isHost) { %>
         <form action="/live/<%= session._id %>/end" method="POST" onsubmit="return confirm('End your live stream broadcast?');">
-          <button type="submit" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-full shadow transition-all flex items-center gap-1">
+          <button type="submit" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-full shadow transition-all flex items-center gap-1 shrink-0 whitespace-nowrap">
             <i data-lucide="square" class="w-3 h-3 fill-white"></i>
-            <span class="hidden sm:inline">End Live</span>
+            <span>End Live</span>
           </button>
         </form>
       <% } else { %>
-        <a href="/live" class="w-8 h-8 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-colors" title="Leave Room">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <a href="/live" class="px-3 py-1.5 bg-white/15 hover:bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap" title="Leave Room">
+          <i data-lucide="log-out" class="w-3 h-3"></i>
+          <span>Leave</span>
         </a>
       <% } %>
 
@@ -561,6 +562,9 @@
       <a id="popoverDmLink" href="/messages" class="py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
         <i data-lucide="message-square" class="w-3 h-3 text-brand-pink"></i> <span>Message</span>
       </a>
+      <button onclick="handlePopoverMention()" class="col-span-2 py-2 bg-brand-pink/20 hover:bg-brand-pink/40 border border-brand-pink/40 text-brand-pink text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
+        <i data-lucide="at-sign" class="w-3.5 h-3.5"></i> Mention in Chat
+      </button>
       <% if (isHost) { %>
         <button id="popoverInviteBtn" onclick="handlePopoverInvite()" class="col-span-2 py-2 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/40 text-amber-400 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1">
           <i data-lucide="users" class="w-3.5 h-3.5"></i> Invite to Co-Host
@@ -654,7 +658,8 @@ let isCoHostActive = false;
 let myGuestStream = null;
 let currentMediaStream = null;
 let isMicMuted = false;
-let peerConnections = {}; // WebRTC peer connections map
+let pcOut = {};
+let pcIn = {}; // Separate incoming and outgoing PCs
 
 // ── WebRTC Configuration ──
 const RTC_CONFIG = {
@@ -780,14 +785,25 @@ socket.on('user-joined', (data) => {
   feed.scrollTop = feed.scrollHeight;
   setTimeout(() => msg.remove(), 4000);
 
-  // If host, initiate WebRTC connection with new viewer
-  if (IS_HOST && currentMediaStream) {
-    createPeerOffer(socket.id);
+  if (data.socketId && data.socketId !== socket.id) {
+    if (IS_HOST && currentMediaStream) {
+      createPeerOffer(data.socketId, 'host', currentMediaStream);
+    }
+    if (isCoHostActive && myGuestStream) {
+      createPeerOffer(data.socketId, 'guest', myGuestStream);
+    }
   }
 });
 
 // Chat message
 let selectedChatUser = { id: '', username: '', avatar: '' };
+
+// Helper for XSS safety
+function escapeHTML(str) {
+  return String(str).replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[tag] || tag));
+}
 
 socket.on('chat-message', (data) => {
   const feed = document.getElementById('liveChatFeed');
@@ -795,8 +811,13 @@ socket.on('chat-message', (data) => {
   const msg = document.createElement('div');
   msg.className = 'inline-flex items-start gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 max-w-[90%] cursor-pointer hover:border-brand-pink/50 transition-colors';
   msg.onclick = () => openChatUserPopover(data.userId, data.username, data.avatar);
-  msg.innerHTML = '<span class="text-amber-400 text-xs font-bold shrink-0 hover:underline">' + data.username + ':</span>' +
-    '<span class="text-white text-xs leading-relaxed">' + data.message + '</span>';
+  
+  let safeMessage = escapeHTML(data.message);
+  // Highlight @username mentions
+  safeMessage = safeMessage.replace(/@([a-zA-Z0-9_]+)/g, '<span class="text-brand-pink font-bold">@$1</span>');
+
+  msg.innerHTML = '<span class="text-amber-400 text-xs font-bold shrink-0 hover:underline">' + escapeHTML(data.username) + ':</span>' +
+    '<span class="text-white text-xs leading-relaxed break-words">' + safeMessage + '</span>';
   feed.appendChild(msg);
   feed.scrollTop = feed.scrollHeight;
 });
@@ -826,6 +847,15 @@ function handlePopoverInvite() {
   }
 }
 
+function handlePopoverMention() {
+  if (selectedChatUser.username) {
+    const input = document.getElementById('liveChatInput');
+    input.value = `@${selectedChatUser.username} ` + input.value;
+    input.focus();
+    document.getElementById('userProfilePopover').classList.add('hidden');
+  }
+}
+
 function sendLiveComment(e) {
   e.preventDefault();
   const input = document.getElementById('liveChatInput');
@@ -842,75 +872,122 @@ function sendLiveComment(e) {
 }
 
 // ── WebRTC Media Stream Handlers (Broadcasting to Viewers) ──
-async function createPeerOffer(targetSocketId) {
+async function createPeerOffer(targetSocketId, role = IS_HOST ? 'host' : 'guest', stream = currentMediaStream) {
   try {
     const pc = new RTCPeerConnection(RTC_CONFIG);
-    peerConnections[targetSocketId] = pc;
+    pcOut[targetSocketId] = pc;
 
-    if (currentMediaStream) {
-      currentMediaStream.getTracks().forEach(track => pc.addTrack(track, currentMediaStream));
+    if (stream) {
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
     }
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: targetSocketId });
+        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: targetSocketId, isOffer: true });
       }
     };
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    socket.emit('webrtc-offer', { roomId: ROOM_ID, sdp: offer, senderId: socket.id, targetId: targetSocketId, role: IS_HOST ? 'host' : 'guest' });
+    socket.emit('webrtc-offer', { roomId: ROOM_ID, sdp: offer, senderId: socket.id, targetId: targetSocketId, role: role });
   } catch (err) {
     console.warn('WebRTC offer error:', err);
   }
 }
 
 socket.on('webrtc-offer', async (data) => {
-  if (IS_HOST) return; // Viewers handle offers from host/guest
+  if (IS_HOST && data.role === 'host') return;
+  if (data.senderId === socket.id) return;
   try {
     const pc = new RTCPeerConnection(RTC_CONFIG);
-    peerConnections[data.senderId] = pc;
+    pcIn[data.senderId] = pc;
 
     pc.ontrack = (event) => {
-      const video = document.getElementById('liveVideoFeed');
+      const videoId = data.role === 'host' ? 'liveVideoFeed' : 'guestVideoFeed';
+      const video = document.getElementById(videoId);
       if (video && event.streams[0]) {
         video.srcObject = event.streams[0];
         video.muted = false;
         video.play().catch(() => {
-          // Autoplay muted fallback - show unmute banner
           video.muted = true;
           video.play();
-          document.getElementById('unmuteAudioBanner').classList.remove('hidden');
+          if (data.role === 'host') document.getElementById('unmuteAudioBanner').classList.remove('hidden');
         });
+        if (data.role === 'guest') {
+          let guestName = 'Co-Host';
+          const guestObj = roomViewers.find(v => v.socketId === data.senderId);
+          if (guestObj) guestName = guestObj.username;
+          setupDualSplitScreen(guestName);
+        }
       }
     };
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: data.senderId });
+        socket.emit('webrtc-ice', { roomId: ROOM_ID, candidate: event.candidate, senderId: socket.id, targetId: data.senderId, isOffer: false });
       }
     };
 
     await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+    const queueKey = data.senderId + '_true';
+    if (earlyIceQueue[queueKey]) {
+      if (!pc.iceQueue) pc.iceQueue = [];
+      pc.iceQueue.push(...earlyIceQueue[queueKey]);
+      delete earlyIceQueue[queueKey];
+    }
+    if (pc.iceQueue) {
+      for (const candidate of pc.iceQueue) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.warn(e));
+      }
+      pc.iceQueue = [];
+    }
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    socket.emit('webrtc-answer', { roomId: ROOM_ID, sdp: answer, senderId: socket.id, targetId: data.senderId, role: 'viewer' });
+    socket.emit('webrtc-answer', { roomId: ROOM_ID, sdp: answer, senderId: socket.id, targetId: data.senderId, role: data.role });
   } catch (err) {
     console.warn('WebRTC receive offer error:', err);
   }
 });
 
 socket.on('webrtc-answer', async (data) => {
-  const pc = peerConnections[data.senderId];
+  const pc = pcOut[data.senderId];
   if (pc) {
     await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+    const queueKey = data.senderId + '_false';
+    if (earlyIceQueue[queueKey]) {
+      if (!pc.iceQueue) pc.iceQueue = [];
+      pc.iceQueue.push(...earlyIceQueue[queueKey]);
+      delete earlyIceQueue[queueKey];
+    }
+    if (pc.iceQueue) {
+      for (const candidate of pc.iceQueue) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.warn(e));
+      }
+      pc.iceQueue = [];
+    }
   }
 });
 
+let earlyIceQueue = {};
+
 socket.on('webrtc-ice', async (data) => {
-  const pc = peerConnections[data.senderId];
+  if (data.senderId === socket.id) return;
+  const pc = data.isOffer ? pcIn[data.senderId] : pcOut[data.senderId];
   if (pc && data.candidate) {
-    await pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {});
+    try {
+      if (pc.remoteDescription && pc.remoteDescription.type) {
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } else {
+        if (!pc.iceQueue) pc.iceQueue = [];
+        pc.iceQueue.push(data.candidate);
+      }
+    } catch (e) {
+      console.warn('ICE add error:', e);
+    }
+  } else if (!pc && data.candidate) {
+    const queueKey = data.senderId + '_' + data.isOffer;
+    if (!earlyIceQueue[queueKey]) earlyIceQueue[queueKey] = [];
+    earlyIceQueue[queueKey].push(data.candidate);
   }
 });
 
@@ -1157,21 +1234,67 @@ window.addEventListener('keydown', (e) => {
 
 // ── Co-Host / Multi-Guest Stage Management ──
 let pendingCoHostUserId = '';
+let coHostRequestTimer = null;
+let coHostRequestTimeLeft = 0;
 
 // Viewer sends request
 function requestToJoinLive() {
   if (!CURRENT_USER.id) { alert('Please sign in to request join!'); return; }
+  
+  const btn = document.getElementById('coHostRequestBtn');
+  
+  // If already requested, this acts as a CANCEL button
+  if (btn.classList.contains('is-requested')) {
+    cancelCoHostRequest();
+    return;
+  }
+  
   socket.emit('co-host-request', {
     roomId: ROOM_ID,
     userId: CURRENT_USER.id,
     username: CURRENT_USER.username,
     avatar: CURRENT_USER.avatar
   });
+  
+  btn.classList.add('is-requested');
+  btn.classList.add('border-amber-400', 'bg-black/80'); 
+  btn.title = "Cancel request";
+  
+  coHostRequestTimeLeft = 15;
+  updateRequestBtnTimer(btn);
+  
+  coHostRequestTimer = setInterval(() => {
+    coHostRequestTimeLeft--;
+    if (coHostRequestTimeLeft <= 0) {
+      cancelCoHostRequest(true); // auto-expired
+    } else {
+      updateRequestBtnTimer(btn);
+    }
+  }, 1000);
+
+  showCameraToast('✋ Join request sent to host!');
+}
+
+function updateRequestBtnTimer(btn) {
+  btn.innerHTML = `<span class="text-[10px] font-bold text-amber-400">${coHostRequestTimeLeft}s</span>`;
+}
+
+function cancelCoHostRequest(isAutoExpired = false) {
+  clearInterval(coHostRequestTimer);
+  socket.emit('co-host-cancel-request', { roomId: ROOM_ID, userId: CURRENT_USER.id });
+  
   const btn = document.getElementById('coHostRequestBtn');
   if (btn) {
-    btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-green-400"></i>';
-    btn.disabled = true;
-    showCameraToast('✋ Join request sent to host!');
+    btn.classList.remove('is-requested', 'border-amber-400', 'bg-black/80');
+    btn.title = "Request to join live as guest";
+    btn.innerHTML = '<i data-lucide="hand" class="w-5 h-5 text-amber-400"></i>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+  
+  if (isAutoExpired) {
+    showCameraToast('⏳ Join request expired. You can try again.');
+  } else {
+    showCameraToast('Join request cancelled.');
   }
 }
 
@@ -1183,6 +1306,16 @@ socket.on('co-host-request', (data) => {
   document.getElementById('coHostAvatarImg').src = data.avatar;
   document.getElementById('coHostRequesterName').textContent = data.username;
   modal.classList.remove('hidden');
+});
+
+// Host receives request cancellation
+socket.on('co-host-request-cancelled', (data) => {
+  if (!IS_HOST) return;
+  if (pendingCoHostUserId === data.userId) {
+    document.getElementById('coHostRequestModal').classList.add('hidden');
+    pendingCoHostUserId = '';
+    showCameraToast('Guest join request cancelled.');
+  }
 });
 
 // Host accepts request
@@ -1206,24 +1339,30 @@ function dismissCoHostModal() {
 }
 
 // Viewer is notified they were accepted as co-host
-socket.on('co-host-accepted', (data) => {
+socket.on('co-host-accepted', async (data) => {
   if (data.userId === CURRENT_USER.id) {
-    document.getElementById('guestJoinStageModal').classList.remove('hidden');
+    clearInterval(coHostRequestTimer);
+    const btn = document.getElementById('coHostRequestBtn');
+    if (btn) {
+      btn.classList.remove('is-requested', 'border-amber-400', 'bg-black/80');
+      btn.innerHTML = '<i data-lucide="hand" class="w-5 h-5 text-amber-400"></i>';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    showCameraToast('✅ Host accepted your request! Joining stage...');
+    await confirmJoinAsGuest();
   } else {
-    // Show split-screen guest container for all users
     setupDualSplitScreen(data.username);
   }
 });
 
 socket.on('co-host-rejected', (data) => {
   if (data.userId === CURRENT_USER.id) {
+    cancelCoHostRequest(false);
     showCameraToast('Your join request was declined by host.');
-    const btn = document.getElementById('coHostRequestBtn');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="hand" class="w-5 h-5 text-amber-400"></i>'; }
   }
 });
 
-// Viewer confirms joining stage as Co-Host
+// Viewer confirms joining stage as Co-Host (also triggered automatically on request accept)
 async function confirmJoinAsGuest() {
   try {
     const guestStream = await navigator.mediaDevices.getUserMedia({
@@ -1232,6 +1371,14 @@ async function confirmJoinAsGuest() {
     });
     myGuestStream = guestStream;
     isCoHostActive = true;
+
+    if (roomViewers && roomViewers.length > 0) {
+      roomViewers.forEach(v => {
+        if (v.socketId && v.socketId !== socket.id) {
+          createPeerOffer(v.socketId, 'guest', guestStream);
+        }
+      });
+    }
 
     // Show local guest feed
     const guestVideo = document.getElementById('guestVideoFeed');
@@ -1243,10 +1390,23 @@ async function confirmJoinAsGuest() {
 
     setupDualSplitScreen(CURRENT_USER.username);
     showCameraToast('🎉 You are now LIVE on stage with host!');
+    
+    // Broadcast to host that we accepted an invite (or finished joining)
+    socket.emit('co-host-invite-accept', { 
+      roomId: ROOM_ID, 
+      userId: CURRENT_USER.id, 
+      username: CURRENT_USER.username 
+    });
   } catch (err) {
     alert('Please allow camera & mic permissions to step on stage.');
   }
 }
+
+// Host gets notified that viewer joined stage
+socket.on('co-host-invite-accepted', (data) => {
+  setupDualSplitScreen(data.username);
+  showCameraToast(`${data.username} joined the live stage!`);
+});
 
 function declineGuestInvitation() {
   document.getElementById('guestJoinStageModal').classList.add('hidden');
@@ -1478,6 +1638,14 @@ async function startLiveCamera(deviceId = null) {
     const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
     currentMediaStream = stream;
     video.srcObject = stream;
+
+    if (IS_HOST && roomViewers && roomViewers.length > 0) {
+      roomViewers.forEach(v => {
+        if (v.socketId && v.socketId !== socket.id) {
+          createPeerOffer(v.socketId, 'host', stream);
+        }
+      });
+    }
     video.muted = true;
     initAudioAnalyser(stream); // Local host is muted locally to prevent echo feedback
     await video.play();

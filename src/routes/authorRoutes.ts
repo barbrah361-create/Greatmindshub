@@ -13,6 +13,7 @@ router.post('/signature-wall', requireAuth, upload.single('signatureImage'), Nov
 router.post('/signature-wall/delete', requireAuth, NovelController.deleteSignature);
 
 router.get('/:id', NovelController.getAuthorProfile);
+router.get('/:id/network', NovelController.getAuthorNetwork);
 router.post('/:id/follow', NovelController.postFollowAuthor);
 
 export default router;

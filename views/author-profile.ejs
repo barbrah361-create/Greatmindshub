@@ -44,7 +44,7 @@
             <span class="text-xs text-gray-400 uppercase tracking-wider">Likes</span>
           </div>
           <div class="w-px h-4 bg-brand-brown/15"></div>
-          <div class="flex items-center gap-1.5">
+          <div onclick="openNetworkModal('followers', '<%= author._id %>')" class="flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all bg-white/5 rounded-lg px-2 py-1">
             <i data-lucide="users" class="w-4.5 h-4.5 text-brand-brown dark:text-brand-pink"></i>
             <span id="followerCountDisplay" class="font-bold text-gray-900 dark:text-white"><%= formattedFollowers %></span>
             <span class="text-xs text-gray-400 uppercase tracking-wider">Followers</span>
@@ -219,5 +219,6 @@ async function toggleFollowAuthor(authorId) {
 }
 </script>
 
+<%- include('partials/network-modal') %>
 <%- include('partials/footer') %>
 

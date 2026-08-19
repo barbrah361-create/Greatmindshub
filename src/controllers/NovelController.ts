@@ -573,6 +573,55 @@ export const NovelController = {
     }
   },
 
+  // 11a. Get Author Network (Followers & Following lists)
+  getAuthorNetwork: (req: Request, res: Response) => {
+    const { id } = req.params;
+    const currentUser = res.locals.user;
+    try {
+      const targetUser = UserModel.findById(id);
+      let followersIds: string[] = [];
+      let followingIds: string[] = [];
+
+      if (targetUser) {
+        followersIds = targetUser.followers || [];
+        followingIds = targetUser.following || [];
+      } else {
+        const author = AuthorModel.findById(id);
+        if (author) {
+          followersIds = author.followers || [];
+        } else {
+          return res.status(404).json({ success: false, message: 'User not found' });
+        }
+      }
+
+      const allUsers = UserModel.find().exec() || [];
+      const mapUserToNetworkProfile = (userId: string) => {
+        const u = allUsers.find((u: any) => String(u._id) === String(userId));
+        if (!u) return null;
+        return {
+          _id: u._id,
+          username: u.username,
+          avatar: u.avatar || '/uploads/default-avatar.png',
+          role: u.role,
+          isFollowing: currentUser ? (currentUser.following || []).includes(String(u._id)) : false,
+          isCurrentUser: currentUser ? String(currentUser._id) === String(u._id) : false
+        };
+      };
+
+      const followersList = followersIds.map(mapUserToNetworkProfile).filter(Boolean);
+      const followingList = followingIds.map(mapUserToNetworkProfile).filter(Boolean);
+
+      return res.json({
+        success: true,
+        followers: followersList,
+        following: followingList
+      });
+    } catch (error) {
+      console.error('getAuthorNetwork error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  },
+
   // 11b. Toggle Follow Author
   postFollowAuthor: (req: Request, res: Response) => {
     const { id } = req.params;

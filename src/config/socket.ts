@@ -27,7 +27,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
   io.on('connection', (socket: Socket) => {
     // ── Join a live room ──
-    socket.on('join-room', (data: { roomId: string; userId?: string; username?: string; avatar?: string; isHost?: boolean }) => {
+    socket.on('join-room', async (data: { roomId: string; userId?: string; username?: string; avatar?: string; isHost?: boolean }) => {
       const { roomId, userId, username, avatar, isHost } = data;
       socket.join(roomId);
       (socket as any)._roomId = roomId;
@@ -49,7 +49,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       });
 
       // Increment viewer count
-      const session = LiveSessionModel.findById(roomId);
+      const session = await LiveSessionModel.findById(roomId);
       if (session) {
         const newCount = roomMap.size;
         LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: newCount });
@@ -63,7 +63,8 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
         io.to(roomId).emit('user-joined', { 
           userId: userId || '',
           username: username || 'Reader', 
-          avatar: avatar || '/uploads/default-avatar.png' 
+          avatar: avatar || '/uploads/default-avatar.png',
+          socketId: socket.id
         });
       }
     });
@@ -88,8 +89,8 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     });
 
     // ── Send heart / Like (Host cannot like own live; likes award points to host & co-hosts) ──
-    socket.on('send-heart', (data: { roomId: string; senderId?: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    socket.on('send-heart', async (data: { roomId: string; senderId?: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (!session) return;
 
       // Host cannot like their own live session
@@ -98,24 +99,24 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       }
 
       const newLikes = (session.likesCount || 0) + 1;
-      LiveSessionModel.findByIdAndUpdate(data.roomId, { likesCount: newLikes });
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { likesCount: newLikes });
 
       // Award points to host
-      const host = UserModel.findById(session.hostId);
+      const host = await UserModel.findById(session.hostId);
       if (host) {
         const hostStreak = (host.streakPoints || 0) + 1;
         const hostScore = (host.giftPoints || 0) + hostStreak;
-        UserModel.findByIdAndUpdate(session.hostId, { streakPoints: hostStreak, viralScore: hostScore });
+        await UserModel.findByIdAndUpdate(session.hostId, { streakPoints: hostStreak, viralScore: hostScore });
       }
 
       // Award points to active co-host guests on stage
       if (session.coHosts && session.coHosts.length > 0) {
         for (const guestId of session.coHosts) {
-          const guestUser = UserModel.findById(guestId);
+          const guestUser = await UserModel.findById(guestId);
           if (guestUser) {
             const guestStreak = (guestUser.streakPoints || 0) + 1;
             const guestScore = (guestUser.giftPoints || 0) + guestStreak;
-            UserModel.findByIdAndUpdate(guestId, { streakPoints: guestStreak, viralScore: guestScore });
+            await UserModel.findByIdAndUpdate(guestId, { streakPoints: guestStreak, viralScore: guestScore });
           }
         }
       }
@@ -124,11 +125,11 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     });
 
     // ── Send gift ──
-    socket.on('send-gift', (data: { roomId: string; userId: string; username: string; avatar: string; giftType: string }) => {
+    socket.on('send-gift', async (data: { roomId: string; userId: string; username: string; avatar: string; giftType: string }) => {
       const gift = GIFT_CATALOG[data.giftType];
       if (!gift) return;
 
-      const session = LiveSessionModel.findById(data.roomId);
+      const session = await LiveSessionModel.findById(data.roomId);
       if (!session) return;
 
       // Record gift in session
@@ -141,15 +142,15 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
         sentAt: new Date().toISOString()
       });
       const totalGiftPoints = (session.totalGiftPoints || 0) + gift.points;
-      LiveSessionModel.findByIdAndUpdate(data.roomId, { gifts, totalGiftPoints });
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { gifts, totalGiftPoints });
 
       // Add points to host's user record
-      const host = UserModel.findById(session.hostId);
+      const host = await UserModel.findById(session.hostId);
       if (host) {
         const newGiftPoints = (host.giftPoints || 0) + gift.points;
         const newStreakPoints = (host.streakPoints || 0) + Math.floor(gift.points / 10);
         const newViralScore = newGiftPoints + newStreakPoints;
-        UserModel.findByIdAndUpdate(session.hostId, {
+        await UserModel.findByIdAndUpdate(session.hostId, {
           giftPoints: newGiftPoints,
           streakPoints: newStreakPoints,
           viralScore: newViralScore
@@ -194,14 +195,14 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     });
 
     // ── Co-host request by viewer ──
-    socket.on('co-host-request', (data: { roomId: string; userId: string; username: string; avatar: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    socket.on('co-host-request', async (data: { roomId: string; userId: string; username: string; avatar: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (!session) return;
 
       const requests = session.coHostRequests || [];
       if (!requests.includes(data.userId)) {
         requests.push(data.userId);
-        LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
+        await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
       }
 
       // Send request notification to host
@@ -212,14 +213,25 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       });
     });
 
+    // ── Viewer cancels co-host request ──
+    socket.on('co-host-cancel-request', async (data: { roomId: string; userId: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
+      if (!session) return;
+      
+      const requests = (session.coHostRequests || []).filter((id: string) => id !== data.userId);
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
+
+      io.to(data.roomId).emit('co-host-request-cancelled', { userId: data.userId });
+    });
+
     // ── Host invites viewer directly ──
     socket.on('co-host-invite', (data: { roomId: string; targetUserId: string; hostName: string }) => {
       io.to(data.roomId).emit('co-host-invite', data);
     });
 
-    // ── Host accepts co-host ──
-    socket.on('co-host-accept', (data: { roomId: string; userId: string; username: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    // ── Host accepts co-host request ──
+    socket.on('co-host-accept', async (data: { roomId: string; userId: string; username: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (!session) return;
 
       const coHosts = session.coHosts || [];
@@ -228,7 +240,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       }
       // Remove from requests
       const requests = (session.coHostRequests || []).filter((id: string) => id !== data.userId);
-      LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts, coHostRequests: requests });
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts, coHostRequests: requests });
 
       io.to(data.roomId).emit('co-host-accepted', {
         userId: data.userId,
@@ -236,55 +248,81 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
       });
     });
 
+    // ── Viewer accepts host invite ──
+    socket.on('co-host-invite-accept', async (data: { roomId: string; userId: string; username: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
+      if (!session) return;
+
+      const coHosts = session.coHosts || [];
+      if (!coHosts.includes(data.userId)) {
+        coHosts.push(data.userId);
+        await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
+      }
+
+      io.to(data.roomId).emit('co-host-invite-accepted', data);
+    });
+
     // ── Host rejects co-host ──
-    socket.on('co-host-reject', (data: { roomId: string; userId: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    socket.on('co-host-reject', async (data: { roomId: string; userId: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (!session) return;
 
       const requests = (session.coHostRequests || []).filter((id: string) => id !== data.userId);
-      LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHostRequests: requests });
 
       io.to(data.roomId).emit('co-host-rejected', { userId: data.userId });
     });
 
     // ── Host drops / kicks co-host ──
-    socket.on('co-host-drop', (data: { roomId: string; guestId: string; guestName?: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    socket.on('co-host-drop', async (data: { roomId: string; guestId: string; guestName?: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (session) {
         const coHosts = (session.coHosts || []).filter((id: string) => id !== data.guestId);
-        LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
+        await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
       }
       io.to(data.roomId).emit('co-host-dropped', { guestId: data.guestId, guestName: data.guestName });
     });
 
     // ── Guest leaves stage voluntarily ──
-    socket.on('co-host-leave', (data: { roomId: string; guestId: string; guestName?: string }) => {
-      const session = LiveSessionModel.findById(data.roomId);
+    socket.on('co-host-leave', async (data: { roomId: string; guestId: string; guestName?: string }) => {
+      const session = await LiveSessionModel.findById(data.roomId);
       if (session) {
         const coHosts = (session.coHosts || []).filter((id: string) => id !== data.guestId);
-        LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
+        await LiveSessionModel.findByIdAndUpdate(data.roomId, { coHosts });
       }
       io.to(data.roomId).emit('co-host-left', { guestId: data.guestId, guestName: data.guestName });
     });
 
     // ── End stream ──
-    socket.on('end-stream', (data: { roomId: string }) => {
+    socket.on('end-stream', async (data: { roomId: string }) => {
+      await LiveSessionModel.findByIdAndUpdate(data.roomId, { isLive: false });
       io.to(data.roomId).emit('stream-ended', {});
+      io.emit('global-stream-ended', { roomId: data.roomId });
     });
 
     // ── Disconnect ──
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       const roomId = (socket as any)._roomId;
       const userId = (socket as any)._userId;
       if (roomId && activeRoomParticipants.has(roomId)) {
         const roomMap = activeRoomParticipants.get(roomId)!;
         const participantKey = userId || socket.id;
+        
+        const participant = roomMap.get(participantKey);
         roomMap.delete(participantKey);
 
-        const newCount = roomMap.size;
-        LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: newCount });
-        io.to(roomId).emit('viewer-count', { count: newCount });
-        io.to(roomId).emit('room-participants', { participants: Array.from(roomMap.values()) });
+        if (participant && participant.role === 'host') {
+          // If the host disconnected (e.g., closed the tab), forcefully end the live session
+          await LiveSessionModel.findByIdAndUpdate(roomId, { isLive: false });
+          io.to(roomId).emit('stream-ended', {});
+          io.emit('global-stream-ended', { roomId });
+        } else {
+          // Normal viewer disconnected
+          const newCount = roomMap.size;
+          await LiveSessionModel.findByIdAndUpdate(roomId, { viewersCount: newCount });
+          io.to(roomId).emit('viewer-count', { count: newCount });
+          io.to(roomId).emit('room-participants', { participants: Array.from(roomMap.values()) });
+        }
       }
     });
   });
