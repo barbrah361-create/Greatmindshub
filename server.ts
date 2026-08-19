@@ -203,7 +203,8 @@ async function bootstrap() {
   });
 
   if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    const { createServer: createViteServer } = await import('vite');
+    const importVite = new Function('return import("vite")');
+    const { createServer: createViteServer } = await importVite();
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
     app.use((req, res, next) => {
       if (req.url.startsWith('/@') || req.url.startsWith('/src/') || req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.css')) {
