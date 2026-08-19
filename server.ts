@@ -237,6 +237,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap().catch((err) => console.error('Failed to start server:', err));
+const bootstrapPromise = bootstrap().catch((err) => console.error('Failed to start server:', err));
 
+export { bootstrapPromise };
 export default app;
