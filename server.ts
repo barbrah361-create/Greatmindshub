@@ -6,7 +6,6 @@ import http from 'http';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
-import { createServer as createViteServer } from 'vite';
 import { initSocketServer } from './src/config/socket.js';
 
 dotenv.config();
@@ -204,6 +203,7 @@ async function bootstrap() {
   });
 
   if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
     app.use((req, res, next) => {
       if (req.url.startsWith('/@') || req.url.startsWith('/src/') || req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.css')) {
